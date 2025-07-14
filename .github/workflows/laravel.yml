@@ -1,0 +1,24 @@
+name: Update Server
+
+on:
+  push:
+    branches:
+      - main # Cambiar a la rama principal de tu repositorio
+
+jobs:
+  update_server:
+    runs-on: ubuntu-latest # Puedes cambiar esto según tus necesidades
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: SSH into server and update repository
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.gabnetic.com
+          username: gabnetic
+          password: NZ*mG&##%%4%
+          server-dir: /folcklore.gabnetic.com/
+
+     
