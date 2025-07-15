@@ -7,9 +7,13 @@ use App\Models\ClienteEmpresa;
 use App\Models\Sucursal;
 use App\Models\UnidadEducativa;
 use Livewire\Component;
+use Illuminate\Validation\Rule;
+use Livewire\WithPagination;
 
 class ClienteController extends Component
 {
+    use WithPagination;
+
     public $tipo_cliente;
     public $institucional_tipo; // EMPRESA o UNIDAD_EDUCATIVA
 
@@ -41,9 +45,15 @@ class ClienteController extends Component
     public $activo = true;
 
     public $sucursales;
-
+    public $modalMode = 'create'; // create | edit | view
+    public function paginationView()
+    {
+        return 'vendor.livewire.bootstrap';
+    }
     public function mount()
     {
+        $this->modalMode = 'create'; // create | edit | view
+
         $this->sucursales = Sucursal::all();
     }
 
@@ -61,7 +71,7 @@ class ClienteController extends Component
             $rules = array_merge($rules, [
                 'nombres' => 'required|string|max:100',
                 'apellidos' => 'required|string|max:100',
-                'carnet_identidad' => 'required|string|max:20|unique:clientes,carnet_identidad',
+                'carnet_identidad' => ['required', 'string', 'max:20', Rule::unique('clientes', 'carnet_identidad')->ignore($this->selectedClienteId)],
             ]);
         } elseif ($this->tipo_cliente === 'INSTITUCIONAL') {
             $rules['institucional_tipo'] = 'required|in:EMPRESA,UNIDAD_EDUCATIVA';
@@ -69,14 +79,14 @@ class ClienteController extends Component
             if ($this->institucional_tipo === 'EMPRESA') {
                 $rules = array_merge($rules, [
                     'razon_social' => 'required|string|max:200',
-                    'nit' => 'required|string|max:20|unique:cliente_empresas,nit',
+                    'nit' => ['required', 'string', 'max:20', Rule::unique('cliente_empresas', 'nit')->ignore($this->selectedClienteId, 'cliente_id')],
                     'telefono_principal' => 'nullable|string|max:20',
                     'telefono_secundario' => 'nullable|string|max:20',
                 ]);
             } elseif ($this->institucional_tipo === 'UNIDAD_EDUCATIVA') {
                 $rules = array_merge($rules, [
                     'nombre_unidad' => 'required|string|max:200',
-                    'codigo_unidad' => 'nullable|string|max:20|unique:unidad_educativas,codigo',
+                    'codigo_unidad' => ['nullable', 'string', 'max:20', Rule::unique('unidad_educativas', 'codigo')->ignore($this->selectedClienteId, 'cliente_id')],
                     'contacto_responsable' => 'nullable|string|max:150',
                     'cargo_responsable' => 'nullable|string|max:100',
                     'tipo_unidad' => 'required|in:COLEGIO,UNIVERSIDAD,INSTITUTO,ACADEMIA,OTRO',
@@ -162,9 +172,8 @@ class ClienteController extends Component
 
         $this->reset(['tipo_cliente', 'institucional_tipo', 'sucursal_id', 'nombres', 'apellidos', 'carnet_identidad', 'razon_social', 'nit', 'telefono_principal', 'telefono_secundario', 'telefono', 'email', 'direccion', 'nombre_unidad', 'codigo_unidad', 'contacto_responsable', 'cargo_responsable', 'tipo_unidad']);
 
-        $this->dispatchBrowserEvent('closeModal');
+        $this->dispatchBrowserEvent('closeClienteModal');
     }
-    public $modalMode = 'create'; // create | edit | view
     public $selectedClienteId = null;
 
     public function verCliente($id)
@@ -206,46 +215,59 @@ class ClienteController extends Component
             $this->telefono_principal = $unidad->telefono ?? null;
         }
 
-        $this->dispatchBrowserEvent('showClienteModal');
+        $this->dispatchBrowserEvent('showViewClienteModal');
     }
 
     public function editarCliente($id)
     {
         $this->resetValidation();
         $this->selectedClienteId = $id;
+
         $cliente = Cliente::with(['clienteEmpresa', 'unidadEducativa'])->findOrFail($id);
 
         $this->modalMode = 'edit';
 
-        // Cargar campos para edición (igual que en verCliente)
-        $this->tipo_cliente = $cliente->tipo_cliente;
-        $this->sucursal_id = $cliente->sucursal_id;
+        // Asignar datos comunes
+        $this->sucursal_id = (int) $cliente->sucursal_id;
         $this->telefono = $cliente->telefono;
         $this->email = $cliente->email;
         $this->direccion = $cliente->direccion;
         $this->activo = $cliente->activo;
 
-        if ($this->tipo_cliente === 'INDIVIDUAL') {
+        // Verificar tipo de cliente
+        if (in_array($cliente->tipo_cliente, ['EMPRESA', 'UNIDAD_EDUCATIVA'])) {
+            $this->tipo_cliente = 'INSTITUCIONAL';
+            $this->institucional_tipo = $cliente->tipo_cliente;
+        } else {
+            $this->tipo_cliente = $cliente->tipo_cliente;
+            $this->institucional_tipo = null;
+        }
+
+        // Datos individuales
+        if ($cliente->tipo_cliente === 'INDIVIDUAL') {
             $this->nombres = $cliente->nombres;
             $this->apellidos = $cliente->apellidos;
             $this->carnet_identidad = $cliente->carnet_identidad;
-            $this->institucional_tipo = null;
-        } elseif ($this->tipo_cliente === 'EMPRESA') {
-            $this->institucional_tipo = 'EMPRESA';
+        }
+
+        // Datos empresa
+        if ($cliente->tipo_cliente === 'EMPRESA' && $cliente->clienteEmpresa) {
             $empresa = $cliente->clienteEmpresa;
-            $this->razon_social = $empresa->razon_social ?? null;
-            $this->nit = $empresa->nit ?? null;
-            $this->telefono_principal = $empresa->telefono_principal ?? null;
-            $this->telefono_secundario = $empresa->telefono_secundario ?? null;
-        } elseif ($this->tipo_cliente === 'UNIDAD_EDUCATIVA') {
-            $this->institucional_tipo = 'UNIDAD_EDUCATIVA';
+            $this->razon_social = $empresa->razon_social;
+            $this->nit = $empresa->nit;
+            $this->telefono_principal = $empresa->telefono_principal;
+            $this->telefono_secundario = $empresa->telefono_secundario;
+        }
+
+        // Datos unidad educativa
+        if ($cliente->tipo_cliente === 'UNIDAD_EDUCATIVA' && $cliente->unidadEducativa) {
             $unidad = $cliente->unidadEducativa;
-            $this->nombre_unidad = $unidad->nombre ?? null;
-            $this->codigo_unidad = $unidad->codigo ?? null;
-            $this->contacto_responsable = $unidad->contacto_responsable ?? null;
-            $this->cargo_responsable = $unidad->cargo_responsable ?? null;
-            $this->tipo_unidad = $unidad->tipo ?? null;
-            $this->telefono_principal = $unidad->telefono ?? null;
+            $this->nombre_unidad = $unidad->nombre;
+            $this->codigo_unidad = $unidad->codigo;
+            $this->contacto_responsable = $unidad->contacto_responsable;
+            $this->cargo_responsable = $unidad->cargo_responsable;
+            $this->tipo_unidad = $unidad->tipo;
+            $this->telefono_principal = $unidad->telefono;
         }
 
         $this->dispatchBrowserEvent('showClienteModal');
@@ -262,20 +284,30 @@ class ClienteController extends Component
         $cliente->direccion = $this->direccion;
         $cliente->activo = $this->activo;
 
+        // Guardar datos comunes
         if ($this->tipo_cliente === 'INDIVIDUAL') {
             $cliente->nombres = $this->nombres;
             $cliente->apellidos = $this->apellidos;
             $cliente->carnet_identidad = $this->carnet_identidad;
+            $cliente->tipo_cliente = 'INDIVIDUAL';
         } else {
             $cliente->nombres = null;
             $cliente->apellidos = null;
             $cliente->carnet_identidad = null;
+
+            // Guardar tipo_cliente correcto desde institucional_tipo
+            if ($this->institucional_tipo === 'EMPRESA') {
+                $cliente->tipo_cliente = 'EMPRESA';
+            } elseif ($this->institucional_tipo === 'UNIDAD_EDUCATIVA') {
+                $cliente->tipo_cliente = 'UNIDAD_EDUCATIVA';
+            }
         }
 
         $cliente->save();
 
-        if ($this->tipo_cliente === 'EMPRESA') {
-            $empresa = ClienteEmpresa::updateOrCreate(
+        // EMPRESA
+        if ($this->institucional_tipo === 'EMPRESA') {
+            ClienteEmpresa::updateOrCreate(
                 ['cliente_id' => $cliente->id],
                 [
                     'razon_social' => $this->razon_social,
@@ -286,8 +318,11 @@ class ClienteController extends Component
                     'direccion' => $this->direccion,
                 ],
             );
-        } elseif ($this->tipo_cliente === 'UNIDAD_EDUCATIVA') {
-            $unidad = UnidadEducativa::updateOrCreate(
+        }
+
+        // UNIDAD EDUCATIVA
+        if ($this->institucional_tipo === 'UNIDAD_EDUCATIVA') {
+            UnidadEducativa::updateOrCreate(
                 ['cliente_id' => $cliente->id],
                 [
                     'nombre' => $this->nombre_unidad,
@@ -324,7 +359,7 @@ class ClienteController extends Component
 
     public function render()
     {
-        $clientes = Cliente::with(['sucursal', 'usuario'])->get();
+        $clientes = Cliente::with(['sucursal', 'usuario', 'clienteEmpresa', 'unidadEducativa'])->paginate(2);
 
         $estadisticas = [
             'total' => Cliente::count(),

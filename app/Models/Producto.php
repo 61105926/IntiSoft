@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
+protected $guarded = [];
+
     use HasFactory;
-      public function sucursal()
+    public function sucursal()
     {
         return $this->belongsTo(Sucursal::class);
     }
@@ -23,8 +25,34 @@ class Producto extends Model
         return $this->belongsTo(User::class, 'usuario_creacion');
     }
 
-    public function movimientos()
+
+    public function stockPorSucursal()
     {
-        return $this->hasMany(InventarioMovimiento::class);
+        return $this->hasMany(StockPorSucursal::class);
+    }
+
+    public function movimientosStock()
+    {
+        return $this->hasMany(MovimientoStockSucursal::class);
+    }
+
+    public function detalleTransferencias()
+    {
+        return $this->hasMany(DetalleTransferencia::class);
+    }
+
+    public function scopeActivos($query)
+    {
+        return $query->where('activo', true);
+    }
+
+    public function getStockEnSucursal($sucursalId)
+    {
+        return $this->stockPorSucursal()->where('sucursal_id', $sucursalId)->first();
+    }
+
+    public function getTotalStock()
+    {
+        return $this->stockPorSucursal()->sum('stock_actual');
     }
 }

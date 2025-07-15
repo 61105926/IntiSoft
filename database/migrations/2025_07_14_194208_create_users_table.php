@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->foreignId('sucursal_id')->constrained('sucursals')->onDelete('cascade');
             $table->string('username', 50)->unique();
             $table->string('email', 100)->unique();
-            $table->string('password_hash');
+            $table->string('password');
             $table->string('nombres', 100);
             $table->string('apellidos', 100);
             $table->string('telefono', 20)->nullable();
@@ -25,7 +25,6 @@ return new class extends Migration {
             $table->integer('intentos_fallidos')->default(0);
             $table->timestamp('bloqueado_hasta')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

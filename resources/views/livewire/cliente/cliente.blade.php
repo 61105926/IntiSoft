@@ -81,16 +81,20 @@
             </div>
         </div>
     </div>
-
+    @if (session()->has('message'))
+        <div class="alert alert-success mt-3">{{ session('message') }}</div>
+    @endif
     <!-- Tabla de Clientes -->
     <div class="card shadow-sm">
-        <div class="card-header">
-            <h3 class="mb-0">Clientes ({{ count($clientes) }})</h3>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Clientes ({{ $clientes->total() }})</h3>
+            <div class="text-muted small">Página {{ $clientes->currentPage() }} de {{ $clientes->lastPage() }}</div>
         </div>
-        <div class="card-body">
+
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover" id="tablaClientes">
-                    <thead>
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
                             <th>Nombre/Razón Social</th>
                             <th>Identificación</th>
@@ -99,13 +103,13 @@
                             <th>Tipo</th>
                             <th>Registro</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($clientes as $cliente)
-                            <tr data-tipo="{{ $cliente->tipo_cliente }}">
-                                <td class="fw-medium">
+                            <tr>
+                                <td class="fw-semibold">
                                     @if ($cliente->tipo_cliente == 'INDIVIDUAL')
                                         {{ $cliente->nombres }} {{ $cliente->apellidos }}
                                     @elseif ($cliente->tipo_cliente == 'EMPRESA')
@@ -116,44 +120,57 @@
                                 </td>
                                 <td>
                                     @if ($cliente->tipo_cliente == 'INDIVIDUAL')
-                                        CI: {{ $cliente->ci }}
+                                        CI: {{ $cliente->carnet_identidad }}
                                     @elseif ($cliente->tipo_cliente == 'EMPRESA')
                                         NIT: {{ $cliente->clienteEmpresa->nit ?? '-' }}
                                     @elseif ($cliente->tipo_cliente == 'UNIDAD_EDUCATIVA')
-                                        NIT: {{ $cliente->unidadEducativa->nit ?? '-' }}
+                                        CÓD: {{ $cliente->unidadEducativa->codigo ?? '-' }}
                                     @endif
                                 </td>
                                 <td>
-                                    <p>{{ $cliente->telefono_principal }}</p>
-                                    @if ($cliente->telefono_secundario)
-                                        <p>{{ $cliente->telefono_secundario }}</p>
+                                    @php
+                                        $tel1 =
+                                            $cliente->clienteEmpresa->telefono_principal ??
+                                            ($cliente->unidadEducativa->telefono ?? ($cliente->telefono ?? null));
+                                        $tel2 = $cliente->clienteEmpresa->telefono_secundario ?? null;
+                                        $mail =
+                                            $cliente->clienteEmpresa->email ??
+                                            ($cliente->unidadEducativa->email ?? ($cliente->email ?? null));
+                                    @endphp
+
+                                    @if ($tel1)
+                                        <div>{{ $tel1 }}</div>
                                     @endif
-                                    @if ($cliente->email)
-                                        <p class="text-muted">{{ $cliente->email }}</p>
+                                    @if ($tel2)
+                                        <div>{{ $tel2 }}</div>
+                                    @endif
+                                    @if ($mail)
+                                        <div class="text-muted small">{{ Str::limit($mail, 30) }}</div>
                                     @endif
                                 </td>
-                                <td>{{ $cliente->direccion }}</td>
+                                <td>{{ Str::limit($cliente->direccion, 40) }}</td>
                                 <td><span class="badge bg-secondary">{{ $cliente->tipo_cliente }}</span></td>
                                 <td>
-                                    <p>{{ $cliente->created_at->format('Y-m-d') }}</p>
-                                    <p class="text-muted">{{ $cliente->sucursal->nombre ?? '-' }}</p>
-                                    <p class="text-muted">Por: {{ $cliente->usuario->name ?? '-' }}</p>
+                                    <div>{{ $cliente->created_at->format('Y-m-d') }}</div>
+                                    <div class="text-muted small">{{ $cliente->sucursal->nombre ?? '-' }}</div>
+                                    <div class="text-muted small">Por: {{ $cliente->usuario->name ?? '-' }}</div>
                                 </td>
                                 <td>
                                     <span class="badge {{ $cliente->activo ? 'bg-success' : 'bg-danger' }}">
                                         {{ $cliente->activo ? 'Activo' : 'Inactivo' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="d-flex gap-2">
+                                <td class="text-end">
+                                    <div class="btn-group">
                                         <button wire:click="verCliente({{ $cliente->id }})"
-                                            class="btn btn-outline-secondary btn-sm" title="Ver"><i
-                                                class="fas fa-eye"></i></button>
+                                            class="btn btn-sm btn-outline-primary" title="Ver">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
                                         <button wire:click="editarCliente({{ $cliente->id }})"
-                                            class="btn btn-outline-secondary btn-sm" title="Editar"><i
+                                            class="btn btn-sm btn-outline-secondary" title="Editar"><i
                                                 class="fas fa-pen"></i></button>
                                         <button wire:click="eliminarCliente({{ $cliente->id }})"
-                                            class="btn btn-danger btn-sm" title="Eliminar"
+                                            class="btn btn-sm btn-danger" title="Eliminar"
                                             onclick="return confirm('¿Seguro que quieres eliminar este cliente?');">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
@@ -162,14 +179,19 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center">No hay clientes registrados.</td>
+                                <td colspan="8" class="text-center py-3">No hay clientes registrados.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <div class="card-footer">
+            {{ $clientes->links() }}
+        </div>
     </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

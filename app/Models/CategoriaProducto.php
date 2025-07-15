@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class CategoriaProducto extends Model
 {
     use HasFactory;
-       public function productos()
+    public function productos()
     {
-        return $this->hasMany(Producto::class, 'categoria_id');
+        return $this->hasMany(Producto::class);
+    }
+
+    public function scopeActivas($query)
+    {
+        return $query->where('activa', true);
     }
 }

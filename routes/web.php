@@ -5,6 +5,7 @@ use App\Http\Controllers\CajaEntradaController;
 use App\Http\Controllers\CajaSalidaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Livewire\Caja\CajaLiveController;
 use App\Http\Livewire\Cita\CitaController;
 use App\Http\Livewire\Client\ClientController;
@@ -84,32 +85,17 @@ Route::get('/migrate-and-seed', function () {
 Auth::routes();
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-    Route::get('/dashboard', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
 
     Route::get('/usuario', UsuarioController::class)->middleware('can:user.view')->name('usuario');
-    Route::get('/raza', RazaController::class)->middleware('can:breed.view')->name('razas');
-    Route::get('/especie', EspecieController::class)->middleware('can:species.view')->name('especie');
-    Route::get('/vacuna', VacunaController::class)->middleware('can:vaccine.view')->name('vacuna');
-    Route::middleware(['can:pet.view'])->group(function () {
-        Route::get('/mascotadetalle/{id}', PetDetailController::class)->middleware('can:pet.detail')->name('pet.detail');
-    });
 
-    Route::get('/personal', PersonController::class);
+
     Route::get('/rool', RolesController::class)->middleware('can:user.view')->name('roles');
 
-    Route::get('/company', CompanyController::class)->middleware('can:user.view')->name('company');
-    Route::get('/client', ClientController::class)->middleware('can:client.view')->name('client');
-    Route::middleware(['can:pet.view'])->group(function () {
-        Route::get('/pet', PetController::class)->name('pet');
-    });
+  
 
-    Route::get('/inventory', ProductsController::class)->middleware('can:inventory.view')->name('inventory');
     Route::get('/ventas', VentaController::class)->middleware('can:sale.view')->name('ventas');
 
-    Route::middleware(['can:provider.view'])->group(function () {
-        Route::get('/proveedor', ProveedorController::class)->name('proveedor');
-        Route::get('/proveedor-compra', ProveedorCompraController::class)->middleware('can:purchase.view')->name('proveedorcompra');
-    });
+
 
     Route::get('/generate-pdf/{id}', [VentaController::class, 'generatePdf'])->name('generate.pdf');
     Route::get('/ventas/reporte', [VentaController::class, 'generateSalesReportPdf'])->name('sales.report');
@@ -124,5 +110,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion');
     Route::get('/cliente', [ClienteController::class, 'index'])->name('cliente');
+    Route::get('/producto', [ProductoController::class, 'index'])->name('producto');
 
 });

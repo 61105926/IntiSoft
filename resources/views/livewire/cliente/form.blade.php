@@ -1,16 +1,19 @@
 <div>
-    <button type="button" class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#newClientModal">
+    <button type="button" class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#clienteModal">
         <i class="fas fa-user-plus me-2"></i> Nuevo Cliente
     </button>
 
-    <div wire:ignore.self class="modal fade" id="newClientModal" tabindex="-1" aria-labelledby="newClientModalLabel"
+    <div wire:ignore.self class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="newClientModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <form wire:submit.prevent="saveCliente" class="modal-content">
+            <form wire:submit.prevent="{{ $modalMode === 'edit' ? 'updateCliente' : 'saveCliente' }}"
+                class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-user-plus me-2 text-warning"></i> Registrar Cliente
+                        <i class="fas fa-user-plus me-2 text-warning"></i>
+                        {{ $modalMode === 'edit' ? 'Editar Cliente' : 'Registrar Cliente' }}
                     </h5>
+
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
 
@@ -201,9 +204,98 @@
     </div>
 
     {{-- Feedback rápido --}}
-    @if (session()->has('message'))
-        <div class="alert alert-success mt-3">{{ session('message') }}</div>
-    @endif
+    {{-- Modal de Visualización --}}
+    <div wire:ignore.self class="modal fade" id="viewClienteModal" tabindex="-1"
+        aria-labelledby="viewClienteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewClienteModalLabel">
+                        <i class="fas fa-user me-2"></i> Detalles del Cliente
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Tipo de Cliente:</strong> {{ $tipo_cliente }}</p>
+                            <p><strong>Sucursal:</strong> {{ optional($sucursales->find($sucursal_id))->nombre }}</p>
+                            <p><strong>Estado:</strong> {{ $activo ? 'Activo' : 'Inactivo' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Correo Electrónico:</strong> {{ $email ?? '—' }}</p>
+                            <p><strong>Dirección:</strong> {{ $direccion ?? '—' }}</p>
+                            <p><strong>Teléfono:</strong> {{ $telefono ?? '—' }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    @if ($tipo_cliente === 'INDIVIDUAL')
+                        <h6 class="mb-3">Datos Individuales</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nombres:</strong> {{ $nombres }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Apellidos:</strong> {{ $apellidos }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>C.I.:</strong> {{ $carnet_identidad }}</p>
+                            </div>
+                        </div>
+                    @elseif ($institucional_tipo === 'EMPRESA')
+                        <h6 class="mb-3">Datos de Empresa</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Razón Social:</strong> {{ $razon_social }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>NIT:</strong> {{ $nit }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Teléfono Principal:</strong> {{ $telefono_principal }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Teléfono Secundario:</strong> {{ $telefono_secundario ?? '—' }}</p>
+                            </div>
+                        </div>
+                    @elseif ($institucional_tipo === 'UNIDAD_EDUCATIVA')
+                        <h6 class="mb-3">Datos de Unidad Educativa</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nombre de Unidad:</strong> {{ $nombre_unidad }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Código:</strong> {{ $codigo_unidad }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Tipo de Unidad:</strong> {{ $tipo_unidad }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Teléfono:</strong> {{ $telefono_principal }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Responsable:</strong> {{ $contacto_responsable }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Cargo del Responsable:</strong> {{ $cargo_responsable }}</p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     {{-- Scripts para abrir/cerrar modales --}}
     <script>

@@ -1016,7 +1016,7 @@ body.dark #sidebar ul.menu-categories li.menu > .dropdown-toggle {
   display: flex;
   justify-content: space-between;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 16px;
   color: #bfc9d4;
   padding: 10.2px 16px;
   font-weight: 400;
