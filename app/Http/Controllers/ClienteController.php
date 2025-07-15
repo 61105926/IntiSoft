@@ -17,3 +17,5 @@ class ClienteController extends Controller
         return view('cliente.index', compact('sucursales'))->extends('layouts.theme.app')->section('content');
     }
 }
+
+
