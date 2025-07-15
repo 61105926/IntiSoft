@@ -62,7 +62,7 @@ class UserSeeder extends Seeder
                 'sucursal_id' => 1, // Suponiendo que ya existe la sucursal con ID 1
                 'username' => 'gabriel',
                 'email' => 'admin@gmail.com',
-                'password_hash' => Hash::make('61105926'),
+                'password_hash' => Hash::make('12345678'),
                 'password' => null,
                 'nombres' => 'Gabriel',
                 'apellidos' => 'Perez',
