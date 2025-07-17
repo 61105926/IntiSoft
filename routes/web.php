@@ -6,6 +6,7 @@ use App\Http\Controllers\CajaSalidaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\StockSucursal;
 use App\Http\Livewire\Caja\CajaLiveController;
 use App\Http\Livewire\Cita\CitaController;
 use App\Http\Livewire\Client\ClientController;
@@ -111,5 +112,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion');
     Route::get('/cliente', [ClienteController::class, 'index'])->name('cliente');
     Route::get('/producto', [ProductoController::class, 'index'])->name('producto');
+    Route::get('/sucursal', [StockSucursal::class, 'index'])->name('sucursal');
+
 
 });

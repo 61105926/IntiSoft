@@ -38,7 +38,7 @@
             <li class="menu menu-heading">
                 <div class="heading">
                     <i class="fas fa-boxes"></i>
-                    <span>Inventario</span>
+                    <span>Inventario y control</span>
                 </div>
             </li>
             <li class="menu">
@@ -46,6 +46,14 @@
                     <div class="{{ route('producto') }}">
                         <i class="fas fa-cube"></i> <!-- Productos -->
                         <span>Productos</span>
+                    </div>
+                </a>
+            </li>
+            <li class="menu">
+                <a href="{{ route('sucursal') }}" aria-expanded="false" class="dropdown-toggle">
+                    <div>
+                        <i class="fas fa-building"></i> <!-- Sucursal -->
+                        <span>Stock Sucursales</span>
                     </div>
                 </a>
             </li>

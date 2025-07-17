@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DetalleTransferencia extends Model
 {
     use HasFactory;
+    protected $guarded = [];
 
     public function transferencia()
     {
@@ -28,4 +29,5 @@ class DetalleTransferencia extends Model
     {
         return $this->cantidad_enviada - $this->cantidad_recibida;
     }
+   
 }
