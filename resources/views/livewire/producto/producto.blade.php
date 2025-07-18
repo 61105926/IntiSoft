@@ -109,14 +109,15 @@
                                         {{ $prod->stock_actual ?? 0 }}
                                     </span>
                                 </td>
-
                                 <td>${{ number_format($prod->precio_venta_sucursal ?? 0, 2) }}</td>
+
                                 <td>${{ number_format($prod->precio_alquiler_sucursal ?? 0, 2) }}</td>
 
 
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button wire:click="showEditModal({{ $prod->id }})"
+                                        <button wire:click="showEditModal({{ $prod->id }}, {{ $prod->sucursal_id }})"
+
                                             class="btn btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </button>

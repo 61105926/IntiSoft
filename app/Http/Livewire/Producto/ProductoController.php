@@ -95,11 +95,12 @@ class ProductoController extends Component
         $this->emit('showModal');
     }
 
-    public function showEditModal($id)
+    public function showEditModal($id, $sucursal_id)
     {
         $producto = Producto::findOrFail($id);
         $this->editingId = $id;
         $this->isEdit = true;
+
         $this->nombre = $producto->nombre;
         $this->descripcion = $producto->descripcion;
         $this->talla = $producto->talla;
@@ -108,15 +109,15 @@ class ProductoController extends Component
         $this->categoria_id_form = $producto->categoria_id;
         $this->disponible_venta_form = $producto->disponible_venta;
         $this->disponible_alquiler_form = $producto->disponible_alquiler;
+        $this->sucursal_id_form = $sucursal_id;
 
-        $stock = StockPorSucursal::where('producto_id', $id)->where('sucursal_id', $this->sucursal_id_form)->first();
+        $stock = StockPorSucursal::where('producto_id', $id)->where('sucursal_id', $sucursal_id)->first();
 
         if ($stock) {
             $this->stock_actual = $stock->stock_actual;
             $this->stock_minimo = $stock->stock_minimo;
             $this->precio_venta = $stock->precio_venta_sucursal;
             $this->precio_alquiler = $stock->precio_alquiler_sucursal;
-            $this->sucursal_id_form = $stock->sucursal_id;
         }
 
         $this->emit('showModal');
