@@ -93,16 +93,27 @@
                             <tr>
                                 <td>{{ $prod->codigo }}</td>
                                 <td>{{ $prod->nombre }}</td>
-                                <td>{{ $prod->categoria->nombre }}</td>
-                                <td>{{ $prod->sucursal->nombre }}</td>
+                                <td>{{ $prod->categoria->nombre ?? 'Sin categoría' }}</td>
+
+                                {{-- Mostrar nombre de sucursal desde stock_por_sucursals --}}
+                                <td>
+                                    @php
+                                        $sucursal = $sucursales->firstWhere('id', $prod->sucursal_id);
+                                    @endphp
+                                    {{ $sucursal ? $sucursal->nombre : 'N/A' }}
+                                </td>
+
                                 <td>
                                     <span
-                                        class="badge bg-{{ $prod->stock_actual <= 0 ? 'danger' : ($prod->stock_actual <= $prod->stock_minimo ? 'warning' : 'success') }}">
-                                        {{ $prod->stock_actual }}
+                                        class="badge bg-{{ ($prod->stock_actual ?? 0) <= 0 ? 'danger' : (($prod->stock_actual ?? 0) <= ($prod->stock_minimo ?? 0) ? 'warning' : 'success') }}">
+                                        {{ $prod->stock_actual ?? 0 }}
                                     </span>
                                 </td>
-                                <td>${{ number_format($prod->precio_venta, 2) }}</td>
-                                <td>${{ number_format($prod->precio_alquiler, 2) }}</td>
+
+                                <td>${{ number_format($prod->precio_venta_sucursal ?? 0, 2) }}</td>
+                                <td>${{ number_format($prod->precio_alquiler_sucursal ?? 0, 2) }}</td>
+
+
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <button wire:click="showEditModal({{ $prod->id }})"
@@ -126,6 +137,7 @@
                             </tr>
                         @endforelse
                     </tbody>
+
                 </table>
             </div>
             <div class="mt-3 d-flex justify-content-end">

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
-protected $guarded = [];
+    protected $guarded = [];
 
     use HasFactory;
     public function sucursal()
@@ -19,16 +19,18 @@ protected $guarded = [];
     {
         return $this->belongsTo(CategoriaProducto::class, 'categoria_id');
     }
-
+    public function stocks()
+    {
+        return $this->hasMany(StockPorSucursal::class, 'producto_id');
+    }
     public function creador()
     {
         return $this->belongsTo(User::class, 'usuario_creacion');
     }
 
-
     public function stockPorSucursal()
     {
-        return $this->hasMany(StockPorSucursal::class);
+        return $this->hasOne(StockPorSucursal::class)->where('sucursal_id', $this->sucursal_id);
     }
 
     public function movimientosStock()

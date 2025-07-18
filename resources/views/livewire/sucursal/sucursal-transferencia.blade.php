@@ -75,15 +75,20 @@
 
     <ul class="nav nav-tabs mb-3" id="stockTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button"
-                role="tab">Stock por Sucursal</button>
+            <button class="nav-link {{ $tabActivo === 'stock' ? 'active' : '' }}" type="button" role="tab"
+                wire:click="cambiarTab('stock')">
+                Stock por Sucursal
+            </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="transferencias-tab" data-bs-toggle="tab" data-bs-target="#transferencias"
-                type="button" role="tab">Transferencias</button>
+            <button class="nav-link {{ $tabActivo === 'transferencias' ? 'active' : '' }}" type="button" role="tab"
+                wire:click="cambiarTab('transferencias')">
+                Transferencias
+            </button>
         </li>
     </ul>
-  
+
+
     <div class="tab-content" id="stockTabsContent">
         @include('livewire.sucursal.stock-tab')
         @include('livewire.sucursal.transferencias-tab')

@@ -10,20 +10,19 @@ use App\Models\Sucursal;
 use Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
+
 class ProductoController extends Component
 {
     use WithPagination;
 
-    // Filtros y paginación
     public $search = '',
         $sucursal_id = '',
         $categoria_id = '',
         $estado_stock = '',
         $disponible_venta = '',
-        $disponible_alquiler = '',
-        $perPage = 10;
+        $disponible_alquiler = '';
+    public $perPage = 10;
 
-    // Modal y edición
     public $showModal = false,
         $isEdit = false,
         $editingId = null;
@@ -33,24 +32,14 @@ class ProductoController extends Component
     public $showDetailModal = false,
         $detailProducto = null;
 
-    // Campos formulario producto
-    public $nombre,
-        $descripcion,
-        $talla,
-        $color,
-        $material,
-        $precio_venta,
-        $precio_alquiler,
-        $stock_actual,
-        $stock_minimo,
-        $categoria_id_form,
-        $sucursal_id_form,
-        $disponible_venta_form = false,
+    public $nombre, $descripcion, $talla, $color, $material;
+    public $precio_venta, $precio_alquiler, $stock_actual, $stock_minimo;
+    public $categoria_id_form, $sucursal_id_form;
+    public $disponible_venta_form = false,
         $disponible_alquiler_form = false;
 
     protected $paginationTheme = 'bootstrap';
 
-    // Reset pagina en filtros
     public function updatingSearch()
     {
         $this->resetPage();
@@ -66,19 +55,32 @@ class ProductoController extends Component
 
     public function render()
     {
-        $productos = Producto::with(['sucursal', 'categoria'])
-            ->when($this->search, fn($q) => $q->where('nombre', 'like', '%' . $this->search . '%')->orWhere('descripcion', 'like', '%' . $this->search . '%'))
-            ->when($this->sucursal_id, fn($q) => $q->where('sucursal_id', $this->sucursal_id))
-            ->when($this->categoria_id, fn($q) => $q->where('categoria_id', $this->categoria_id))
-            ->when($this->estado_stock === 'sin_stock', fn($q) => $q->where('stock_actual', '<=', 0))
-            ->when($this->estado_stock === 'stock_bajo', fn($q) => $q->whereColumn('stock_actual', '<=', 'stock_minimo'))
-            ->when($this->disponible_venta !== '', fn($q) => $q->where('disponible_venta', $this->disponible_venta))
-            ->when($this->disponible_alquiler !== '', fn($q) => $q->where('disponible_alquiler', $this->disponible_alquiler))
-            ->orderBy('nombre')
-            ->paginate($this->perPage);
+        $query = Producto::query()->select('productos.*', 'sps.stock_actual', 'sps.stock_minimo', 'sps.precio_venta_sucursal', 'sps.precio_alquiler_sucursal', 'sps.sucursal_id')->join('stock_por_sucursals as sps', 'productos.id', '=', 'sps.producto_id')->when($this->sucursal_id, fn($q) => $q->where('sps.sucursal_id', $this->sucursal_id))->with('categoria');
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('productos.nombre', 'like', "%{$this->search}%")->orWhere('productos.descripcion', 'like', "%{$this->search}%");
+            });
+        }
+
+        if ($this->categoria_id) {
+            $query->where('productos.categoria_id', $this->categoria_id);
+        }
+        if ($this->estado_stock === 'sin_stock') {
+            $query->where('sps.stock_actual', '<=', 0);
+        } elseif ($this->estado_stock === 'stock_bajo') {
+            $query->whereColumn('sps.stock_actual', '<=', 'sps.stock_minimo');
+        }
+
+        if ($this->disponible_venta !== '') {
+            $query->where('productos.disponible_venta', $this->disponible_venta);
+        }
+        if ($this->disponible_alquiler !== '') {
+            $query->where('productos.disponible_alquiler', $this->disponible_alquiler);
+        }
 
         return view('livewire.producto.producto', [
-            'productos' => $productos,
+            'productos' => $query->orderBy('productos.nombre')->paginate($this->perPage),
             'sucursales' => Sucursal::activo()->get(),
             'categorias' => CategoriaProducto::all(),
         ])
@@ -86,7 +88,6 @@ class ProductoController extends Component
             ->section('content');
     }
 
-    // Mostrar modal crear
     public function showCreateModal()
     {
         $this->resetForm();
@@ -94,62 +95,79 @@ class ProductoController extends Component
         $this->emit('showModal');
     }
 
-    // Mostrar modal editar
- 
-
-    // Mostrar modal agregar stock
-    public function showStockModal($id)
+    public function showEditModal($id)
     {
-        $this->stockProductoId = $id;
+        $producto = Producto::findOrFail($id);
+        $this->editingId = $id;
+        $this->isEdit = true;
+        $this->nombre = $producto->nombre;
+        $this->descripcion = $producto->descripcion;
+        $this->talla = $producto->talla;
+        $this->color = $producto->color;
+        $this->material = $producto->material;
+        $this->categoria_id_form = $producto->categoria_id;
+        $this->disponible_venta_form = $producto->disponible_venta;
+        $this->disponible_alquiler_form = $producto->disponible_alquiler;
+
+        $stock = StockPorSucursal::where('producto_id', $id)->where('sucursal_id', $this->sucursal_id_form)->first();
+
+        if ($stock) {
+            $this->stock_actual = $stock->stock_actual;
+            $this->stock_minimo = $stock->stock_minimo;
+            $this->precio_venta = $stock->precio_venta_sucursal;
+            $this->precio_alquiler = $stock->precio_alquiler_sucursal;
+            $this->sucursal_id_form = $stock->sucursal_id;
+        }
+
+        $this->emit('showModal');
+    }
+
+    public function showStockModal($productoId)
+    {
+        $this->stockProductoId = $productoId;
         $this->stockAdd = 0;
         $this->emit('showStockModal');
     }
 
-    // Añadir stock
-    public function showEditModal($id)
-{
-    $prod = Producto::findOrFail($id);
-
-    $this->editingId          = $id;
-    $this->isEdit             = true;
-    $this->nombre             = $prod->nombre;
-    $this->descripcion        = $prod->descripcion;
-    $this->talla              = $prod->talla;
-    $this->color              = $prod->color;
-    $this->material           = $prod->material;
-    $this->precio_venta       = $prod->precio_venta;
-    $this->precio_alquiler    = $prod->precio_alquiler;
-    $this->stock_actual       = $prod->stock_actual;
-    $this->stock_minimo       = $prod->stock_minimo;
-    $this->categoria_id_form  = $prod->categoria_id;
-    $this->sucursal_id_form   = $prod->sucursal_id;
-    $this->disponible_venta_form    = $prod->disponible_venta;
-    $this->disponible_alquiler_form = $prod->disponible_alquiler;
-
-    $this->emit('showModal');
-}
-
     public function addStock()
     {
         $this->validate(['stockAdd' => 'required|integer|min:1']);
-        $prod = Producto::findOrFail($this->stockProductoId);
-        $prod->increment('stock_actual', $this->stockAdd);
+
+        $stock = StockPorSucursal::where('producto_id', $this->stockProductoId)->where('sucursal_id', $this->sucursal_id)->first();
+
+        if (!$stock) {
+            session()->flash('error', 'No se encontró stock para este producto en la sucursal seleccionada.');
+            return;
+        }
+
+        $stock->increment('stock_actual', $this->stockAdd);
+
+        MovimientoStockSucursal::create([
+            'producto_id' => $this->stockProductoId,
+            'sucursal_id' => $this->sucursal_id,
+            'tipo_movimiento' => 'ENTRADA',
+            'cantidad' => $this->stockAdd,
+            'stock_anterior' => $stock->stock_actual - $this->stockAdd,
+            'stock_nuevo' => $stock->stock_actual,
+            'referencia' => 'AGREGAR-STOCK-' . now()->format('YmdHis'),
+            'motivo' => 'Stock agregado manualmente',
+            'usuario_id' => Auth::id(),
+            'fecha_movimiento' => now(),
+        ]);
+
         session()->flash('message', 'Stock actualizado.');
         $this->emit('hideStockModal');
     }
 
-    // Mostrar detalle
     public function showDetailModal($id)
     {
-        $this->detailProducto = Producto::with(['sucursal', 'categoria'])->findOrFail($id);
+        $this->detailProducto = Producto::with(['categoria'])->findOrFail($id);
         $this->emit('showDetailModal');
     }
 
-    // Guardar o actualizar
     public function save()
     {
-        // Validación
-        $rules = [
+        $validated = $this->validate([
             'nombre' => 'required|string|max:100',
             'sucursal_id_form' => 'required|exists:sucursals,id',
             'categoria_id_form' => 'required|exists:categoria_productos,id',
@@ -157,88 +175,77 @@ class ProductoController extends Component
             'precio_alquiler' => 'nullable|numeric|min:0',
             'stock_actual' => 'nullable|integer|min:0',
             'stock_minimo' => 'nullable|integer|min:0',
-        ];
-        $validated = $this->validate($rules);
+        ]);
 
-        // Generar código
-        $codigo = $this->generateCode($validated['categoria_id_form'], $validated['sucursal_id_form']);
+        // Buscar si el producto ya existe por nombre (puedes incluir más filtros como color, talla, etc.)
+        $producto = Producto::where('nombre', $validated['nombre'])->first();
 
-        // Armar datos correctos para la tabla productos
-        $data = [
-            'nombre' => $validated['nombre'],
-            'descripcion' => $this->descripcion,
-            'talla' => $this->talla,
-            'color' => $this->color,
-            'material' => $this->material,
-            'precio_venta' => $validated['precio_venta'],
-            'precio_alquiler' => $validated['precio_alquiler'],
-            'stock_actual' => $this->stock_actual,
-            'stock_minimo' => $this->stock_minimo,
-            'disponible_venta' => $this->disponible_venta_form,
-            'disponible_alquiler' => $this->disponible_alquiler_form,
-            'codigo' => $codigo,
-            'usuario_creacion' => Auth::id(),
-            // **Aquí los nombres reales de columnas**:
-            'sucursal_id' => $validated['sucursal_id_form'],
-            'categoria_id' => $validated['categoria_id_form'],
-        ];
-
-        if ($this->isEdit && $this->editingId) {
-            // Actualizar
-            Producto::findOrFail($this->editingId)->update($data);
-            session()->flash('message', 'Producto actualizado correctamente.');
-        } else {
-            // Crear nuevo
-            $producto = Producto::create($data);
-            session()->flash('message', 'Producto creado correctamente.');
-
-            // Registrar stock y movimiento (igual que antes)…
-            StockPorSucursal::create([
-                'producto_id' => $producto->id,
-                'sucursal_id' => $data['sucursal_id'],
-                'stock_actual' => $data['stock_actual'] ?? 0,
-                'stock_minimo' => $data['stock_minimo'] ?? 0,
-                'stock_reservado' => 0,
-                'stock_alquilado' => 0,
-                'stock_vendido' => 0,
-                'precio_venta_sucursal' => $data['precio_venta'],
-                'precio_alquiler_sucursal' => $data['precio_alquiler'],
-                'activo' => true,
-            ]);
-
-            MovimientoStockSucursal::create([
-                'producto_id' => $producto->id,
-                'sucursal_id' => $data['sucursal_id'],
-                'tipo_movimiento' => 'ENTRADA',
-                'cantidad' => $data['stock_actual'] ?? 0,
-                'stock_anterior' => 0,
-                'stock_nuevo' => $data['stock_actual'] ?? 0,
-                'referencia' => 'INI-' . now()->format('Ymd'),
-                'motivo' => 'Stock inicial al crear producto',
-                'usuario_id' => Auth::id(),
-                'fecha_movimiento' => now(),
+        if (!$producto) {
+            $producto = Producto::create([
+                'nombre' => $validated['nombre'],
+                'descripcion' => $this->descripcion,
+                'talla' => $this->talla,
+                'color' => $this->color,
+                'material' => $this->material,
+                'disponible_venta' => $this->disponible_venta_form,
+                'disponible_alquiler' => $this->disponible_alquiler_form,
+                'categoria_id' => $validated['categoria_id_form'],
+                'usuario_creacion' => Auth::id(),
+                'codigo' => $this->generateCode(),
             ]);
         }
 
+        // Verificar si ya existe el producto en esa sucursal
+        $stock = StockPorSucursal::where('producto_id', $producto->id)->where('sucursal_id', $validated['sucursal_id_form'])->first();
+
+        if ($stock) {
+            session()->flash('error', 'El producto ya existe en esta sucursal.');
+            return;
+        }
+
+        // Crear el stock por sucursal
+        StockPorSucursal::create([
+            'producto_id' => $producto->id,
+            'sucursal_id' => $validated['sucursal_id_form'],
+            'stock_actual' => $this->stock_actual ?? 0,
+            'stock_minimo' => $this->stock_minimo ?? 0,
+            'stock_reservado' => 0,
+            'stock_alquilado' => 0,
+            'stock_vendido' => 0,
+            'precio_venta_sucursal' => $this->precio_venta,
+            'precio_alquiler_sucursal' => $this->precio_alquiler,
+            'activo' => true,
+        ]);
+
+        // Registrar el movimiento
+        MovimientoStockSucursal::create([
+            'producto_id' => $producto->id,
+            'sucursal_id' => $validated['sucursal_id_form'],
+            'tipo_movimiento' => 'ENTRADA',
+            'cantidad' => $this->stock_actual ?? 0,
+            'stock_anterior' => 0,
+            'stock_nuevo' => $this->stock_actual ?? 0,
+            'referencia' => 'INI-' . now()->format('Ymd'),
+            'motivo' => 'Stock inicial al registrar en otra sucursal',
+            'usuario_id' => Auth::id(),
+            'fecha_movimiento' => now(),
+        ]);
+
+        session()->flash('message', 'Producto registrado en la sucursal correctamente.');
         $this->emit('hideModal');
         $this->resetForm();
     }
 
-    // Genera código
-    private function generateCode($catId, $sucId)
+    private function generateCode()
     {
-        $cat = CategoriaProducto::find($catId);
-        $suc = Sucursal::find($sucId);
-        $pref = strtoupper(substr($cat->nombre, 0, 3)) . '-' . strtoupper(substr($suc->nombre, 0, 3));
-        $year = now()->format('Y');
-        $num = Producto::where('codigo', 'like', "{$pref}-{$year}-%")->count() + 1;
-        return sprintf('%s-%s-%04d', $pref, $year, $num);
+        $base = strtoupper(substr($this->nombre, 0, 3));
+        $contador = Producto::where('codigo', 'like', "$base-%")->count() + 1;
+        return sprintf('%s-%04d', $base, $contador);
     }
 
     private function resetForm()
     {
-        $this->reset(['nombre', 'descripcion', 'talla', 'color', 'material', 'precio_venta', 'precio_alquiler', 'stock_actual', 'stock_minimo', 'categoria_id_form', 'sucursal_id_form', 'disponible_venta_form', 'disponible_alquiler_form', 'editingId']);
-        $this->isEdit = false;
+        $this->reset(['nombre', 'descripcion', 'talla', 'color', 'material', 'precio_venta', 'precio_alquiler', 'stock_actual', 'stock_minimo', 'categoria_id_form', 'sucursal_id_form', 'disponible_venta_form', 'disponible_alquiler_form', 'editingId', 'isEdit']);
     }
 
     public function clearFilters()

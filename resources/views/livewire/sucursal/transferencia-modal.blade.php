@@ -16,35 +16,39 @@
                         {{-- Sucursal Origen --}}
                         <div class="mb-3">
                             <label class="form-label">Sucursal Origen</label>
-                            <select class="form-select" wire:model="sucursal_origen_id">
-                                <option selected disabled>Seleccione sucursal origen</option>
+                            <select class="form-select" wire:model.defer="sucursal_origen_id">
+                                <option value="" selected disabled>Seleccione sucursal origen</option>
                                 @foreach($sucursales as $id => $nombre)
                                     <option value="{{ $id }}">{{ $nombre }}</option>
                                 @endforeach
                             </select>
+                            @error('sucursal_origen_id') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
 
                         {{-- Sucursal Destino --}}
                         <div class="mb-3">
                             <label class="form-label">Sucursal Destino</label>
-                            <select class="form-select" wire:model="sucursal_destino_id">
-                                <option selected disabled>Seleccione sucursal destino</option>
+                            <select class="form-select" wire:model.defer="sucursal_destino_id">
+                                <option value="" selected disabled>Seleccione sucursal destino</option>
                                 @foreach($sucursales as $id => $nombre)
                                     <option value="{{ $id }}">{{ $nombre }}</option>
                                 @endforeach
                             </select>
+                            @error('sucursal_destino_id') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
 
                         {{-- Motivo --}}
                         <div class="mb-3">
                             <label class="form-label">Motivo</label>
-                            <input type="text" class="form-control" wire:model="motivo" placeholder="Motivo de la transferencia">
+                            <input type="text" class="form-control" wire:model.defer="motivo" placeholder="Motivo de la transferencia">
+                            @error('motivo') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
 
                         {{-- Observaciones --}}
                         <div class="mb-3">
                             <label class="form-label">Observaciones</label>
-                            <input type="text" class="form-control" wire:model="observaciones" placeholder="Observaciones adicionales">
+                            <input type="text" class="form-control" wire:model.defer="observaciones" placeholder="Observaciones adicionales">
+                            @error('observaciones') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -54,16 +58,18 @@
 
                         {{-- Selección de producto y cantidad --}}
                         <div class="d-flex mb-3">
-                            <select class="form-select me-2" wire:model="producto_id">
-                                <option selected disabled>Seleccione un producto</option>
+                            <select class="form-select me-2" wire:model.defer="producto_id">
+                                <option value="" selected disabled>Seleccione un producto</option>
                                 @foreach($productos as $id => $nombre)
                                     <option value="{{ $id }}">{{ $nombre }}</option>
                                 @endforeach
                             </select>
 
-                            <input type="number" class="form-control me-2" wire:model="cantidad" placeholder="Cant." min="1">
-                            <button class="btn btn-outline-secondary" wire:click="agregarProducto">Añadir</button>
+                            <input type="number" class="form-control me-2" wire:model.defer="cantidad" placeholder="Cant." min="1">
+                            <button class="btn btn-outline-secondary" wire:click.prevent="agregarProducto">Añadir</button>
                         </div>
+                        @error('producto_id') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('cantidad') <span class="text-danger small">{{ $message }}</span> @enderror
 
                         {{-- Lista de productos seleccionados --}}
                         <div class="border rounded p-2" style="max-height: 250px; overflow-y: auto">
@@ -73,7 +79,7 @@
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                             {{ $p['nombre'] }} (x{{ $p['cantidad'] }})
                                             <button type="button" class="btn btn-sm btn-danger"
-                                                    wire:click="eliminarProductoTransferencia({{ $index }})">x</button>
+                                                    wire:click.prevent="eliminarProductoTransferencia({{ $index }})">x</button>
                                         </li>
                                     @endforeach
                                 </ul>
@@ -88,7 +94,7 @@
             {{-- Botones --}}
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-warning text-dark" wire:click="guardarTransferencia">Solicitar Transferencia</button>
+                <button type="button" class="btn btn-warning text-dark" wire:click.prevent="guardarTransferencia">Solicitar Transferencia</button>
             </div>
         </div>
     </div>

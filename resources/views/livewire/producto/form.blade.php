@@ -40,7 +40,7 @@
             {{-- Sucursal --}}
             <div class="col-md-6">
               <label class="form-label">Sucursal *</label>
-              <select wire:model.defer="sucursal_id_form" class="form-select @error('sucursal_id_form') is-invalid @enderror">
+              <select wire:model="sucursal_id_form" class="form-select @error('sucursal_id_form') is-invalid @enderror">
                 <option value="">Seleccionar sucursal</option>
                 @foreach($sucursales as $s)
                   <option value="{{ $s->id }}">{{ $s->nombre }}</option>
