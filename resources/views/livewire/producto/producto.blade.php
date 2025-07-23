@@ -2,6 +2,7 @@
 <div>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Gestión de Productos</h2>
+          
         <div>
             <button type="button" wire:click="showCreateModal" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Nuevo Producto

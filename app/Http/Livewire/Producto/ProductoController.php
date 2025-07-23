@@ -8,6 +8,7 @@ use App\Models\Producto;
 use App\Models\StockPorSucursal;
 use App\Models\Sucursal;
 use Auth;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -52,6 +53,7 @@ class ProductoController extends Component
     {
         $this->resetPage();
     }
+    public $productosAll;
 
     public function render()
     {
@@ -78,8 +80,10 @@ class ProductoController extends Component
         if ($this->disponible_alquiler !== '') {
             $query->where('productos.disponible_alquiler', $this->disponible_alquiler);
         }
+        $this->productosAll = Producto::all(); // o la consulta que uses para cargar productos
 
         return view('livewire.producto.producto', [
+            'productosAll' => $this->productosAll,
             'productos' => $query->orderBy('productos.nombre')->paginate($this->perPage),
             'sucursales' => Sucursal::activo()->get(),
             'categorias' => CategoriaProducto::all(),
@@ -97,29 +101,6 @@ class ProductoController extends Component
 
     public function showEditModal($id, $sucursal_id)
     {
-        $producto = Producto::findOrFail($id);
-        $this->editingId = $id;
-        $this->isEdit = true;
-
-        $this->nombre = $producto->nombre;
-        $this->descripcion = $producto->descripcion;
-        $this->talla = $producto->talla;
-        $this->color = $producto->color;
-        $this->material = $producto->material;
-        $this->categoria_id_form = $producto->categoria_id;
-        $this->disponible_venta_form = $producto->disponible_venta;
-        $this->disponible_alquiler_form = $producto->disponible_alquiler;
-        $this->sucursal_id_form = $sucursal_id;
-
-        $stock = StockPorSucursal::where('producto_id', $id)->where('sucursal_id', $sucursal_id)->first();
-
-        if ($stock) {
-            $this->stock_actual = $stock->stock_actual;
-            $this->stock_minimo = $stock->stock_minimo;
-            $this->precio_venta = $stock->precio_venta_sucursal;
-            $this->precio_alquiler = $stock->precio_alquiler_sucursal;
-        }
-
         $this->emit('showModal');
     }
 
@@ -165,10 +146,21 @@ class ProductoController extends Component
         $this->detailProducto = Producto::with(['categoria'])->findOrFail($id);
         $this->emit('showDetailModal');
     }
-
+    private function getFormData()
+    {
+        return [
+            'nombre' => $this->nombre,
+            'sucursal_id_form' => $this->sucursal_id_form,
+            'categoria_id_form' => $this->categoria_id_form,
+            'precio_venta' => $this->precio_venta,
+            'precio_alquiler' => $this->precio_alquiler,
+            'stock_actual' => $this->stock_actual,
+            'stock_minimo' => $this->stock_minimo,
+        ];
+    }
     public function save()
     {
-        $validated = $this->validate([
+        $validator = Validator::make($this->getFormData(), [
             'nombre' => 'required|string|max:100',
             'sucursal_id_form' => 'required|exists:sucursals,id',
             'categoria_id_form' => 'required|exists:categoria_productos,id',
@@ -177,6 +169,25 @@ class ProductoController extends Component
             'stock_actual' => 'nullable|integer|min:0',
             'stock_minimo' => 'nullable|integer|min:0',
         ]);
+
+        // Regla personalizada para existencia producto en sucursal
+        $validator->after(function ($validator) {
+            if ($this->productoSeleccionadoId) {
+                $existeEnSucursal = StockPorSucursal::where('producto_id', $this->productoSeleccionadoId)->where('sucursal_id', $this->sucursal_id_form)->exists();
+
+                if ($existeEnSucursal) {
+                    $validator->errors()->add('productoSeleccionadoId', 'El producto ya existe en esta sucursal.');
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            $this->setErrorBag($validator->errors());
+            // dd($validator->errors());
+            return;
+        }
+
+        $validated = $validator->validated();
 
         // Buscar si el producto ya existe por nombre (puedes incluir más filtros como color, talla, etc.)
         $producto = Producto::where('nombre', $validated['nombre'])->first();
@@ -197,12 +208,6 @@ class ProductoController extends Component
         }
 
         // Verificar si ya existe el producto en esa sucursal
-        $stock = StockPorSucursal::where('producto_id', $producto->id)->where('sucursal_id', $validated['sucursal_id_form'])->first();
-
-        if ($stock) {
-            session()->flash('error', 'El producto ya existe en esta sucursal.');
-            return;
-        }
 
         // Crear el stock por sucursal
         StockPorSucursal::create([
@@ -253,5 +258,45 @@ class ProductoController extends Component
     {
         $this->reset(['search', 'sucursal_id', 'categoria_id', 'estado_stock', 'disponible_venta', 'disponible_alquiler']);
         $this->resetPage();
+    }
+    public $productoSeleccionadoId = null;
+    public $productosExistentes = []; // Lista real de productos para el select
+
+    protected $listeners = ['productoSeleccionado', 'productoSeleccionadoActualizado'];
+
+    public function productoSeleccionado($selected)
+    {
+        if (is_numeric($selected)) {
+            $this->productoSeleccionadoId = $selected;
+            $this->productosExistentes = true;
+
+            $producto = Producto::find($selected);
+            if ($producto) {
+                $this->nombre = $producto->nombre;
+                $this->descripcion = $producto->descripcion;
+                $this->categoria_id_form = $producto->categoria_id;
+                $this->talla = $producto->talla;
+                $this->color = $producto->color;
+                $this->material = $producto->material;
+                // otros campos
+            }
+        } else {
+            // Nuevo producto (texto libre)
+            $this->productoSeleccionadoId = null;
+            $this->productosExistentes = false;
+
+            $this->nombre = $selected;
+            $this->descripcion = '';
+            $this->categoria_id_form = null;
+            $this->talla = '';
+            $this->color = '';
+            $this->material = '';
+            $this->mount();
+        }
+    }
+    public function productoSeleccionadoActualizado($valor)
+    {
+        $this->productoSeleccionadoId = is_array($valor) ? $valor['id'] ?? null : null;
+        $this->resetErrorBag('productoSeleccionadoId');
     }
 }
