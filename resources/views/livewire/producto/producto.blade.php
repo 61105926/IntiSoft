@@ -2,13 +2,13 @@
 <div>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Gestión de Productos</h2>
-          
+
         <div>
             <button type="button" wire:click="showCreateModal" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nuevo Producto
+                <i class="fas fa-plus"></i>
+                Nuevo Producto
             </button>
             @include('livewire.producto.form')
-
         </div>
     </div>
 
@@ -26,8 +26,12 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <label>Buscar</label>
-                    <input type="text" class="form-control" wire:model.live="search"
-                        placeholder="Nombre o descripción...">
+                    <input
+                        type="text"
+                        class="form-control"
+                        wire:model.live="search"
+                        placeholder="Nombre o descripción..."
+                    />
                 </div>
                 <div class="col-md-2">
                     <label>Sucursal</label>
@@ -90,7 +94,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($productos as $prod)
+                        @forelse ($productos as $prod)
                             <tr>
                                 <td>{{ $prod->codigo }}</td>
                                 <td>{{ $prod->nombre }}</td>
@@ -101,33 +105,36 @@
                                     @php
                                         $sucursal = $sucursales->firstWhere('id', $prod->sucursal_id);
                                     @endphp
+
                                     {{ $sucursal ? $sucursal->nombre : 'N/A' }}
                                 </td>
-
                                 <td>
                                     <span
-                                        class="badge bg-{{ ($prod->stock_actual ?? 0) <= 0 ? 'danger' : (($prod->stock_actual ?? 0) <= ($prod->stock_minimo ?? 0) ? 'warning' : 'success') }}">
+                                        class="badge bg-{{ ($prod->stock_actual ?? 0) <= 0 ? 'danger' : (($prod->stock_actual ?? 0) <= ($prod->stock_minimo ?? 0) ? 'warning' : 'success') }}"
+                                    >
                                         {{ $prod->stock_actual ?? 0 }}
                                     </span>
                                 </td>
                                 <td>${{ number_format($prod->precio_venta_sucursal ?? 0, 2) }}</td>
-
                                 <td>${{ number_format($prod->precio_alquiler_sucursal ?? 0, 2) }}</td>
-
-
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button wire:click="showEditModal({{ $prod->id }}, {{ $prod->sucursal_id }})"
-
-                                            class="btn btn-outline-primary">
+                                        <button
+                                            wire:click="showEditModal({{ $prod->id }}, {{ $prod->sucursal_id }})"
+                                            class="btn btn-outline-primary"
+                                        >
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button wire:click="showStockModal({{ $prod->id }})"
-                                            class="btn btn-outline-info">
+                                        <button
+                                            wire:click="showStockModal({{ $prod->id }})"
+                                            class="btn btn-outline-info"
+                                        >
                                             <i class="fas fa-plus-square"></i>
                                         </button>
-                                        <button wire:click="showDetailModal({{ $prod->id }})"
-                                            class="btn btn-outline-secondary">
+                                        <button
+                                            wire:click="showDetailModal({{ $prod->id }})"
+                                            class="btn btn-outline-secondary"
+                                        >
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
@@ -139,7 +146,6 @@
                             </tr>
                         @endforelse
                     </tbody>
-
                 </table>
             </div>
             <div class="mt-3 d-flex justify-content-end">

@@ -1,46 +1,35 @@
 <template>
-    <div>
-        <label class="block mb-1 font-bold">Producto</label>
-        <Multiselect
-            v-model="selected"
-            :options="productos"
-            placeholder="Selecciona o escribe un producto"
-            :taggable="true"
-            @update:modelValue="emitir"
-            class="w-full"
-            label="label"
-            track-by="value"
-            @input="window.Livewire.emit('productoSeleccionadoActualizado', selected)"
-        />
-    </div>
+    <multiselect
+        v-model="selected"
+        :options="options"
+        label="nombre"
+        track-by="id"
+        placeholder="Selecciona o escribe un producto"
+        :taggable="true"
+        @tag="addTag"
+    ></multiselect>
 </template>
 
-<script lang="ts" setup>
-import { ref, defineEmits, defineProps } from 'vue';
+<script setup>
+import { ref, watch } from 'vue';
 import Multiselect from 'vue-multiselect';
+import 'vue-multiselect/dist/vue-multiselect.min.css';
 
-interface ProductoOption {
-    label: string;
-    value: string | number;
-}
+// Props (en caso de que quieras recibir productos por props)
+const options = ref(window.productos || []);
+const selected = ref(null);
 
-const props = defineProps<{
-    productos: ProductoOption[];
-}>();
-
-const selected = ref<ProductoOption | null>(null);
-
-const emit = defineEmits<{
-    (e: 'cambio', valor: string | number): void;
-}>();
-
-function emitir() {
-    if (selected.value) {
-        emit('cambio', selected.value.value);
+// Emitir a Livewire
+watch(selected, (newVal) => {
+    if (newVal) {
+        Livewire.emit('productoSeleccionado', typeof newVal === 'string' ? newVal : newVal.id);
     }
-}
-</script>
+});
 
-<style scoped>
-/* Estilos opcionales */
-</style>
+const addTag = (newTag) => {
+    const tagObject = { id: newTag, nombre: newTag };
+    options.value.push(tagObject);
+    selected.value = tagObject;
+    Livewire.emit('productoSeleccionado', newTag);
+};
+</script>

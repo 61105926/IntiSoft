@@ -6,6 +6,8 @@
     tabindex="-1"
     aria-labelledby="productoModalLabel"
     aria-hidden="true"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
 >
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -21,18 +23,30 @@
                 {{-- Modal Body --}}
                 <div class="modal-body">
                     <div class="row g-3">
-                        {{-- Nombre con Select2 --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Nombre *</label>
-                            <div wire:ignore>
-                                <div id="vue-app"></div>
-                                {{-- Aquí va el componente Vue con Select2 --}}
+                        @if ($isEdit)
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre *</label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ $nombre ?? 'Nombre no disponible' }}"
+                                    disabled
+                                />
                             </div>
-                            @error('productoSeleccionadoId')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-
+                        @else
+                            {{-- Nombre con Select2 (solo si no estás editando) --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre *</label>
+                                <div wire:ignore>
+                                    <div id="vue-app">
+                                        <producto-select></producto-select>
+                                    </div>
+                                </div>
+                                @error('productoSeleccionadoId')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endif
                         {{-- Descripción --}}
                         <div class="col-md-6">
                             <label class="form-label">Descripción</label>
@@ -71,6 +85,7 @@
                             <select
                                 wire:model="sucursal_id_form"
                                 class="form-select @error('sucursal_id_form') is-invalid @enderror"
+                                {{ $isEdit ? 'disabled' : '' }}
                             >
                                 <option value="" @if ($sucursal_id_form != '') disabled @endif>
                                     Seleccionar sucursal
@@ -123,6 +138,7 @@
                                 placeholder="Ej: S, M, L"
                                 class="form-control @error('talla') is-invalid @enderror"
                                 {{ $productosExistentes ? 'disabled' : '' }}
+                                {{ $isEdit ? 'disabled' : '' }}
                             />
                             @error('talla')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -167,6 +183,7 @@
                                 wire:model.defer="stock_actual"
                                 placeholder="0"
                                 class="form-control @error('stock_actual') is-invalid @enderror"
+                                {{ $isEdit ? 'disabled' : '' }}
                             />
                             @error('stock_actual')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -217,7 +234,9 @@
 
                 {{-- Modal Footer --}}
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" wire:click="resetForm()" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
                     <button type="submit" class="btn btn-primary">
                         {{ $isEdit ? 'Actualizar' : 'Guardar' }}
                     </button>

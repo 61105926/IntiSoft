@@ -99,10 +99,38 @@ class ProductoController extends Component
         $this->emit('showModal');
     }
 
-    public function showEditModal($id, $sucursal_id)
+    public function showEditModal($productoId, $sucursalId)
     {
-        $this->emit('showModal');
+        $this->isEdit = true;
+
+        $producto = Producto::findOrFail($productoId);
+        $stockSucursal = StockPorSucursal::where('producto_id', $productoId)
+            ->where('sucursal_id', $sucursalId)
+            ->first();
+        $this->productoSeleccionadoId = $producto->id;
+
+        // Setear datos del producto
+        $this->nombre = $producto->nombre;
+        $this->descripcion = $producto->descripcion;
+        $this->categoria_id_form = $producto->categoria_id;
+        $this->talla = $producto->talla;
+        $this->color = $producto->color;
+        $this->material = $producto->material;
+        $this->disponible_venta_form = $producto->disponible_venta;
+        $this->disponible_alquiler_form = $producto->disponible_alquiler;
+
+        // Setear datos específicos de la sucursal
+        $this->sucursal_id_form = $sucursalId;
+        $this->stock_actual = $stockSucursal->stock_actual ?? 0;
+        $this->stock_minimo = $stockSucursal->stock_minimo ?? 0;
+        $this->precio_venta = $stockSucursal->precio_venta_sucursal ?? 0;
+        $this->precio_alquiler = $stockSucursal->precio_alquiler_sucursal ?? 0;
+
+        $this->productosExistentes = true;
+
+        $this->emit('showModal'); // abrir modal en frontend
     }
+
 
     public function showStockModal($productoId)
     {
@@ -249,10 +277,32 @@ class ProductoController extends Component
         return sprintf('%s-%04d', $base, $contador);
     }
 
-    private function resetForm()
-    {
-        $this->reset(['nombre', 'descripcion', 'talla', 'color', 'material', 'precio_venta', 'precio_alquiler', 'stock_actual', 'stock_minimo', 'categoria_id_form', 'sucursal_id_form', 'disponible_venta_form', 'disponible_alquiler_form', 'editingId', 'isEdit']);
-    }
+public function resetForm()
+{
+    $this->reset([
+        'productoSeleccionadoId',
+        'nombre',
+        'descripcion',
+        'categoria_id_form',
+        'sucursal_id_form',
+        'precio_venta',
+        'precio_alquiler',
+        'stock_actual',
+        'stock_minimo',
+        'talla',
+        'color',
+        'material',
+        'disponible_venta_form',
+        'disponible_alquiler_form',
+        'isEdit',
+    ]);
+
+    // Limpia errores de validación
+    $this->resetValidation();
+    $this->resetErrorBag();
+
+}
+
 
     public function clearFilters()
     {
@@ -299,4 +349,5 @@ class ProductoController extends Component
         $this->productoSeleccionadoId = is_array($valor) ? $valor['id'] ?? null : null;
         $this->resetErrorBag('productoSeleccionadoId');
     }
+
 }
