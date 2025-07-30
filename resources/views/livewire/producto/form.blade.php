@@ -38,7 +38,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Nombre *</label>
                                 <div wire:ignore>
-                                    <div id="vue-app">
+                                    <div id="vue-app" key="vue-{{ uniqid() }}">
                                         <producto-select></producto-select>
                                     </div>
                                 </div>

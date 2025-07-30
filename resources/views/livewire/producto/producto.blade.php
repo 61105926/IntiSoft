@@ -1,26 +1,73 @@
 {{-- resources/views/livewire/producto/producto.blade.php --}}
 <div>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Productos</h2>
+    {{-- Statistics Cards --}}
+    <div class="row row-cols-1 row-cols-md-4 g-4 mb-4 mt-2">
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Total Ítems</p>
+                        <p class="fs-2 fw-bold mb-0">{{ $estadisticas['total_items'] }}</p>
+                    </div>
+                    <i class="fas fa-boxes text-primary fa-2x"></i>
+                </div>
+            </div>
+        </div>
 
-        <div>
-            <button type="button" wire:click="showCreateModal" class="btn btn-primary">
-                <i class="fas fa-plus"></i>
-                Nuevo Producto
-            </button>
-            @include('livewire.producto.form')
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Sin Stock</p>
+                        <p class="fs-2 fw-bold mb-0">{{ $estadisticas['sin_stock'] }}</p>
+                    </div>
+                    <i class="fas fa-times-circle text-danger fa-2x"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Stock Bajo</p>
+                        <p class="fs-2 fw-bold mb-0">{{ $estadisticas['stock_bajo'] }}</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Stock OK</p>
+                        <p class="fs-2 fw-bold mb-0">{{ $estadisticas['stock_ok'] }}</p>
+                    </div>
+                    <i class="fas fa-check-circle text-success fa-2x"></i>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Mensajes flash --}}
+    {{-- Flash Messages --}}
     @if (session()->has('message'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    {{-- Filtros --}}
+    {{-- Nuevo Producto Button --}}
+    <div class="mb-4">
+        <button type="button" wire:click="showCreateModal" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Nuevo Producto
+        </button>
+    </div>
+
+    {{-- Filters --}}
     <div class="card mb-4">
         <div class="card-body">
             <div class="row g-3">
@@ -76,7 +123,7 @@
         </div>
     </div>
 
-    {{-- Tabla de productos --}}
+    {{-- Product Table --}}
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
@@ -99,8 +146,6 @@
                                 <td>{{ $prod->codigo }}</td>
                                 <td>{{ $prod->nombre }}</td>
                                 <td>{{ $prod->categoria->nombre ?? 'Sin categoría' }}</td>
-
-                                {{-- Mostrar nombre de sucursal desde stock_por_sucursals --}}
                                 <td>
                                     @php
                                         $sucursal = $sucursales->firstWhere('id', $prod->sucursal_id);
@@ -154,12 +199,11 @@
         </div>
     </div>
 
-    {{-- Modal Formulario Nuevo/Editar --}}
+    {{-- Modal Includes --}}
     @include('livewire.producto.form')
-    =
-    {{-- Modal Detalle --}}
     @include('livewire.producto.detail')
 
+    {{-- JavaScript for Modals --}}
     <script>
         document.addEventListener('livewire:load', () => {
             Livewire.on('showModal', () => new bootstrap.Modal('#productoModal').show());
