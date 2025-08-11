@@ -734,10 +734,10 @@ body.dark .ql-toolbar.ql-snow .ql-picker-options {
   box-shadow: rgba(0, 0, 0, 0.2) 0 2px 8px;
 }
 body.dark .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label {
-  border-color: #0e1726;
+  border-color: #121212;
 }
 body.dark .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options {
-  border-color: #0e1726;
+  border-color: #121212;
   border-color: #191e3a;
   border-radius: 6px;
 }

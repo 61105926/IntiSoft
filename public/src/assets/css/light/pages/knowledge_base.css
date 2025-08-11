@@ -20,7 +20,7 @@
 .fq-header-wrapper h1 {
   font-size: 46px;
   font-weight: 700;
-  color: #0e1726;
+  color: #121212;
   margin-bottom: 8px;
 }
 .fq-header-wrapper p {
@@ -67,7 +67,7 @@
   font-size: 29px;
   font-weight: 700;
   margin-bottom: 40px;
-  color: #0e1726;
+  color: #121212;
 }
 .faq .faq-layouting .fq-tab-section .accordion .card {
   border: none;
@@ -148,7 +148,7 @@
   font-size: 29px;
   font-weight: 700;
   margin-bottom: 40px;
-  color: #0e1726;
+  color: #121212;
 }
 
 /*
@@ -163,7 +163,7 @@
 #miniFooterWrapper {
   color: #fff;
   font-size: 14px;
-  border-top: solid 1px #0e1726;
+  border-top: solid 1px #121212;
   padding: 14px;
   -webkit-box-shadow: 0 -6px 10px 0 rgba(0, 0, 0, 0.14), 0 -1px 18px 0 rgba(0, 0, 0, 0.12), 0 -3px 5px -1px rgba(0, 0, 0, 0.2);
   box-shadow: 0 -6px 10px 0 rgba(0, 0, 0, 0.14), 0 -1px 18px 0 rgba(0, 0, 0, 0.12), 0 -3px 5px -1px rgba(0, 0, 0, 0.2);
@@ -172,7 +172,7 @@
   color: #888ea8;
 }
 #miniFooterWrapper .arrow {
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 50%;
   position: absolute;
   z-index: 2;

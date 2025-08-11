@@ -638,7 +638,7 @@
 <!-- Mantener los scripts existentes -->
 
 @push('scripts')
-<script src="{{ asset('plugins/apex/apexcharts.min.js') }}"></script>
+{{-- <script src="{{ asset('plugins/apex/apexcharts.min.js') }}"></script> --}}
 
 <script>
     document.addEventListener('livewire:load', function() {

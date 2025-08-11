@@ -23,7 +23,7 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/fontawesome.min.css" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/all.min.css" />
-    <link href="{{ asset('plugins/apex/apexcharts.css') }}" rel="stylesheet" type="text/css">
+    {{-- <link href="{{ asset('plugins/apex/apexcharts.css') }}" rel="stylesheet" type="text/css"> --}}
 
 </head>
 
@@ -68,7 +68,7 @@
     <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
 
     <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
-    <script src="{{ asset('plugins/apex/apexcharts.min.js') }}"></script>
+    {{-- <script src="{{ asset('plugins/apex/apexcharts.min.js') }}"></script> --}}
     @stack('scripts')
 </body>
 

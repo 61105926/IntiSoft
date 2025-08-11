@@ -124,10 +124,10 @@
   color: #191e3a !important;
 }
 .tab-title .nav-pills a.nav-link.active:hover {
-  color: #0e1726;
+  color: #121212;
 }
 .tab-title .nav-pills a.nav-link.active:hover svg {
-  color: #0e1726;
+  color: #121212;
 }
 .tab-title .nav-pills a.nav-link:hover svg {
   fill: none;

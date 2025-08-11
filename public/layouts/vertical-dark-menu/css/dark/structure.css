@@ -154,7 +154,7 @@ body.dark .layout-px-spacing {
   min-height: calc(100vh - 112px) !important;
 }
 body.dark .widget.box .widget-header {
-  background: #0e1726;
+  background: #121212;
   padding: 0px 8px 0px;
   border-top-right-radius: 8px;
   border-top-left-radius: 8px;
@@ -203,7 +203,7 @@ body.dark .widget .widget-header:after {
 body.dark .widget-content-area {
   padding: 20px;
   position: relative;
-  background-color: #0e1726;
+  background-color: #121212;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   border: none;
@@ -282,7 +282,7 @@ body.dark .navbar-expand-sm .navbar-item .nav-link {
 body.dark .navbar .toggle-sidebar, body.dark .navbar .sidebarCollapse {
   display: inline-block;
   position: relative;
-  color: #0e1726;
+  color: #121212;
 }
 body.dark .navbar .navbar-item .nav-item.theme-toggle-item .nav-link {
   padding: 4.24px 0;
@@ -504,7 +504,7 @@ body.dark .navbar .form-inline.search {
 }
 body.dark .navbar .form-inline.search .search-form-control {
   font-size: 14px;
-  background-color: #0e1726;
+  background-color: #121212;
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px;
@@ -633,7 +633,7 @@ body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .d
 }
 body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .dropdown-item:hover a {
   color: #61b6cd;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .dropdown-item.active, body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .dropdown-item:active {
   background-color: transparent;
@@ -746,7 +746,7 @@ body.dark .sidebar-wrapper {
   user-select: none;
   -webkit-user-drag: none;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  border-right: 1px solid #0e1726;
+  border-right: 1px solid #121212;
   top: 107px;
 }
 body.dark .shadow-bottom {
@@ -1038,7 +1038,7 @@ body.dark #sidebar ul.menu-categories li.menu > .dropdown-toggle[aria-expanded=f
   transition: 0.5s;
 }
 body.dark #sidebar ul.menu-categories li.menu > .dropdown-toggle[aria-expanded=true] {
-  background: #0e1726;
+  background: #121212;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   border-radius: 6px;
   color: #fafafa;

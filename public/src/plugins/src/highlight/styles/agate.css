@@ -10,7 +10,7 @@
  * #fc9b9b
  * #ffa
  * #fff
- * #0e1726
+ * #121212
  * #62c8f3
  * #888
  *
@@ -20,7 +20,7 @@
   display: block;
   overflow-x: auto;
   padding: 0.5em;
-  background: #0e1726;
+  background: #121212;
   color: white;
 }
 
@@ -89,12 +89,12 @@
 
 .hljs-deletion {
   background-color: #fc9b9b;
-  color: #0e1726;
+  color: #121212;
 }
 
 .hljs-addition {
   background-color: #a2fca2;
-  color: #0e1726;
+  color: #121212;
 }
 
 .hljs a {

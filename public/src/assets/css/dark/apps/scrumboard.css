@@ -93,12 +93,12 @@ body.dark .task-list-container:last-child {
 */
 body.dark .connect-sorting {
   padding: 15px;
-  background: #0e1726;
+  background: #121212;
   border-radius: 8px;
   -webkit-box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
   -moz-box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
   box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .connect-sorting .task-container-header {
   display: flex;
@@ -297,7 +297,7 @@ body.dark .scrumboard .card.task-text-progress .card-body .task-content .progres
   margin-right: 17px;
   margin-bottom: 0;
   align-self: center;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .scrumboard .card.task-text-progress .card-body .task-content .progress .progress-bar {
   background-color: #009688 !important;

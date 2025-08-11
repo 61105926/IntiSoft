@@ -16,9 +16,9 @@
 <!-- END GLOBAL MANDATORY STYLES -->
 
 <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM STYLES -->
-<link href="../src/plugins/src/apex/apexcharts.css"
+{{-- <link href="../src/plugins/src/apex/apexcharts.css"
     rel="stylesheet"
-    type="text/css">
+    type="text/css"> --}}
 <link href="../src/assets/css/light/components/list-group.css"
     rel="stylesheet"
     type="text/css">
@@ -40,25 +40,25 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/css/all.min.css" />
 {{-- end --}}
 <!-- BEGIN THEME GLOBAL STYLES -->
-<link href="../src/plugins/src/flatpickr/flatpickr.css"
+{{-- <link href="../src/plugins/src/flatpickr/flatpickr.css"
     rel="stylesheet"
-    type="text/css">
+    type="text/css"> --}}
 <link href="../src/plugins/src/noUiSlider/nouislider.min.css"
     rel="stylesheet"
     type="text/css">
 <!-- END THEME GLOBAL STYLES -->
 
 <!--  BEGIN CUSTOM STYLE FILE  -->
-<link href="../src/plugins/css/light/flatpickr/custom-flatpickr.css"
+{{-- <link href="../src/plugins/css/light/flatpickr/custom-flatpickr.css"
     rel="stylesheet"
-    type="text/css">
+    type="text/css"> --}}
 
-<link href="../src/assets/css/dark/scrollspyNav.css"
+{{-- <link href="../src/assets/css/dark/scrollspyNav.css"
     rel="stylesheet"
-    type="text/css" />
-<link href="../src/plugins/css/dark/flatpickr/custom-flatpickr.css"
+    type="text/css" /> --}}
+{{-- <link href="../src/plugins/css/dark/flatpickr/custom-flatpickr.css"
     rel="stylesheet"
-    type="text/css">
+    type="text/css"> --}}
 <!--  END CUSTOM STYLE FILE  -->
 <link href="../src/assets/css/light/elements/custom-pagination.css"
     rel="stylesheet"
@@ -74,38 +74,38 @@
     rel="stylesheet"
     type="text/css" />
 
-<link rel="stylesheet"
+{{-- <link rel="stylesheet"
     type="text/css"
-    href="../src/plugins/src/stepper/bsStepper.min.css">
+    href="../src/plugins/src/stepper/bsStepper.min.css"> --}}
 
-<link rel="stylesheet"
+{{-- <link rel="stylesheet"
     type="text/css"
-    href="../src/assets/css/light/scrollspyNav.css" />
-<link rel="stylesheet"
+    href="../src/assets/css/light/scrollspyNav.css" /> --}}
+{{-- <link rel="stylesheet"
     type="text/css"
-    href="../src/plugins/css/light/stepper/custom-bsStepper.css">
+    href="../src/plugins/css/light/stepper/custom-bsStepper.css"> --}}
 
-<link rel="stylesheet"
+{{-- <link rel="stylesheet"
     type="text/css"
-    href="../src/assets/css/dark/scrollspyNav.css" />
-<link rel="stylesheet"
+    href="../src/assets/css/dark/scrollspyNav.css" /> --}}
+{{-- <link rel="stylesheet"
     type="text/css"
-    href="../src/plugins/css/dark/stepper/custom-bsStepper.css">
+    href="../src/plugins/css/dark/stepper/custom-bsStepper.css"> --}}
 
-<link href="../src/plugins/src/fullcalendar/fullcalendar.min.css"
+{{-- <link href="../src/plugins/src/fullcalendar/fullcalendar.min.css"
     rel="stylesheet"
     type="text/css" />
 
 <link href="../src/plugins/css/light/fullcalendar/custom-fullcalendar.css"
     rel="stylesheet"
-    type="text/css" />
+    type="text/css" /> --}}
 <link href="../src/assets/css/light/components/modal.css"
     rel="stylesheet"
     type="text/css">
 
-<link href="../src/plugins/css/dark/fullcalendar/custom-fullcalendar.css"
+{{-- <link href="../src/plugins/css/dark/fullcalendar/custom-fullcalendar.css"
     rel="stylesheet"
-    type="text/css" />
+    type="text/css" /> --}}
 <link href="../src/assets/css/dark/components/modal.css"
     rel="stylesheet"
     type="text/css">
@@ -125,9 +125,9 @@
 <link href="../src/plugins/css/light/filepond/custom-filepond.css"
     rel="stylesheet"
     type="text/css" />
-<link href="../src/plugins/css/light/flatpickr/custom-flatpickr.css"
+{{-- <link href="../src/plugins/css/light/flatpickr/custom-flatpickr.css"
     rel="stylesheet"
-    type="text/css">
+    type="text/css"> --}}
 <link href="../src/assets/css/light/apps/invoice-edit.css"
     rel="stylesheet"
     type="text/css" />
@@ -135,9 +135,9 @@
 <link href="../src/plugins/css/dark/filepond/custom-filepond.css"
     rel="stylesheet"
     type="text/css" />
-<link href="../src/plugins/css/dark/flatpickr/custom-flatpickr.css"
+{{-- <link href="../src/plugins/css/dark/flatpickr/custom-flatpickr.css"
     rel="stylesheet"
-    type="text/css">
+    type="text/css"> --}}
 <link href="../src/assets/css/dark/apps/invoice-edit.css"
     rel="stylesheet"
     type="text/css" />
@@ -147,12 +147,12 @@
 {{-- tom select  --}}
 
    <!--  BEGIN CUSTOM STYLE FILE  -->
-   <link href="../src/assets/css/light/scrollspyNav.css" rel="stylesheet" type="text/css" />
-   <link href="../src/assets/css/dark/scrollspyNav.css" rel="stylesheet" type="text/css" />
+   {{-- <link href="../src/assets/css/light/scrollspyNav.css" rel="stylesheet" type="text/css" />
+   <link href="../src/assets/css/dark/scrollspyNav.css" rel="stylesheet" type="text/css" /> --}}
 
-   <link rel="stylesheet" type="text/css" href="../src/plugins/src/tomSelect/tom-select.default.min.css">
+   {{-- <link rel="stylesheet" type="text/css" href="../src/plugins/src/tomSelect/tom-select.default.min.css">
    <link rel="stylesheet" type="text/css" href="../src/plugins/css/light/tomSelect/custom-tomSelect.css">
-   <link rel="stylesheet" type="text/css" href="../src/plugins/css/dark/tomSelect/custom-tomSelect.css">
+   <link rel="stylesheet" type="text/css" href="../src/plugins/css/dark/tomSelect/custom-tomSelect.css"> --}}
    
    <!--  END CUSTOM STYLE FILE  -->
 @livewireStyles

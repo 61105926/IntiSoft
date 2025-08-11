@@ -25,7 +25,7 @@ body.dark .selectable-dropdown a.dropdown-toggle {
   display: inline-block;
   cursor: pointer;
   width: 100%;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .selectable-dropdown a.dropdown-toggle img {
   width: 19px;
@@ -79,10 +79,10 @@ body.dark .invoice-detail-body {
   padding: 0;
   padding-top: 32px;
   padding-bottom: 32px;
-  background-color: #0e1726;
+  background-color: #121212;
   box-shadow: 0 0 40px 0 rgba(94, 92, 154, 0.06);
   border-radius: 8px;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 
 /*
@@ -207,7 +207,7 @@ body.dark .invoice-detail-terms label {
 
 /* Detail Items */
 body.dark .invoice-detail-items {
-  background: #0e1726;
+  background: #121212;
   padding: 30px;
   padding: 30px 48px;
 }
@@ -217,14 +217,14 @@ body.dark .invoice-detail-items thead th {
   border-top: 1px solid #191e3a !important;
   border-bottom: 1px solid #191e3a !important;
   color: #888ea8 !important;
-  background: #0e1726 !important;
+  background: #121212 !important;
   border-radius: 0 !important;
 }
 body.dark .invoice-detail-items tbody td {
   border: none;
   padding: 14px 7px;
   vertical-align: top !important;
-  background: #0e1726 !important;
+  background: #121212 !important;
 }
 
 /* Detail Items -> table thead */
@@ -358,9 +358,9 @@ body.dark .invoice-actions {
   padding: 0;
   padding-top: 32px;
   padding-bottom: 32px;
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 8px;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .invoice-actions label {
   font-size: 13px;
@@ -480,8 +480,8 @@ body.dark .invoice-actions-btn {
   padding-top: 32px;
   padding-bottom: 32px;
   margin-top: 25px;
-  background-color: #0e1726;
-  border: 1px solid #0e1726;
+  background-color: #121212;
+  border: 1px solid #121212;
   border-radius: 8px;
 }
 body.dark .invoice-actions-btn label {

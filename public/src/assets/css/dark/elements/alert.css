@@ -99,7 +99,7 @@ body.dark .alert-outline-dark {
   border-radius: 5px;
 }
 body.dark .alert.alert-light .close {
-  color: #0e1726;
+  color: #121212;
 }
 body.dark .alert.solid-alert-3 .close, body.dark .alert.solid-alert-4 .close {
   color: #000;

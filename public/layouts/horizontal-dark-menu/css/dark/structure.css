@@ -165,7 +165,7 @@ body.dark .layout-px-spacing {
   min-height: calc(100vh - 112px) !important;
 }
 body.dark .widget.box .widget-header {
-  background: #0e1726;
+  background: #121212;
   padding: 0px 8px 0px;
   border-top-right-radius: 8px;
   border-top-left-radius: 8px;
@@ -214,7 +214,7 @@ body.dark .widget .widget-header:after {
 body.dark .widget-content-area {
   padding: 20px;
   position: relative;
-  background-color: #0e1726;
+  background-color: #121212;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   border: none;

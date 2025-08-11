@@ -78,7 +78,7 @@ table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, 
   top: 1.3rem;
 }
 table.dataTable thead .sorting_asc:before, table.dataTable thead .sorting_desc:after {
-  color: #0e1726;
+  color: #121212;
 }
 table.dataTable > thead > tr, table.dataTable > tfoot > tr {
   border: none;

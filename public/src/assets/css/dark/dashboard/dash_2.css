@@ -16,7 +16,7 @@ body.dark .widget {
   padding: 20px;
   border-radius: 6px;
   border: none;
-  background: #0e1726;
+  background: #121212;
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
@@ -63,7 +63,7 @@ body.dark .apexcharts-tooltip.apexcharts-theme-dark .apexcharts-tooltip-title {
 */
 body.dark .widget-two {
   position: relative;
-  background: #0e1726;
+  background: #121212;
   padding: 0;
   border-radius: 6px;
   height: 100%;
@@ -100,7 +100,7 @@ body.dark .widget-two .w-numeric-value .w-icon {
 }
 body.dark .widget-two .w-numeric-value svg {
   display: block;
-  color: #0e1726;
+  color: #121212;
   width: 20px;
   height: 20px;
 }
@@ -148,7 +148,7 @@ body.dark .widget-one {
   padding: 0;
   border-radius: 6px;
   border: none;
-  background-color: #0e1726;
+  background-color: #121212;
 }
 body.dark .widget-one .widget-content {
   font-size: 17px;
@@ -216,7 +216,7 @@ body.dark .widget-one .apexcharts-canvas svg {
 */
 body.dark .widget-three {
   position: relative;
-  background: #0e1726;
+  background: #121212;
   padding: 20px;
   border-radius: 8px;
   height: 100%;

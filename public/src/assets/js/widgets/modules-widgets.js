@@ -1637,7 +1637,7 @@ window.addEventListener("load", function(){
             stroke: {
               show: true,
               width: 15,
-              colors: '#0e1726'
+              colors: '#121212'
             },
             series: [985, 737, 270],
             labels: ['Apparel', 'Sports', 'Others'],
@@ -1886,7 +1886,7 @@ window.addEventListener("load", function(){
             floating: false,
             style: {
               fontSize: '18px',
-              color:  '#0e1726'
+              color:  '#121212'
             },
           },
           stroke: {
@@ -2058,7 +2058,7 @@ window.addEventListener("load", function(){
                       show: true,
                       fontSize: '26px',
                       fontFamily: 'Nunito, sans-serif',
-                      color: '#0e1726',
+                      color: '#121212',
                       offsetY: 16,
                       formatter: function (val) {
                         return val
@@ -2230,7 +2230,7 @@ window.addEventListener("load", function(){
   
         chart.updateOptions({
           stroke: {
-            colors: '#0e1726'
+            colors: '#121212'
           },
           plotOptions: {
             pie: {
@@ -2283,7 +2283,7 @@ window.addEventListener("load", function(){
           },
           title: {
             style: {
-              color:  '#0e1726'
+              color:  '#121212'
             }
           },
           grid: {
@@ -2307,7 +2307,7 @@ window.addEventListener("load", function(){
               donut: {
                 labels: {
                   value: {
-                    color: '#0e1726'
+                    color: '#121212'
                   }
                 }
               }

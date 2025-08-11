@@ -168,7 +168,7 @@ body.dark .pricing-table-2 .billing-cycle-radios span {
   color: #bfc9d4;
 }
 body.dark .pricing-table-2 .billing-cycle-radios .badge {
-  color: #0e1726;
+  color: #121212;
   font-weight: 900;
   font-size: 13px;
   margin-left: 5px;
@@ -216,7 +216,7 @@ body.dark .pricing-table-2 .pricing-plan .pricing-header-section {
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
-  border-bottom: 1px solid #0e1726;
+  border-bottom: 1px solid #121212;
   padding-bottom: 20px;
 }
 body.dark .pricing-table-2 .pricing-plan .pricing-header-section .pricing-header {
@@ -241,7 +241,7 @@ body.dark .pricing-table-2 .pricing-plan-features ul li {
 }
 body.dark .pricing-table-2 .pricing-plan-features ul li span {
   display: inline-flex;
-  background: #0e1726;
+  background: #121212;
   text-align: center;
   padding: 3px;
   border-radius: 50%;
@@ -254,7 +254,7 @@ body.dark .pricing-table-2 .pricing-plan-features ul li span svg {
 }
 body.dark .pricing-table-2 .pricing-plan .pricing-header-section .pricing-header-pricing {
   padding: 7px 13px;
-  background: #0e1726;
+  background: #121212;
   border-radius: 10px;
   border: 1px solid #2196f3;
   text-align: center;
@@ -281,7 +281,7 @@ body.dark .pricing-table-2 .pricing-plan .pricing-header-section .pricing-header
   letter-spacing: 1px;
 }
 body.dark .pricing-table-2 .pricing-plan .btn-dark.button {
-  background: #0e1726;
+  background: #121212;
   border: none;
   width: 100%;
   padding: 12px;

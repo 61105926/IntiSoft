@@ -10,10 +10,10 @@
 */
 body.dark .calendar-container {
   padding: 30px 30px;
-  background-color: #0e1726;
+  background-color: #121212;
   box-shadow: 0 0 40px 0 rgba(94, 92, 154, 0.06);
   border-radius: 8px;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .fc .fc-button-primary {
   background-color: #1b2e4b;
@@ -36,7 +36,7 @@ body.dark .fc .fc-button-primary:focus, body.dark .fc .fc-button-primary:active:
   box-shadow: none !important;
 }
 body.dark .fc .fc-list-sticky .fc-list-day > * {
-  background-color: #0e1726;
+  background-color: #121212;
 }
 body.dark .fc .fc-daygrid-body {
   width: 100% !important;
@@ -48,7 +48,7 @@ body.dark .fc .fc-scrollgrid-section-body table {
   width: 100% !important;
 }
 body.dark .fc-theme-standard .fc-list-day-cushion {
-  background-color: #0e1726;
+  background-color: #121212;
 }
 body.dark .fc-theme-standard .fc-list {
   border: 1px solid #3b3f5c;

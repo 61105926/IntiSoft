@@ -648,7 +648,7 @@
 }
 .timeline-item-icon.faded-icon {
   background-color: white;
-  color: #0e1726;
+  color: #121212;
 }
 .timeline-item-icon.filled-icon {
   background-color: #650abb;
@@ -713,7 +713,7 @@
   width: 24px;
   height: 24px;
   fill: #e2a03f;
-  color: #0e1726;
+  color: #121212;
 }
 
 .show-replies {

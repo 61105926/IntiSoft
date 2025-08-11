@@ -306,7 +306,7 @@ code {
 .navbar .toggle-sidebar, .navbar .sidebarCollapse {
   display: inline-block;
   position: relative;
-  color: #0e1726;
+  color: #121212;
 }
 .navbar .navbar-item .nav-item.theme-toggle-item .nav-link {
   padding: 4.24px 0;
@@ -403,7 +403,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   display: none;
 }
 .navbar .navbar-item .nav-item.dropdown.notification-dropdown .nav-link svg {
-  color: #0e1726;
+  color: #121212;
   stroke-width: 1.5;
 }
 .navbar .navbar-item .nav-item.dropdown.notification-dropdown .nav-link span.badge {
@@ -443,7 +443,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   font-size: 14px;
   letter-spacing: 1px;
   font-weight: 200;
-  color: #0e1726;
+  color: #121212;
 }
 .navbar .navbar-item .nav-item.dropdown.notification-dropdown .dropdown-menu .dropdown-item {
   padding: 0.625rem 1rem;
@@ -563,7 +563,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   cursor: pointer;
   position: initial;
   left: 1453px;
-  color: #0e1726;
+  color: #121212;
   stroke-width: 1.5;
   margin-right: 5px;
   margin-top: -3px;
@@ -1137,7 +1137,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
 #sidebar ul.menu-categories li.menu ul.submenu > li.active a:hover:before {
   background: #fff !important;
   box-shadow: 0 0 0px 2px rgba(255, 255, 255, 0.43);
-  border: 1.9px solid #0e1726;
+  border: 1.9px solid #121212;
 }
 #sidebar ul.menu-categories ul.submenu > li {
   margin-top: 3px;

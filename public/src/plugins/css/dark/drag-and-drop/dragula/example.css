@@ -310,7 +310,7 @@ body.dark .parent.ex-5 .dragula > div, body.dark .parent.ex-5 .dragula > .gu-tra
 body.dark .parent.ex-5 .handle {
   padding: 0 9px;
   margin-right: 5px;
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 2px;
   color: #fff;
   cursor: move;
@@ -318,7 +318,7 @@ body.dark .parent.ex-5 .handle {
 body.dark body.gu-unselectable .handle {
   padding: 0 9px;
   margin-right: 5px;
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 2px;
   color: #fff;
   cursor: move;

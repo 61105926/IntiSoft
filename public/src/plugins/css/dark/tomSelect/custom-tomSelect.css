@@ -16,7 +16,7 @@ body.dark .ts-wrapper .ts-dropdown {
   color: #e0e6ed;
 }
 body.dark .ts-wrapper .ts-dropdown .active {
-  background-color: #0e1726;
+  background-color: #121212;
   color: #fff;
 }
 body.dark .ts-wrapper .ts-dropdown .active.create {

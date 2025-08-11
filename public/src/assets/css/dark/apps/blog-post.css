@@ -9,9 +9,9 @@
 	===============================
 */
 body.dark .single-post-content {
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 20px;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
   padding: 32px;
 }
 body.dark .featured-image {

@@ -15,11 +15,11 @@ body.dark .mail-box-container {
   position: relative;
   display: flex;
   border-radius: 8px;
-  background: #0e1726;
+  background: #121212;
   -webkit-box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
   -moz-box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
   box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .mail-overlay {
   display: none;
@@ -45,7 +45,7 @@ body.dark .tab-title .row {
   --bs-gutter-x:1.8rem;
 }
 body.dark .tab-title svg.feather-clipboard {
-  color: #0e1726;
+  color: #121212;
   fill: #009688;
   margin-bottom: 13px;
 }
@@ -123,10 +123,10 @@ body.dark .tab-title .nav-pills .nav-link.active .badge {
   color: #191e3a !important;
 }
 body.dark .tab-title .nav-pills a.nav-link.active:hover {
-  color: #0e1726;
+  color: #121212;
 }
 body.dark .tab-title .nav-pills a.nav-link.active:hover svg {
-  color: #0e1726;
+  color: #121212;
 }
 body.dark .tab-title .nav-pills a.nav-link:hover svg {
   fill: rgba(136, 142, 168, 0.2588235294);
@@ -448,7 +448,7 @@ body.dark .compose-box .compose-content form #editor-container h1, body.dark .co
     z-index: 4;
     left: -100px;
     width: 0;
-    background: #0e1726;
+    background: #121212;
   }
   body.dark .todo-inbox {
     -ms-flex: 0 0 100%;

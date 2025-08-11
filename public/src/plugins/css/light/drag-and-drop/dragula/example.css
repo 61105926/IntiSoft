@@ -359,14 +359,14 @@ body.gu-unselectable div.media.el-drag-ex-3.gu-mirror {
   margin-right: 5px;
   background-color: #e0e6ed;
   border-radius: 2px;
-  color: #0e1726;
+  color: #121212;
   cursor: move;
 }
 
 body.gu-unselectable .handle {
   padding: 0 9px;
   margin-right: 5px;
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 2px;
   color: #fff;
   cursor: move;

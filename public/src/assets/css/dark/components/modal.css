@@ -17,7 +17,7 @@ body.dark .modal-backdrop.show {
 body.dark .modal-content {
   border: none;
   border-radius: 6px;
-  background: #0e1726;
+  background: #121212;
   border: 1px solid #191e3a;
 }
 body.dark .modal-content hr {
@@ -104,7 +104,7 @@ body.dark .nav-tabs svg {
 body.dark .nav-tabs .nav-link.active {
   color: #e95f2b;
   background-color: #191e3a;
-  border-color: #191e3a #191e3a #0e1726;
+  border-color: #191e3a #191e3a #121212;
 }
 body.dark .nav-tabs .nav-link.active:after {
   color: #e95f2b;

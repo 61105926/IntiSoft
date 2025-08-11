@@ -77,7 +77,7 @@
   height: 100%;
 }
 .tab-title hr {
-  border-top: 1px solid #0e1726;
+  border-top: 1px solid #121212;
   max-width: 54px;
   margin: 0 auto;
   margin-top: 25px;
@@ -233,7 +233,7 @@
 .note-container.note-grid .note-item .note-inner-content .note-title {
   font-size: 16px;
   font-weight: 500;
-  color: #0e1726;
+  color: #121212;
   margin-bottom: 0px;
   letter-spacing: 0px;
 }

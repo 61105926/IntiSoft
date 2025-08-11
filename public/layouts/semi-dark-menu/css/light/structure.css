@@ -306,7 +306,7 @@ code {
 .navbar .toggle-sidebar, .navbar .sidebarCollapse {
   display: inline-block;
   position: relative;
-  color: #0e1726;
+  color: #121212;
 }
 .navbar .navbar-item .nav-item.theme-toggle-item .nav-link {
   padding: 4.24px 0;
@@ -403,7 +403,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   display: none;
 }
 .navbar .navbar-item .nav-item.dropdown.notification-dropdown .nav-link svg {
-  color: #0e1726;
+  color: #121212;
   stroke-width: 1.5;
 }
 .navbar .navbar-item .nav-item.dropdown.notification-dropdown .nav-link span.badge {
@@ -443,7 +443,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   font-size: 14px;
   letter-spacing: 1px;
   font-weight: 200;
-  color: #0e1726;
+  color: #121212;
 }
 .navbar .navbar-item .nav-item.dropdown.notification-dropdown .dropdown-menu .dropdown-item {
   padding: 0.625rem 1rem;
@@ -563,7 +563,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   cursor: pointer;
   position: initial;
   left: 1453px;
-  color: #0e1726;
+  color: #121212;
   stroke-width: 1.5;
   margin-right: 5px;
   margin-top: -3px;
@@ -773,12 +773,12 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   left: 6px;
   -webkit-filter: blur(5px);
   filter: blur(7px);
-  background: -webkit-linear-gradient(#0e1726 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
-  background: linear-gradient(#0e1726 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
+  background: -webkit-linear-gradient(#121212 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
+  background: linear-gradient(#121212 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
 }
 
 .sidebar-theme {
-  background: #0e1726;
+  background: #121212;
 }
 
 .sidebar-closed > .sidebar-wrapper {
@@ -805,9 +805,9 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
 }
 
 #sidebar .theme-brand {
-  background-color: #0e1726;
+  background-color: #121212;
   padding: 10px 12px 6px 21px;
-  border-bottom: 1px solid #0e1726;
+  border-bottom: 1px solid #121212;
   border-radius: 8px 6px 0 0;
   justify-content: space-between;
 }
@@ -892,7 +892,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
 
 #sidebar .theme-brand div.theme-text a {
   font-size: 30px !important;
-  color: #c8c91e !important;
+  color: #ffffff !important;
   line-height: 2.75rem;
   padding: 0.39rem 0.8rem;
   text-transform: initial;
@@ -956,7 +956,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
-  color: #c8c91e;
+  color: #ffffff;
   padding: 32px 0 10px 36px;
   letter-spacing: 1px;
 }
@@ -1125,7 +1125,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
 #sidebar ul.menu-categories li.menu ul.submenu > li a:hover:before {
   background: #fff !important;
   box-shadow: 0 0 0px 2px rgba(255, 255, 255, 0.431);
-  border: 1.9px solid #0e1726;
+  border: 1.9px solid #121212;
 }
 #sidebar ul.menu-categories li.menu ul.submenu > li.active a {
   color: #fff;

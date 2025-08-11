@@ -89,7 +89,7 @@ body.dark .mark, body.dark mark {
   background-color: #bfc9d4;
 }
 body.dark .modal-content {
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .code-section-container {
   margin-top: 20px;
@@ -600,7 +600,7 @@ body.dark .form-check .form-check-input {
 @supports (-webkit-overflow-scrolling: touch) {
   /* CSS specific to iOS devices */
   body.dark .form-control {
-    color: #0e1726;
+    color: #121212;
   }
 }
 /*      Custom Select       */
@@ -774,7 +774,7 @@ body.dark .input-group .dropdown-divider {
   height: 0;
   margin: 0.5rem 0;
   overflow: hidden;
-  border-top: 1px solid #0e1726;
+  border-top: 1px solid #121212;
 }
 body.dark .input-group .input-group-text {
   border: 1px solid #1b2e4b;
@@ -915,7 +915,7 @@ body.dark .btn.disabled:hover, body.dark .btn.btn[disabled]:hover {
   cursor: not-allowed;
 }
 body.dark .btn .caret {
-  border-top-color: #0e1726;
+  border-top-color: #121212;
   margin-top: 0;
   margin-left: 3px;
   vertical-align: middle;
@@ -975,7 +975,7 @@ body.dark .btn-group .dropdown-menu a.dropdown-item {
   font-size: 13px;
 }
 body.dark .dropdown-divider {
-  border-top: 1px solid #0e1726;
+  border-top: 1px solid #121212;
 }
 body.dark .btn-group .dropdown-menu a.dropdown-item:hover {
   color: #2196f3;
@@ -1325,12 +1325,12 @@ body.dark .btn-warning:active, body.dark .btn-warning.active {
   border-top: 1px solid #e2a03f;
 }
 body.dark .btn-warning:not(:disabled):not(.disabled).active, body.dark .btn-warning:not(:disabled):not(.disabled):active {
-  color: #0e1726;
+  color: #121212;
   background-color: #e2a03f;
   border-color: #e2a03f;
 }
 body.dark .show > .btn-warning.dropdown-toggle {
-  color: #0e1726;
+  color: #121212;
   background-color: #e2a03f;
   border-color: #e2a03f;
 }
@@ -1591,13 +1591,13 @@ body.dark .btn-group.open .btn-success.dropdown-toggle {
   background-color: #499249;
 }
 body.dark .btn-dismiss {
-  color: #0e1726;
+  color: #121212;
   background-color: #fff !important;
   border-color: #fff;
   padding: 3px 7px;
 }
 body.dark .btn-dismiss:hover, body.dark .btn-dismiss:focus {
-  color: #0e1726;
+  color: #121212;
   background-color: #fff;
 }
 body.dark .btn-dismiss:active, body.dark .btn-dismiss.active {
@@ -1703,7 +1703,7 @@ body.dark .btn .badge.badge-align-right {
   right: 8px;
 }
 body.dark .dropup .btn .caret {
-  border-bottom-color: #0e1726;
+  border-bottom-color: #121212;
 }
 body.dark .btn-outline-primary:not(:disabled):not(.disabled).active, body.dark .btn-outline-primary:not(:disabled):not(.disabled):active {
   background-color: #650abb;

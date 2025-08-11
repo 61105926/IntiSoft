@@ -304,7 +304,7 @@ span.red {
   padding: 24px 20px;
 }
 .card .card-title {
-  color: #0e1726;
+  color: #121212;
   line-height: 1.5;
 }
 .card .card-text {
@@ -526,7 +526,7 @@ input[type=search]::-ms-reveal {
 /*      Form Group Label       */
 .form-group label, label {
   font-size: 15px;
-  color: #0e1726;
+  color: #121212;
   letter-spacing: 1px;
   display: inline-block;
   margin-bottom: 0.5rem;
@@ -578,7 +578,7 @@ input[type=search]::-ms-reveal {
 @supports (-webkit-overflow-scrolling: touch) {
   /* CSS specific to iOS devices */
   .form-control {
-    color: #0e1726;
+    color: #121212;
   }
 }
 .form-control[type=range] {
@@ -803,7 +803,7 @@ select.form-control.form-custom {
   padding: 6px 17px;
   clear: both;
   font-weight: 500;
-  color: #0e1726;
+  color: #121212;
   text-align: inherit;
   white-space: nowrap;
   background-color: transparent;
@@ -970,7 +970,7 @@ select.form-control.form-custom {
   cursor: not-allowed;
 }
 .btn .caret {
-  border-top-color: #0e1726;
+  border-top-color: #121212;
   margin-top: 0;
   margin-left: 3px;
   vertical-align: middle;
@@ -1029,7 +1029,7 @@ select.form-control.form-custom {
   padding: 6px 17px;
   clear: both;
   font-weight: 500;
-  color: #0e1726;
+  color: #121212;
   text-align: inherit;
   white-space: nowrap;
   background-color: transparent;
@@ -1092,7 +1092,7 @@ select.form-control.form-custom {
   padding: 6px 17px;
   clear: both;
   font-weight: 500;
-  color: #0e1726;
+  color: #121212;
   text-align: inherit;
   white-space: nowrap;
   background-color: transparent;
@@ -1448,13 +1448,13 @@ fieldset:disabled .btn {
   border-top: 1px solid #e2a03f;
 }
 .btn-warning:not(:disabled):not(.disabled).active, .btn-warning:not(:disabled):not(.disabled):active {
-  color: #0e1726;
+  color: #121212;
   background-color: #e2a03f;
   border-color: #e2a03f;
 }
 
 .show > .btn-warning.dropdown-toggle {
-  color: #0e1726;
+  color: #121212;
   background-color: #e2a03f;
   border-color: #e2a03f;
 }
@@ -1703,13 +1703,13 @@ fieldset:disabled .btn {
 }
 
 .btn-dismiss {
-  color: #0e1726;
+  color: #121212;
   background-color: #fff !important;
   border-color: #fff;
   padding: 3px 7px;
 }
 .btn-dismiss:hover, .btn-dismiss:focus {
-  color: #0e1726;
+  color: #121212;
   background-color: #fff;
 }
 .btn-dismiss:active, .btn-dismiss.active {
@@ -1827,7 +1827,7 @@ fieldset:disabled .btn {
 }
 
 .dropup .btn .caret {
-  border-bottom-color: #0e1726;
+  border-bottom-color: #121212;
 }
 
 .btn-outline-primary:not(:disabled):not(.disabled).active, .btn-outline-primary:not(:disabled):not(.disabled):active {

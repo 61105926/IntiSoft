@@ -8,7 +8,7 @@
   display: block;
   background: white;
   padding: 0.5em;
-  color: #0e1726333;
+  color: #121212333;
   overflow-x: auto;
 }
 
@@ -44,7 +44,7 @@
 }
 
 .hljs-tag {
-  color: #0e1726333;
+  color: #121212333;
 }
 
 .hljs-title,

@@ -81,14 +81,14 @@ body.dark .faq .faq-layouting .fq-tab-section h2 {
   color: #bfc9d4;
 }
 body.dark .faq .faq-layouting .fq-tab-section .accordion .card {
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
   margin-bottom: 26px;
   -webkit-box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
   -moz-box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
   box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
   cursor: pointer;
-  background-color: #0e1726;
+  background-color: #121212;
 }
 body.dark .faq .faq-layouting .fq-tab-section .accordion .card .card-header {
   padding: 0;
@@ -169,7 +169,7 @@ body.dark .faq .faq-layouting .fq-article-section h2 {
 body.dark #miniFooterWrapper {
   color: #fff;
   font-size: 14px;
-  border-top: solid 1px #0e1726;
+  border-top: solid 1px #121212;
   padding: 14px;
   -webkit-box-shadow: 0 -6px 10px 0 rgba(0, 0, 0, 0.14), 0 -1px 18px 0 rgba(0, 0, 0, 0.12), 0 -3px 5px -1px rgba(0, 0, 0, 0.2);
   box-shadow: 0 -6px 10px 0 rgba(0, 0, 0, 0.14), 0 -1px 18px 0 rgba(0, 0, 0, 0.12), 0 -3px 5px -1px rgba(0, 0, 0, 0.2);
@@ -178,7 +178,7 @@ body.dark #miniFooterWrapper p {
   color: #888ea8;
 }
 body.dark #miniFooterWrapper .arrow {
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 50%;
   position: absolute;
   z-index: 2;

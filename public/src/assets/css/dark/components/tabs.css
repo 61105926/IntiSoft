@@ -57,7 +57,7 @@ body.dark .nav.nav-pills li.nav-item button.nav-link svg {
 }
 body.dark .nav.nav-pills li.nav-item button.nav-link.active {
   border-bottom: none;
-  background-color: #0e1726;
+  background-color: #121212;
   box-shadow: 1px 1px 4px 0 rgba(0, 0, 0, 0.2);
 }
 body.dark .nav.nav-pills li.nav-item button.nav-link:disabled {
@@ -79,7 +79,7 @@ body.dark .nav.nav-pills[aria-orientation=vertical] button.nav-link svg {
 }
 body.dark .nav.nav-pills[aria-orientation=vertical] button.nav-link.active {
   border-bottom: none;
-  background-color: #0e1726;
+  background-color: #121212;
   box-shadow: 1px 1px 4px 0 rgba(0, 0, 0, 0.2);
 }
 body.dark .nav.nav-pills[aria-orientation=vertical] button.nav-link:disabled {

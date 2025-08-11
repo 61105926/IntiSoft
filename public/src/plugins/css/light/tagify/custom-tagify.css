@@ -48,7 +48,7 @@
   margin-left: 0.5px;
 }
 .tagify__tag__removeBtn:hover {
-  background: #0e1726;
+  background: #121212;
 }
 
 .tagify__tag:focus div::before, .tagify__tag:hover:not([readonly]) div::before {

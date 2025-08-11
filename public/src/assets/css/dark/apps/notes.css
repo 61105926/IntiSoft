@@ -82,7 +82,7 @@ body.dark .tab-title hr {
   margin-bottom: 25px;
 }
 body.dark .tab-title .nav-pills .nav-link.active, body.dark .tab-title .nav-pills .show > .nav-link {
-  background-color: #0e1726;
+  background-color: #121212;
   color: #888ea8;
   font-weight: 600;
   border-left: 3px solid #805dca;
@@ -223,9 +223,9 @@ body.dark .note-container.note-grid .note-item .note-inner-content {
   margin-right: 0;
   margin-bottom: 18px;
   border-radius: 10px;
-  background: #0e1726;
+  background: #121212;
   width: 100%;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .note-container.note-grid .note-item .note-inner-content .note-title {
   font-size: 16px;
@@ -428,7 +428,7 @@ body.dark .hamburger {
     border-radius: 0;
     border-bottom-right-radius: 8px;
     padding: 11px;
-    background: #0e1726;
+    background: #121212;
   }
   body.dark .note-sidebar-scroll {
     height: 100%;

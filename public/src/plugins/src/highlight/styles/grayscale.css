@@ -8,7 +8,7 @@ grayscale style (c) MY Sun <simonmysun@gmail.com>
   display: block;
   overflow-x: auto;
   padding: 0.5em;
-  color: #0e1726;
+  color: #121212;
   background: #fff;
 }
 
@@ -21,7 +21,7 @@ grayscale style (c) MY Sun <simonmysun@gmail.com>
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-subst {
-  color: #0e1726;
+  color: #121212;
   font-weight: bold;
 }
 
@@ -33,7 +33,7 @@ grayscale style (c) MY Sun <simonmysun@gmail.com>
 .hljs-string,
 .hljs-doctag,
 .hljs-formula {
-  color: #0e1726;
+  color: #121212;
   background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAJ0lEQVQIW2O8e/fufwYGBgZBQUEQxcCIIfDu3Tuwivfv30NUoAsAALHpFMMLqZlPAAAAAElFTkSuQmCC) repeat;
 }
 
@@ -51,16 +51,16 @@ grayscale style (c) MY Sun <simonmysun@gmail.com>
 .hljs-class .hljs-title,
 .hljs-type,
 .hljs-name {
-  color: #0e1726;
+  color: #121212;
   font-weight: bold;
 }
 
 .hljs-tag {
-  color: #0e1726;
+  color: #121212;
 }
 
 .hljs-regexp {
-    color: #0e1726;
+    color: #121212;
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAYAAADA+m62AAAAPUlEQVQYV2NkQAN37979r6yszIgujiIAU4RNMVwhuiQ6H6wQl3XI4oy4FMHcCJPHcDS6J2A2EqUQpJhohQDexSef15DBCwAAAABJRU5ErkJggg==) repeat;
 }
 

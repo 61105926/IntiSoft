@@ -54,10 +54,10 @@ body.dark .mail-box-container {
   position: relative;
   display: flex;
   border-radius: 8px;
-  background-color: #0e1726;
+  background-color: #121212;
   height: calc(100vh - 155px);
   box-shadow: 5px 5px 14px #02030a, -5px -5px 14px #0a0d26;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .mail-box-container .avatar-sm {
   width: 2.5rem;
@@ -303,13 +303,13 @@ body.dark .mailbox-inbox .mail-menu {
 body.dark .mailbox-inbox .search {
   display: flex;
   border-bottom: 1px solid #191e3a;
-  background: #0e1726;
+  background: #121212;
   border-top-right-radius: 8px;
 }
 body.dark .mailbox-inbox .search input {
   border: none;
   padding: 12px 13px 12px 13px;
-  background-color: #0e1726;
+  background-color: #121212;
   border-radius: 0;
   border-top-right-radius: 8px;
   box-shadow: none;
@@ -320,7 +320,7 @@ body.dark .mailbox-inbox .action-center {
   justify-content: space-between;
   background: transparent;
   padding: 14px 16px;
-  border-bottom: 1px solid #0e1726;
+  border-bottom: 1px solid #121212;
 }
 body.dark .mailbox-inbox .action-center .new-control {
   font-weight: 600;
@@ -427,7 +427,7 @@ body.dark .mailbox-inbox .mail-item div.mail-item-heading {
   padding: 11px 10px 11px 0;
   cursor: pointer;
   position: relative;
-  border-bottom: 1px solid #0e1726;
+  border-bottom: 1px solid #121212;
 }
 body.dark .mailbox-inbox .mail-item div.mail-item-heading:hover {
   background: #1b2e4b;
@@ -536,7 +536,7 @@ body.dark .mailbox-inbox .mail-item div.mail-item-heading .attachments span {
   border: 1px solid #009688;
   padding: 1px 11px;
   border-radius: 30px;
-  color: #0e1726;
+  color: #121212;
   background: #009688;
   font-size: 12px;
   margin-right: 3px;
@@ -555,7 +555,7 @@ body.dark .mailbox-inbox .mail-item div.mail-item-heading .attachments span {
 =====================
 */
 body.dark .content-box {
-  background-color: #0e1726;
+  background-color: #121212;
   position: absolute;
   top: 0;
   height: 100%;
@@ -568,7 +568,7 @@ body.dark .content-box {
 }
 body.dark .content-box .msg-close {
   padding: 13px;
-  background: #0e1726;
+  background: #121212;
   border-bottom: 1px solid #191e3a;
 }
 body.dark .content-box svg.close-message {
@@ -602,7 +602,7 @@ body.dark .mailbox-inbox .mail-content-container .user-info img {
   height: 50px;
   border-radius: 50%;
   margin-right: 8px;
-  border: 3px solid #0e1726;
+  border: 3px solid #121212;
 }
 body.dark .mailbox-inbox .mail-content-container .user-info .avatar {
   margin-right: 8px;
@@ -813,7 +813,7 @@ body.dark .fadeInUp {
     z-index: 4;
     left: -147px;
     width: 0;
-    background: #0e1726;
+    background: #121212;
   }
   body.dark .tab-title.mail-menu-show {
     left: 0;
@@ -829,7 +829,7 @@ body.dark .fadeInUp {
     margin: 12px 13px 8px 13px;
   }
   body.dark .mailbox-inbox .search {
-    background-color: #0e1726;
+    background-color: #121212;
     padding: 0;
   }
   body.dark .mailbox-inbox .action-center {

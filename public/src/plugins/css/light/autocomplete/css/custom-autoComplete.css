@@ -52,7 +52,7 @@
 }
 .autoComplete_wrapper > ul .no_result {
   font-size: 15px;
-  color: #0e1726;
+  color: #121212;
   padding: 8px 10px;
 }
 .autoComplete_wrapper:hover > ul {

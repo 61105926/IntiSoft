@@ -10,7 +10,7 @@ window.addEventListener("load", function(){
             borderColor: '#191e3a'
         }
         Apex.track = {
-            background: '#0e1726',
+            background: '#121212',
         }
         Apex.tooltip = {
             theme: 'dark'
@@ -331,7 +331,7 @@ window.addEventListener("load", function(){
                 }
             },
             stroke: {
-            colors: '#0e1726'
+            colors: '#121212'
             },
             legend: {
                 markers: {
@@ -926,7 +926,7 @@ window.addEventListener("load", function(){
 
             donut.updateOptions({
                 stroke: {
-                    colors: '#0e1726'
+                    colors: '#121212'
                 }
             })
             

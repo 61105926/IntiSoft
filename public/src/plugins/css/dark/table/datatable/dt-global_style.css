@@ -9,10 +9,10 @@
 	===============================
 */
 body.dark .widget-content-area {
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
   box-shadow: 0 0 40px 0 rgba(94, 92, 154, 0.06);
   padding: 0;
-  background-color: #0e1726;
+  background-color: #121212;
 }
 body.dark .no-content:before, body.dark .no-content:after {
   display: none !important;
@@ -72,7 +72,7 @@ body.dark table.dataTable thead .sorting:after, body.dark table.dataTable thead 
   top: 1.3rem;
 }
 body.dark table.dataTable thead .sorting_asc:before, body.dark table.dataTable thead .sorting_desc:after {
-  color: #0e1726;
+  color: #121212;
 }
 body.dark table.dataTable > thead > tr, body.dark table.dataTable > tfoot > tr {
   border: none;
@@ -156,8 +156,8 @@ body.dark .dataTable.table-striped tbody tr:nth-of-type(odd) td {
 }
 body.dark .dataTable.table-striped.table > thead > tr > th {
   background: transparent;
-  border-top: 1px solid #0e1726 !important;
-  border-bottom: 1px solid #0e1726 !important;
+  border-top: 1px solid #121212 !important;
+  border-bottom: 1px solid #121212 !important;
 }
 body.dark .table > tfoot > tr > th {
   border: none;
@@ -195,7 +195,7 @@ body.dark div.dataTables_wrapper div.dataTables_filter svg {
   color: #bfc9d4;
 }
 body.dark .dataTables_wrapper .form-control {
-  background: #0e1726;
+  background: #121212;
   border: none;
   -webkit-box-shadow: none;
   box-shadow: none;
@@ -235,7 +235,7 @@ body.dark .dataTables_wrapper .dataTables_length select.form-control {
   -moz-appearance: none;
   -webkit-appearance: none;
   appearance: none;
-  background: #0e1726 url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23d3d3d3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-chevron-down'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") 54px 12px no-repeat;
+  background: #121212 url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23d3d3d3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-chevron-down'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") 54px 12px no-repeat;
   padding: 7px 18px 7px 14px;
 }
 body.dark div.dataTables_wrapper div.dataTables_paginate {

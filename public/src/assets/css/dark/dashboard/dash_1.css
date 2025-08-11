@@ -49,7 +49,7 @@ body.dark .apexcharts-tooltip.apexcharts-theme-dark .apexcharts-tooltip-title {
 */
 body.dark .widget.widget-card-four {
   padding: 25px 23px;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .widget-card-four .w-header {
   display: flex;
@@ -151,7 +151,7 @@ body.dark .widget-card-four .w-icon p {
 */
 body.dark .widget.widget-six {
   padding: 22px 18px;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .widget.widget-six .widget-heading {
   display: flex;
@@ -206,7 +206,7 @@ body.dark .widget.widget-six .w-chart .w-chart-section .w-stats {
 	===============================
 */
 body.dark .widget.widget-chart-three {
-  background: #0e1726;
+  background: #121212;
   padding: 0;
 }
 body.dark .widget.widget-chart-three .widget-heading {
@@ -260,7 +260,7 @@ body.dark .widget.widget-chart-three #uniqueVisits {
 */
 body.dark .widget.widget-activity-five {
   position: relative;
-  background: #0e1726;
+  background: #121212;
   border-radius: 6px;
   height: 100%;
   padding: 0;
@@ -301,8 +301,8 @@ body.dark .widget.widget-activity-five .w-shadow-top {
   left: 2px;
   -webkit-filter: blur(9px);
   filter: blur(9px);
-  background: -webkit-linear-gradient(180deg, #0e1726 44%, rgba(14, 23, 38, 0.8196078431) 73%, rgba(44, 48, 60, 0));
-  background: linear-gradient(180deg, #0e1726 44%, rgba(14, 23, 38, 0.8196078431) 73%, rgba(44, 48, 60, 0));
+  background: -webkit-linear-gradient(180deg, #121212 44%, rgba(14, 23, 38, 0.8196078431) 73%, rgba(44, 48, 60, 0));
+  background: linear-gradient(180deg, #121212 44%, rgba(14, 23, 38, 0.8196078431) 73%, rgba(44, 48, 60, 0));
 }
 body.dark .widget.widget-activity-five .w-shadow-bottom {
   display: block;
@@ -315,8 +315,8 @@ body.dark .widget.widget-activity-five .w-shadow-bottom {
   left: 2px;
   -webkit-filter: blur(9px);
   filter: blur(9px);
-  background: -webkit-linear-gradient(180deg, #0e1726 44%, rgba(14, 23, 38, 0.831372549) 73%, rgba(44, 48, 60, 0));
-  background: linear-gradient(180deg, #0e1726 44%, rgba(14, 23, 38, 0.831372549) 73%, rgba(44, 48, 60, 0));
+  background: -webkit-linear-gradient(180deg, #121212 44%, rgba(14, 23, 38, 0.831372549) 73%, rgba(44, 48, 60, 0));
+  background: linear-gradient(180deg, #121212 44%, rgba(14, 23, 38, 0.831372549) 73%, rgba(44, 48, 60, 0));
 }
 body.dark .widget.widget-activity-five .mt-container {
   position: relative;
@@ -450,7 +450,7 @@ body.dark .widget.widget-activity-five .timeline-line .item-timeline:last-child 
 */
 body.dark .widget-one_hybrid {
   background: #fff;
-  background: #0e1726;
+  background: #121212;
   padding: 0 !important;
 }
 body.dark .widget-one_hybrid .widget-heading {
@@ -616,7 +616,7 @@ body.dark .widget-card-three .account-box .acc-action a svg {
       ==================
   */
 body.dark .widget-card-one {
-  background: #0e1726;
+  background: #121212;
   padding: 20px 0 !important;
 }
 body.dark .widget-card-one .widget-content .media {
@@ -714,7 +714,7 @@ body.dark .widget-card-one .widget-content .w-action .read-more a:hover {
 */
 body.dark .widget.widget-card-five {
   padding: 25px 23px;
-  background-color: #0e1726;
+  background-color: #121212;
   overflow: hidden;
 }
 body.dark .widget.widget-card-five .account-box .info-box {
@@ -796,7 +796,7 @@ body.dark .widget.widget-card-five .account-box .card-bottom-section a:hover {
   */
 body.dark .widget-four {
   position: relative;
-  background: #0e1726;
+  background: #121212;
   padding: 20px;
   border-radius: 6px;
   height: 100%;
@@ -900,7 +900,7 @@ body.dark .widget-four .widget-content .w-browser-stats .progress .progress-bar:
   content: "";
   height: 7px;
   width: 7px;
-  background: #0e1726;
+  background: #121212;
   position: absolute;
   right: 3px;
   border-radius: 50%;
@@ -924,7 +924,7 @@ body.dark .widget-four .widget-content .w-browser-stats .progress .progress-bar:
 */
 body.dark .widget-card-two {
   padding: 20px 0px !important;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .widget-card-two .media {
   padding-left: 15px;
@@ -1009,7 +1009,7 @@ body.dark .widget-card-two .card-bottom-section a.btn:hover, body.dark .widget-c
     =====================
 */
 body.dark .widget-five {
-  background: #0e1726;
+  background: #121212;
   padding: 20px 0px !important;
   height: 100%;
 }

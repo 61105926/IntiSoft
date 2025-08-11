@@ -155,7 +155,7 @@ body.dark .layout-px-spacing {
   min-height: calc(100vh - 112px) !important;
 }
 body.dark .widget.box .widget-header {
-  background: #0e1726;
+  background: #121212;
   padding: 0px 8px 0px;
   border-top-right-radius: 8px;
   border-top-left-radius: 8px;
@@ -203,7 +203,7 @@ body.dark .widget .widget-header:after {
 body.dark .widget-content-area {
   padding: 20px;
   position: relative;
-  background-color: #0e1726;
+  background-color: #121212;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   border: none;
@@ -696,7 +696,7 @@ body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .d
 }
 body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .dropdown-item:hover a {
   color: #fff;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .dropdown-item.active, body.dark .navbar .navbar-item .nav-item.user-profile-dropdown .dropdown-menu .dropdown-item:active {
   background-color: transparent;
@@ -729,11 +729,11 @@ body.dark .shadow-bottom {
   left: 6px;
   -webkit-filter: blur(5px);
   filter: blur(7px);
-  background: -webkit-linear-gradient(#0e1726 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
-  background: linear-gradient(#0e1726 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
+  background: -webkit-linear-gradient(#121212 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
+  background: linear-gradient(#121212 41%, rgba(14, 23, 38, 0.839) 95%, rgba(14, 23, 38, 0.22));
 }
 body.dark .sidebar-theme {
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .sidebar-closed > .sidebar-wrapper {
   width: 84px;
@@ -752,9 +752,9 @@ body.dark .sidebar-closed > #content {
   margin-left: 84px;
 }
 body.dark #sidebar .theme-brand {
-  background-color: #0e1726;
+  background-color: #121212;
   padding: 10px 12px 6px 21px;
-  border-bottom: 1px solid #0e1726;
+  border-bottom: 1px solid #121212;
   border-radius: 8px 6px 0 0;
   justify-content: space-between;
 }
@@ -832,7 +832,7 @@ body.dark .sidebar-closed > .sidebar-wrapper:hover #sidebar .theme-brand li.them
 }
 body.dark #sidebar .theme-brand div.theme-text a {
   font-size: 30px !important;
-  color: #c8c91e !important;
+  color: #ffffff !important;
   line-height: 2.75rem;
   padding: 0.39rem 0.8rem;
   text-transform: initial;
@@ -893,7 +893,7 @@ body.dark .sidebar-wrapper ul.menu-categories li.menu.menu-heading > .heading {
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
-  color: #c8c91e;
+  color: #ffffff;
   padding: 32px 0 10px 36px;
   letter-spacing: 1px;
 }
@@ -1060,7 +1060,7 @@ body.dark #sidebar ul.menu-categories li.menu ul.submenu > li a:hover {
 body.dark #sidebar ul.menu-categories li.menu ul.submenu > li a:hover:before {
   background: #fff !important;
   box-shadow: 0 0 0px 2px rgba(255, 255, 255, 0.431);
-  border: 1.9px solid #0e1726;
+  border: 1.9px solid #121212;
 }
 body.dark #sidebar ul.menu-categories li.menu ul.submenu > li.active a {
   color: #fff;
@@ -1077,7 +1077,7 @@ body.dark #sidebar ul.menu-categories li.menu ul.submenu > li.active a:hover {
 body.dark #sidebar ul.menu-categories li.menu ul.submenu > li.active a:hover:before {
   background: #fff !important;
   box-shadow: 0 0 0px 2px rgba(255, 255, 255, 0.43);
-  border: 1.9px solid #0e1726;
+  border: 1.9px solid #121212;
 }
 body.dark #sidebar ul.menu-categories ul.submenu > li {
   margin-top: 3px;

@@ -296,10 +296,10 @@ body.dark .summary .widget-content .summary-list.summary-expenses .w-summary-inf
 =======================
 */
 body.dark .pro-plan .widget {
-  background: #0e1726;
+  background: #121212;
   padding: 20px 0px !important;
   border-radius: 8px;
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .pro-plan .widget-heading {
   display: flex;

@@ -119,7 +119,7 @@ body.dark .flatpickr-day.inRange, body.dark .flatpickr-day.prevMonthDay.inRange,
 }
 body.dark .flatpickr-day.selected, body.dark .flatpickr-day.startRange, body.dark .flatpickr-day.endRange, body.dark .flatpickr-day.selected.inRange, body.dark .flatpickr-day.startRange.inRange, body.dark .flatpickr-day.endRange.inRange, body.dark .flatpickr-day.selected:focus, body.dark .flatpickr-day.startRange:focus, body.dark .flatpickr-day.endRange:focus, body.dark .flatpickr-day.selected:hover, body.dark .flatpickr-day.startRange:hover, body.dark .flatpickr-day.endRange:hover, body.dark .flatpickr-day.selected.prevMonthDay, body.dark .flatpickr-day.startRange.prevMonthDay, body.dark .flatpickr-day.endRange.prevMonthDay, body.dark .flatpickr-day.selected.nextMonthDay, body.dark .flatpickr-day.startRange.nextMonthDay, body.dark .flatpickr-day.endRange.nextMonthDay {
   background: #009688;
-  color: #0e1726;
+  color: #121212;
   border-color: #009688;
   font-weight: 700;
 }
@@ -127,10 +127,10 @@ body.dark .flatpickr-time input {
   color: #bfc9d4;
 }
 body.dark .flatpickr-time input:hover {
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .flatpickr-time .flatpickr-am-pm:hover, body.dark .flatpickr-time input:focus, body.dark .flatpickr-time .flatpickr-am-pm:focus {
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .flatpickr-time .flatpickr-time-separator, body.dark .flatpickr-time .flatpickr-am-pm {
   color: #bfc9d4;

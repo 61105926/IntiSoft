@@ -553,7 +553,7 @@ body.dark .editor-statusbar span {
 }
 body.dark .editor-preview, body.dark .editor-preview-side {
   padding: 10px;
-  background: #0e1726;
+  background: #121212;
   overflow: auto;
   display: none;
   box-sizing: border-box;
@@ -1194,7 +1194,7 @@ body.dark .editor-statusbar span {
 }
 body.dark .editor-preview, body.dark .editor-preview-side {
   padding: 10px;
-  background: #0e1726;
+  background: #121212;
   overflow: auto;
   display: none;
   box-sizing: border-box;

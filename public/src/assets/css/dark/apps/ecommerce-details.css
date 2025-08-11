@@ -26,7 +26,7 @@ body.dark {
   */
 }
 body.dark .widget-content-area {
-  border: 1px solid #0e1726;
+  border: 1px solid #121212;
 }
 body.dark .widget-content-area h1, body.dark .widget-content-area h2, body.dark .widget-content-area h3, body.dark .widget-content-area h4, body.dark .widget-content-area h5, body.dark .widget-content-area h6 {
   color: #e0e6ed;
@@ -242,7 +242,7 @@ body.dark .production-descriptions .pro-des-content .accordion .card:first-child
   border-top: 1px solid #1b2e4b;
 }
 body.dark .production-descriptions .pro-des-content .accordion .card .card-header {
-  background-color: #0e1726;
+  background-color: #121212;
 }
 body.dark .production-descriptions .pro-des-content .accordion .card .card-header section > div {
   padding: 13px 0;
@@ -267,7 +267,7 @@ body.dark .production-descriptions .pro-des-content .accordion .card .card-heade
 }
 body.dark .production-descriptions .pro-des-content .accordion .card .card-body {
   padding: 24px 0;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .production-descriptions .pro-des-content .accordion .card .card-body p {
   font-size: 14px;
@@ -350,7 +350,7 @@ body.dark .production-descriptions .product-reviews .review-progress .progress {
   height: 8px;
   border-radius: 10px;
   margin-bottom: 0;
-  background: #0e1726;
+  background: #121212;
 }
 body.dark .production-descriptions .product-reviews .review-progress .progress-bar {
   border-radius: 0;

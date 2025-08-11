@@ -8,9 +8,9 @@
 <!-- END GLOBAL MANDATORY SCRIPTS -->
 
 <!-- BEGIN PAGE LEVEL SCRIPTS -->
-<script src="../src/assets/js/scrollspyNav.js"></script>
-<script src="../src/plugins/src/tomSelect/tom-select.base.js"></script>
-<script src="../src/plugins/src/tomSelect/custom-tom-select.js"></script>
+{{-- <script src="../src/assets/js/scrollspyNav.js"></script> --}}
+{{-- <script src="../src/plugins/src/tomSelect/tom-select.base.js"></script> --}}
+{{-- <script src="../src/plugins/src/tomSelect/custom-tom-select.js"></script> --}}
 <!-- END GLOBAL MANDATORY SCRIPTS -->
 
 <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
@@ -54,21 +54,21 @@
 </script>
 
 <!-- BEGIN PAGE LEVEL SCRIPTS -->
-<script src="../src/plugins/src/flatpickr/flatpickr.js"></script>
+{{-- <script src="../src/plugins/src/flatpickr/flatpickr.js"></script>
 
-<script src="../src/plugins/src/flatpickr/custom-flatpickr.js"></script>
+<script src="../src/plugins/src/flatpickr/custom-flatpickr.js"></script> --}}
 <!-- END PAGE LEVEL SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script src="../src/plugins/src/sweetalerts2/sweetalerts2.min.js"></script>
-<script src="../src/plugins/src/sweetalerts2/custom-sweetalert.js"></script>
+{{-- <script src="../src/plugins/src/sweetalerts2/custom-sweetalert.js"></script> --}}
 
 
 
 
 <!-- BEGIN PAGE LEVEL SCRIPTS -->
-<script src="../src/plugins/src/stepper/bsStepper.min.js"></script>
-<script src="../src/plugins/src/stepper/custom-bsStepper.min.js"></script>
+{{-- <script src="../src/plugins/src/stepper/bsStepper.min.js"></script>
+<script src="../src/plugins/src/stepper/custom-bsStepper.min.js"></script> --}}
 
 {{-- <script src="https://cdn.jsdelivr.net/npm/alpinejs@2"></script> --}}
 {{-- <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js"></script> --}}
@@ -79,20 +79,20 @@
 
 <!-- END GLOBAL MANDATORY SCRIPTS -->
 <!-- BEGIN PAGE LEVEL SCRIPTS -->
-<script src="../src/plugins/src/fullcalendar/fullcalendar.min.js"></script>
+{{-- <script src="../src/plugins/src/fullcalendar/fullcalendar.min.js"></script>
 <script src="../src/plugins/src/uuid/uuid4.min.js"></script>
 <!-- END PAGE LEVEL SCRIPTS -->
 
 <!--  BEGIN CUSTOM SCRIPTS FILE  -->
 <script src="../src/plugins/src/fullcalendar/custom-fullcalendar.js"></script>
-<script src="../src/plugins/src/fullcalendar/locale/es.js"></script>
+<script src="../src/plugins/src/fullcalendar/locale/es.js"></script> --}}
 
 <!--  END CUSTOM SCRIPTS FILE  -->
 
 
 <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
-<script src="../src/plugins/src/apex/apexcharts.min.js"></script>
-<script src="../src/plugins/src/apex/custom-apexcharts.js"></script>
+{{-- <script src="../src/plugins/src/apex/apexcharts.min.js"></script> --}}
+{{-- <script src="../src/plugins/src/apex/custom-apexcharts.js"></script> --}}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         $('#companySelect').select2({
@@ -152,18 +152,7 @@
         });
 
     });
-    document.addEventListener('DOMContentLoaded', function() {
-
-        new TomSelect("#service", {
-            create: true,
-            sortField: {
-                field: "text",
-                direction: "asc"
-            }
-        });
-
-
-    });
+  
 </script>
 
 <script></script>

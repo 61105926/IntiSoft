@@ -642,7 +642,7 @@ body.dark .timeline-item-icon svg {
   height: 20px;
 }
 body.dark .timeline-item-icon.faded-icon {
-  background-color: #0e1726;
+  background-color: #121212;
   color: white;
 }
 body.dark .timeline-item-icon.filled-icon {
@@ -705,7 +705,7 @@ body.dark .btn.square svg {
   width: 24px;
   height: 24px;
   fill: #e2a03f;
-  color: #0e1726;
+  color: #121212;
 }
 body.dark .show-replies {
   color: #b2b2b2;

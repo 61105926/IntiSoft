@@ -173,7 +173,7 @@
   color: #bfc9d4;
 }
 .pricing-table-2 .billing-cycle-radios .badge {
-  color: #0e1726;
+  color: #121212;
   font-weight: 900;
   font-size: 13px;
   margin-left: 5px;
@@ -286,7 +286,7 @@
   letter-spacing: 1px;
 }
 .pricing-table-2 .pricing-plan .btn-dark.button {
-  background: #0e1726;
+  background: #121212;
   border: none;
   width: 100%;
   padding: 12px;

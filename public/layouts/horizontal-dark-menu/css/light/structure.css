@@ -307,7 +307,7 @@ body.enable-secondaryNav .layout-top-spacing {
 .navbar .toggle-sidebar, .navbar .sidebarCollapse {
   display: none;
   position: relative;
-  color: #0e1726;
+  color: #121212;
 }
 .navbar .navbar-item .nav-item.theme-toggle-item .nav-link {
   padding: 4.24px 0;
@@ -439,7 +439,7 @@ body .navbar .dark-mode, body:not(.dark) .navbar .dark-mode {
   font-size: 14px;
   letter-spacing: 1px;
   font-weight: 200;
-  color: #0e1726;
+  color: #121212;
 }
 .navbar .navbar-item .nav-item.notification-dropdown .dropdown-menu .dropdown-item {
   padding: 0.625rem 1rem;

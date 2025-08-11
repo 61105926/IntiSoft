@@ -62,7 +62,7 @@
 .widget-card-four .w-header .w-info h6 {
   font-weight: 600;
   margin-bottom: 0;
-  color: #0e1726;
+  color: #121212;
   font-size: 23px;
   letter-spacing: 0;
 }
@@ -87,7 +87,7 @@
 }
 .widget-card-four .w-content .w-info p.value span {
   font-size: 15px;
-  color: #0e1726;
+  color: #121212;
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -160,7 +160,7 @@
   margin-bottom: 0;
 }
 .widget.widget-six .widget-heading h6 {
-  color: #0e1726;
+  color: #121212;
   margin-bottom: 74px;
   font-size: 17px;
   display: block;
@@ -220,7 +220,7 @@
 .widget.widget-chart-three .widget-heading h5 {
   font-size: 17px;
   display: block;
-  color: #0e1726;
+  color: #121212;
   font-weight: 600;
   margin-bottom: 0;
 }
@@ -276,7 +276,7 @@
 .widget.widget-activity-five .widget-heading h5 {
   font-size: 17px;
   display: block;
-  color: #0e1726;
+  color: #121212;
   font-weight: 600;
   margin-bottom: 0;
 }
@@ -677,7 +677,7 @@
 .widget-card-one .widget-content .w-action span {
   vertical-align: sub;
   font-weight: 700;
-  color: #0e1726;
+  color: #121212;
   letter-spacing: 1px;
 }
 .widget-card-one .widget-content .w-action .read-more {
@@ -760,7 +760,7 @@
   margin-bottom: 0;
   font-size: 25px;
   font-weight: 700;
-  color: #0e1726;
+  color: #121212;
 }
 .widget.widget-card-five .account-box .card-bottom-section {
   display: flex;
@@ -812,7 +812,7 @@
 .widget-four .widget-heading h5 {
   font-size: 17px;
   display: block;
-  color: #0e1726;
+  color: #121212;
   font-weight: 600;
   margin-bottom: 0;
 }

@@ -1,36 +1,16 @@
 <?php
 
-use App\Http\Controllers\CajaController;
-use App\Http\Controllers\CajaEntradaController;
-use App\Http\Controllers\CajaSalidaController;
+
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\StockSucursal;
-use App\Http\Livewire\Caja\CajaLiveController;
-use App\Http\Livewire\Cita\CitaController;
-use App\Http\Livewire\Client\ClientController;
-use App\Http\Livewire\Company\CompanyController;
-use App\Http\Livewire\Contract\ContractController;
-use App\Http\Livewire\Dashboard\DashboardController;
-use App\Http\Livewire\Especie\EspecieController;
-use App\Http\Livewire\Item\ItemController;
-use App\Http\Livewire\Lactation\LactationController;
-use App\Http\Livewire\Memoradum\MemoradumController;
-use App\Http\Livewire\Person\PersonController;
-use App\Http\Livewire\Pet\PetController;
-use App\Http\Livewire\Pet\PetDetailController;
-use App\Http\Livewire\Products\ProductsController;
-use App\Http\Livewire\Proveedor\ProveedorController;
-use App\Http\Livewire\ProveedorCompra\ProveedorCompraController;
-use App\Http\Livewire\Raza\RazaController;
-use App\Http\Livewire\RegisterFile\RegisterFileController;
 use App\Http\Livewire\Roles\RolesController;
 use App\Http\Livewire\Usuario\UsuarioController;
-use App\Http\Livewire\Vacaciones\VacacionesController;
-use App\Http\Livewire\Vacuna\VacunaController;
+
 use App\Http\Livewire\Venta\VentaController;
-use App\Models\HistorialMascota;
+
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -113,6 +93,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cliente', [ClienteController::class, 'index'])->name('cliente');
     Route::get('/producto', [ProductoController::class, 'index'])->name('producto');
     Route::get('/sucursal', [StockSucursal::class, 'index'])->name('sucursal');
+    Route::get('/reserva', [ReservaController::class, 'index'])->name('reserva');
+
 
 
 });

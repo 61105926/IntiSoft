@@ -206,7 +206,7 @@
   font-weight: 700;
   font-size: 15px;
   display: inline-block;
-  color: #0e1726;
+  color: #121212;
   letter-spacing: 1px;
   margin-top: 22px;
   margin-bottom: 13px;
@@ -317,7 +317,7 @@
 .mailbox-inbox .search {
   display: flex;
   border-bottom: 1px solid #e0e6ed;
-  background: #0e1726;
+  background: #121212;
   border-top-right-radius: 8px;
 }
 .mailbox-inbox .search input {
@@ -549,7 +549,7 @@
   border: 1px solid #009688;
   padding: 1px 11px;
   border-radius: 30px;
-  color: #0e1726;
+  color: #121212;
   background: #009688;
   font-size: 12px;
   margin-right: 3px;
