@@ -1,6 +1,6 @@
 <?php
 
-
+use App\Http\Controllers\AlquileresController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\ProductoController;
@@ -94,7 +94,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/producto', [ProductoController::class, 'index'])->name('producto');
     Route::get('/sucursal', [StockSucursal::class, 'index'])->name('sucursal');
     Route::get('/reserva', [ReservaController::class, 'index'])->name('reserva');
+    Route::get('/reserva', [ReservaController::class, 'index'])->name('reserva');
 
+    Route::get('/alquiler', [AlquileresController::class, 'index'])->name('alquiler');
 
 
 });

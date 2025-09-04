@@ -24,6 +24,7 @@ class ReservasController extends Component
     public $searchTerm = '';
     public $filterEstado = 'TODOS';
     public $filterTipo = 'TODOS';
+    public $filterSucursal = 'TODAS';
 
     // Modal states
 
@@ -119,6 +120,10 @@ class ReservasController extends Component
             $query->where('tipo_reserva', $this->filterTipo);
         }
 
+        if ($this->filterSucursal !== 'TODAS') {
+            $query->where('sucursal_id', $this->filterSucursal);
+        }
+
         return $query->orderBy('created_at', 'desc')->paginate(10);
     }
 
@@ -155,6 +160,11 @@ class ReservasController extends Component
     }
 
     public function updatedFilterTipo()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterSucursal()
     {
         $this->resetPage();
     }
@@ -419,7 +429,11 @@ class ReservasController extends Component
 
             DB::commit();
 
-            session()->flash('success', 'Reserva cancelada exitosamente.');
+            $this->dispatchBrowserEvent('swal', [
+                'title' => '¡Reserva Cancelada!',
+                'text' => 'La reserva ha sido cancelada exitosamente y el stock ha sido liberado.',
+                'icon' => 'success'
+            ]);
         } catch (\Exception $e) {
             DB::rollback();
             session()->flash('error', 'Error al cancelar la reserva: ' . $e->getMessage());

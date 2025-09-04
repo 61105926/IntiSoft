@@ -113,7 +113,7 @@
                         <a href="{{ route('reserva') }}">Reservas</a>
                     </li>
                     <li class="menu">
-                        <a href="#">Alquileres</a>
+                        <a href="{{ route('alquiler') }}">Alquileres</a>
                     </li>
                 </ul>
             </li>

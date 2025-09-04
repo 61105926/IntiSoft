@@ -107,7 +107,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text"
@@ -127,12 +127,21 @@
                         <option value="CANCELADA">Cancelada</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select class="form-select"
                             wire:model="filterTipo">
                         <option value="TODOS">Todos los Tipos</option>
                         <option value="ALQUILER">Alquiler</option>
                         <option value="VENTA">Venta</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select"
+                            wire:model="filterSucursal">
+                        <option value="TODAS">Todas las Sucursales</option>
+                        @foreach ($sucursales as $sucursal)
+                            <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -284,8 +293,7 @@
                                             </button>
                                             <button type="button"
                                                     class="btn btn-sm btn-danger"
-                                                    wire:click="cancelReserva({{ $reserva->id }})"
-                                                    onclick="return confirm('¿Está seguro de cancelar esta reserva?')">
+                                                    onclick="confirmCancelReserva({{ $reserva->id }})">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         @endif
@@ -712,7 +720,37 @@
             <div class="modal-backdrop fade show"></div>
         @endif
 
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            // Función para confirmar cancelación de reserva
+            function confirmCancelReserva(reservaId) {
+                Swal.fire({
+                    title: '¿Cancelar Reserva?',
+                    text: 'Esta acción no se puede deshacer. La reserva se cancelará y el stock se liberará.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, cancelar',
+                    cancelButtonText: 'No, mantener',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        @this.call('cancelReserva', reservaId);
+                    }
+                });
+            }
+
+            // Escuchar eventos de SweetAlert desde Livewire
+            window.addEventListener('swal', event => {
+                Swal.fire({
+                    title: event.detail.title,
+                    text: event.detail.text,
+                    icon: event.detail.icon,
+                    confirmButtonText: 'OK'
+                });
+            });
+
             document.addEventListener('livewire:load', function() {
                 console.log('hola');
                 Livewire.on('printReservaEvent', reservaJson => {
