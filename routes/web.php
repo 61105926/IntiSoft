@@ -3,6 +3,7 @@
 use App\Http\Controllers\AlquileresController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\GarantiaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\StockSucursal;
@@ -97,6 +98,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reserva', [ReservaController::class, 'index'])->name('reserva');
 
     Route::get('/alquiler', [AlquileresController::class, 'index'])->name('alquiler');
+    Route::get('/garantias', \App\Http\Livewire\Garantias\GarantiasController::class)->name('garantias');
 
 
 });

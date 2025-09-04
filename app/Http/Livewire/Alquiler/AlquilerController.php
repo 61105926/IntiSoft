@@ -91,6 +91,17 @@ class AlquilerController extends Component
         $unidadesEducativas = UnidadEducativa::orderBy('nombre')->get();
         $productos = Producto::all();
         $estadisticas = $this->getEstadisticas();
+        
+        // Garantías disponibles para asignar
+        $garantiasDisponibles = \App\Models\Garantia::with('tipoGarantia', 'cliente')
+            ->leftJoin('alquileres', 'garantias.id', '=', 'alquileres.garantia_id')
+            ->where('garantias.estado', \App\Models\Garantia::ESTADO_RECIBIDA)
+            ->whereNull('alquileres.id') // Sin asignar a ningún alquiler
+            ->select('garantias.*')
+            ->orderBy('garantias.fecha_recepcion', 'desc')
+            ->get();
+        
+        $tiposGarantia = \App\Models\TipoGarantia::activos()->orderBy('nombre')->get();
 
         return view('livewire.alquiler.alquiler', [
             'alquileres' => $alquileres,
@@ -100,12 +111,14 @@ class AlquilerController extends Component
             'unidadesEducativas' => $unidadesEducativas,
             'productos' => $productos,
             'estadisticas' => $estadisticas,
+            'garantiasDisponibles' => $garantiasDisponibles,
+            'tiposGarantia' => $tiposGarantia,
         ])->extends('layouts.theme.app')->section('content');
     }
 
     private function getFilteredAlquileres()
     {
-        $query = Alquiler::with(['cliente', 'sucursal', 'reserva', 'usuarioCreacion', 'unidadEducativa']);
+        $query = Alquiler::with(['cliente', 'sucursal', 'reserva', 'usuarioCreacion', 'unidadEducativa', 'garantia.tipoGarantia']);
 
         if ($this->searchTerm) {
             $query->where(function ($q) {
@@ -254,9 +267,22 @@ class AlquilerController extends Component
                 'usuario_creacion' => Auth::id(),
             ]);
 
-            // Si viene de una reserva, actualizar el estado a CONFIRMADA
+            // Si viene de una reserva, actualizar el estado a CONFIRMADA y transferir anticipo
             if ($this->reserva_id) {
-                Reserva::find($this->reserva_id)->update(['estado' => 'CONFIRMADA']);
+                $reserva = Reserva::find($this->reserva_id);
+                $reserva->update(['estado' => 'CONFIRMADA']);
+                
+                // Transferir anticipo de reserva al alquiler
+                if ($reserva->anticipo > 0) {
+                    $alquiler->update([
+                        'anticipo_reserva' => $reserva->anticipo,
+                        'anticipo' => $this->anticipo + $reserva->anticipo, // Sumar anticipo de reserva + adicional
+                        'saldo_pendiente' => $alquiler->total - ($this->anticipo + $reserva->anticipo),
+                    ]);
+                    
+                    // Actualizar estado de pago
+                    $alquiler->actualizarEstadoPago();
+                }
             }
 
             DB::commit();

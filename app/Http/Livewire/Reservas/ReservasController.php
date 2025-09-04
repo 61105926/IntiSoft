@@ -31,13 +31,13 @@ class ReservasController extends Component
     public $showNewReservaModal = false;
     public $showViewReservaModal = false;
     public $showConfirmReservaModal = false;
-
+    public $showConvertToAlquilerModal = false;
     // Form data para nueva reserva
     public $cliente_id = '';
     public $tipo_reserva = 'ALQUILER';
     public $fecha_reserva;
     public $fecha_vencimiento;
-    public $monto_efectivo = 0;
+    public $anticipo = 0;
     public $observaciones = '';
     public $sucursal_id = '';
 
@@ -52,13 +52,22 @@ class ReservasController extends Component
     // Confirmación
     public $montoAdicional = 0;
     public $observacionesConfirmacion = '';
+    
+    // Conversión a alquiler
+    public $fechaAlquiler;
+    public $fechaDevolucion;
+    public $diasAlquiler = 3;
+    public $anticipoAdicional = 0;
+    public $requiereDeposito = false;
+    public $depositoGarantia = 0;
+    public $observacionesAlquiler = '';
 
     protected $rules = [
         'cliente_id' => 'required|exists:clientes,id',
         'tipo_reserva' => 'required|in:ALQUILER,VENTA',
         'fecha_reserva' => 'required|date',
         'fecha_vencimiento' => 'required|date|after:fecha_reserva',
-        'monto_efectivo' => 'required|numeric|min:0',
+        'anticipo' => 'required|numeric|min:0',
         'sucursal_id' => 'required|exists:sucursals,id',
         'selectedProducts' => 'required|array|min:1',
     ];
@@ -145,7 +154,7 @@ class ReservasController extends Component
             'vencidas' => Reserva::where('fecha_vencimiento', '<', $hoy)->count(),
 
             'confirmadas' => Reserva::where('estado', 'CONFIRMADA')->count(),
-            'montoTotalEfectivo' => Reserva::where('estado', 'ACTIVA')->sum('monto_efectivo'),
+            'montoTotalEfectivo' => Reserva::where('estado', 'ACTIVA')->sum('anticipo'),
         ];
     }
 
@@ -280,8 +289,8 @@ class ReservasController extends Component
                     'subtotal' => $detalle->subtotal,
                 ];
             }),
-            'total_estimado' => $this->reservaToPrint->total_estimado,
-            'monto_efectivo' => $this->reservaToPrint->monto_efectivo,
+            'total_estimado' => $this->reservaToPrint->total,
+            'monto_efectivo' => $this->reservaToPrint->anticipo,
             'observaciones' => $this->reservaToPrint->observaciones,
         ];
         // dd($reservaData);
@@ -305,8 +314,9 @@ class ReservasController extends Component
                 'tipo_reserva' => $this->tipo_reserva,
                 'fecha_reserva' => $this->fecha_reserva,
                 'fecha_vencimiento' => $this->fecha_vencimiento,
-                'monto_efectivo' => $this->monto_efectivo,
-                'total_estimado' => $this->calculateTotal(),
+                'anticipo' => $this->anticipo,
+                'subtotal' => $this->calculateTotal(),
+                'total' => $this->calculateTotal(),
                 'observaciones' => $this->observaciones,
                 'sucursal_id' => $this->sucursal_id,
                 'usuario_creacion_id' => Auth::id(),
@@ -387,7 +397,7 @@ class ReservasController extends Component
 
             $this->selectedReserva->update([
                 'estado' => 'CONFIRMADA',
-                'monto_efectivo' => $this->selectedReserva->monto_efectivo + $this->montoAdicional,
+                'anticipo' => $this->selectedReserva->anticipo + $this->montoAdicional,
                 'observaciones' => $this->selectedReserva->observaciones . "\n" . $this->observacionesConfirmacion,
             ]);
 
@@ -443,8 +453,15 @@ class ReservasController extends Component
 
     private function createAlquilerFromReserva($reserva)
     {
-        // Aquí implementarías la lógica para crear un alquiler desde la reserva
-        // Esto dependería de tu modelo de Alquiler
+        // Usar el método del modelo para convertir reserva a alquiler
+        $alquiler = $reserva->convertirAAlquiler([
+            'fecha_alquiler' => now()->toDateString(),
+            'fecha_devolucion_programada' => now()->addDays(3)->toDateString(),
+            'dias_alquiler' => 3,
+            'usuario_creacion' => Auth::id(),
+        ]);
+
+        return $alquiler;
     }
 
     private function resetForm()
@@ -453,7 +470,7 @@ class ReservasController extends Component
         $this->tipo_reserva = 'ALQUILER';
         $this->fecha_reserva = Carbon::now()->format('Y-m-d');
         $this->fecha_vencimiento = Carbon::now()->addDays(7)->format('Y-m-d');
-        $this->monto_efectivo = 0;
+        $this->anticipo = 0;
         $this->observaciones = '';
         $this->selectedProducts = [];
         $this->currentProductId = '';
@@ -463,11 +480,120 @@ class ReservasController extends Component
     public function getSaldoPendienteProperty()
     {
         if (!$this->selectedReserva) return 0;
-        return $this->selectedReserva->total_estimado - $this->selectedReserva->monto_efectivo;
+        return $this->selectedReserva->total - $this->selectedReserva->anticipo;
     }
 
     public function getSaldoFinalProperty()
     {
         return $this->getSaldoPendienteProperty() - $this->montoAdicional;
+    }
+
+    // Métodos para conversión a alquiler
+    public function convertToAlquiler($reservaId)
+    {
+        $this->selectedReserva = Reserva::with(['cliente', 'detalles.producto'])->find($reservaId);
+        
+        if (!$this->selectedReserva || !$this->selectedReserva->puedeConvertirseAAlquiler()) {
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Esta reserva no puede convertirse a alquiler.',
+                'icon' => 'error'
+            ]);
+            return;
+        }
+
+        // Inicializar valores por defecto
+        $this->fechaAlquiler = now()->format('Y-m-d');
+        $this->fechaDevolucion = now()->addDays(3)->format('Y-m-d');
+        $this->diasAlquiler = 3;
+        $this->anticipoAdicional = 0;
+        $this->requiereDeposito = false;
+        $this->depositoGarantia = 0;
+        
+        $this->showConvertToAlquilerModal = true;
+    }
+
+    public function closeConvertToAlquilerModal()
+    {
+        $this->showConvertToAlquilerModal = false;
+        $this->selectedReserva = null;
+        $this->resetConversionForm();
+    }
+
+    public function saveConvertToAlquiler()
+    {
+        $this->validate([
+            'fechaAlquiler' => 'required|date|after_or_equal:today',
+            'fechaDevolucion' => 'required|date|after:fechaAlquiler',
+            'diasAlquiler' => 'required|integer|min:1',
+            'anticipoAdicional' => 'required|numeric|min:0',
+            'depositoGarantia' => 'required_if:requiereDeposito,true|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Calcular días de alquiler automáticamente
+            $fechaInicio = \Carbon\Carbon::parse($this->fechaAlquiler);
+            $fechaFin = \Carbon\Carbon::parse($this->fechaDevolucion);
+            $diasCalculados = $fechaInicio->diffInDays($fechaFin) + 1; // +1 para incluir el día de entrega
+
+            // Crear el alquiler usando el método del modelo
+            $alquiler = $this->selectedReserva->convertirAAlquiler([
+                'fecha_alquiler' => $this->fechaAlquiler,
+                'fecha_devolucion_programada' => $this->fechaDevolucion,
+                'dias_alquiler' => $diasCalculados,
+                'anticipo' => $this->anticipoAdicional, // Pago adicional
+                'requiere_deposito' => $this->requiereDeposito,
+                'deposito_garantia' => $this->depositoGarantia,
+                'observaciones' => $this->observacionesAlquiler ?? '',
+                'usuario_creacion' => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            $this->dispatchBrowserEvent('swal', [
+                'title' => '¡Alquiler Creado!',
+                'text' => "El alquiler {$alquiler->numero_contrato} ha sido creado exitosamente desde la reserva {$this->selectedReserva->numero_reserva}.",
+                'icon' => 'success'
+            ]);
+
+            $this->closeConvertToAlquilerModal();
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Error al convertir reserva: ' . $e->getMessage(),
+                'icon' => 'error'
+            ]);
+        }
+    }
+
+    private function resetConversionForm()
+    {
+        $this->fechaAlquiler = '';
+        $this->fechaDevolucion = '';
+        $this->diasAlquiler = 3;
+        $this->anticipoAdicional = 0;
+        $this->requiereDeposito = false;
+        $this->depositoGarantia = 0;
+        $this->observacionesAlquiler = '';
+    }
+
+    public function updatedDiasAlquiler()
+    {
+        if ($this->fechaAlquiler && $this->diasAlquiler > 0) {
+            $fechaAlquiler = \Carbon\Carbon::parse($this->fechaAlquiler);
+            $this->fechaDevolucion = $fechaAlquiler->addDays($this->diasAlquiler)->format('Y-m-d');
+        }
+    }
+
+    public function updatedFechaAlquiler()
+    {
+        if ($this->fechaAlquiler && $this->diasAlquiler > 0) {
+            $fechaAlquiler = \Carbon\Carbon::parse($this->fechaAlquiler);
+            $this->fechaDevolucion = $fechaAlquiler->addDays($this->diasAlquiler)->format('Y-m-d');
+        }
     }
 }

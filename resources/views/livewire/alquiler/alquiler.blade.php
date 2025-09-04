@@ -203,11 +203,32 @@
                                 <td>
                                     <div class="small">
                                         <div><strong>Bs. {{ number_format($alquiler->total, 2) }}</strong></div>
-                                        <div class="text-success">Anticipo: Bs. {{ number_format($alquiler->anticipo, 2) }}</div>
+                                        @if($alquiler->anticipo_reserva && $alquiler->anticipo_reserva > 0)
+                                            <div class="text-info">Reserva: Bs. {{ number_format($alquiler->anticipo_reserva, 2) }}</div>
+                                            @if($alquiler->anticipo > $alquiler->anticipo_reserva)
+                                                <div class="text-success">Adicional: Bs. {{ number_format($alquiler->anticipo - $alquiler->anticipo_reserva, 2) }}</div>
+                                            @endif
+                                            <div class="text-success border-top">Total Pagado: Bs. {{ number_format($alquiler->anticipo, 2) }}</div>
+                                        @else
+                                            <div class="text-success">Anticipo: Bs. {{ number_format($alquiler->anticipo, 2) }}</div>
+                                        @endif
                                         <div class="text-warning">Saldo: Bs. {{ number_format($alquiler->saldo_pendiente, 2) }}</div>
                                     </div>
                                 </td>
-                                <td>N/A</td>
+                                <td>
+                                    @if($alquiler->tieneGarantia())
+                                        <div class="small">
+                                            <span class="badge bg-success mb-1">{{ $alquiler->garantia->tipoGarantia->nombre }}</span>
+                                            <div class="text-primary fw-bold">{{ $alquiler->garantia->numero_ticket }}</div>
+                                            @if($alquiler->garantia->monto > 0)
+                                                <div class="text-success">Bs. {{ number_format($alquiler->garantia->monto, 2) }}</div>
+                                            @endif
+                                            <div class="text-muted">{{ $alquiler->garantia->estado_display }}</div>
+                                        </div>
+                                    @else
+                                        <span class="text-muted small">Sin garantía</span>
+                                    @endif
+                                </td>
                                 <td>{{ $alquiler->usuarioCreacion->name ?? 'N/A' }}</td>
                                 <td>
                                     <div class="btn-group" role="group">

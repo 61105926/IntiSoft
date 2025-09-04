@@ -260,12 +260,12 @@
                                     @endforeach
                                 </td>
                                 <td class="small">
-                                    <div><strong>Total: Bs. {{ number_format($reserva->total_estimado, 2) }}</strong>
+                                    <div><strong>Total: Bs. {{ number_format($reserva->total, 2) }}</strong>
                                     </div>
                                     <div class="text-success">Efectivo: Bs.
-                                        {{ number_format($reserva->monto_efectivo, 2) }}</div>
+                                        {{ number_format($reserva->anticipo, 2) }}</div>
                                     <div class="text-warning">Saldo: Bs.
-                                        {{ number_format($reserva->total_estimado - $reserva->monto_efectivo, 2) }}
+                                        {{ number_format($reserva->total - $reserva->anticipo, 2) }}
                                     </div>
                                 </td>
                                 <td class="small">
@@ -291,6 +291,14 @@
                                                     wire:click="confirmReserva({{ $reserva->id }})">
                                                 <i class="fas fa-check"></i>
                                             </button>
+                                            @if ($reserva->tipo_reserva === 'ALQUILER' && !$reserva->alquiler)
+                                                <button type="button"
+                                                        class="btn btn-sm btn-info"
+                                                        wire:click="convertToAlquiler({{ $reserva->id }})"
+                                                        title="Convertir a Alquiler">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                </button>
+                                            @endif
                                             <button type="button"
                                                     class="btn btn-sm btn-danger"
                                                     onclick="confirmCancelReserva({{ $reserva->id }})">
@@ -421,10 +429,10 @@
                                         <label class="form-label">Monto en Efectivo (Bs.) *</label>
                                         <input type="number"
                                                step="0.01"
-                                               class="form-control @error('monto_efectivo') is-invalid @enderror"
-                                               wire:model="monto_efectivo"
+                                               class="form-control @error('anticipo') is-invalid @enderror"
+                                               wire:model="anticipo"
                                                placeholder="0.00">
-                                        @error('monto_efectivo')
+                                        @error('anticipo')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -507,12 +515,12 @@
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="fw-bold">Monto en Efectivo:</span>
                                             <span class="fw-bold fs-5 text-success">Bs.
-                                                {{ number_format($monto_efectivo, 2) }}</span>
+                                                {{ number_format($anticipo, 2) }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between border-top pt-2">
                                             <span class="fw-bold">Saldo Pendiente:</span>
                                             <span class="fw-bold fs-5 text-warning">Bs.
-                                                {{ number_format($this->calculateTotal() - $monto_efectivo, 2) }}</span>
+                                                {{ number_format($this->calculateTotal() - $anticipo, 2) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -595,17 +603,17 @@
                                         <tr>
                                             <td><strong>Total Estimado:</strong></td>
                                             <td><strong>Bs.
-                                                    {{ number_format($selectedReserva->total_estimado, 2) }}</strong></td>
+                                                    {{ number_format($selectedReserva->total, 2) }}</strong></td>
                                         </tr>
                                         <tr>
                                             <td><strong>Monto en Efectivo:</strong></td>
                                             <td><strong class="text-success">Bs.
-                                                    {{ number_format($selectedReserva->monto_efectivo, 2) }}</strong></td>
+                                                    {{ number_format($selectedReserva->anticipo, 2) }}</strong></td>
                                         </tr>
                                         <tr>
                                             <td><strong>Saldo Pendiente:</strong></td>
                                             <td><strong class="text-warning">Bs.
-                                                    {{ number_format($selectedReserva->total_estimado - $selectedReserva->monto_efectivo, 2) }}</strong>
+                                                    {{ number_format($selectedReserva->total - $selectedReserva->anticipo, 2) }}</strong>
                                             </td>
                                         </tr>
                                     </table>
@@ -661,12 +669,12 @@
                             <div class="bg-light mb-3 rounded p-3">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Total Estimado:</span>
-                                    <strong>Bs. {{ number_format($selectedReserva->total_estimado, 2) }}</strong>
+                                    <strong>Bs. {{ number_format($selectedReserva->total, 2) }}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Monto ya Pagado:</span>
                                     <strong class="text-success">Bs.
-                                        {{ number_format($selectedReserva->monto_efectivo, 2) }}</strong>
+                                        {{ number_format($selectedReserva->anticipo, 2) }}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between border-top pt-2">
                                     <span>Saldo Pendiente:</span>
@@ -713,6 +721,293 @@
                                     wire:click="saveConfirmReserva">
                                 Confirmar Reserva
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        @endif
+
+        {{-- Modal de Conversión a Alquiler --}}
+        @if ($showConvertToAlquilerModal && $selectedReserva)
+            <div class="modal fade show"
+                 style="display: block;"
+                 tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="d-flex align-items-center text-white w-100">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-white bg-opacity-20 rounded-circle p-2 me-3">
+                                        <i class="fas fa-exchange-alt fa-lg text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0">Convertir Reserva a Alquiler</h5>
+                                        <small class="opacity-75">{{ $selectedReserva->numero_reserva }} → Nuevo Contrato de Alquiler</small>
+                                    </div>
+                                </div>
+                                <div class="ms-auto text-end">
+                                    <div class="small opacity-75">Cliente</div>
+                                    <div class="fw-bold">{{ $selectedReserva->cliente->nombres }} {{ $selectedReserva->cliente->apellidos }}</div>
+                                </div>
+                            </div>
+                            <button type="button"
+                                    class="btn-close btn-close-white"
+                                    wire:click="closeConvertToAlquilerModal"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if (session()->has('errorConversion'))
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    {{ session('errorConversion') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            @endif
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="fas fa-info-circle text-primary me-2"></i>
+                                        Información de la Reserva
+                                    </h6>
+                                    <div class="card border-primary shadow-sm">
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <div class="col-6">
+                                                    <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                                                        <div class="fs-4 fw-bold text-success mb-1">
+                                                            Bs. {{ number_format($selectedReserva->anticipo, 2) }}
+                                                        </div>
+                                                        <small class="text-muted">Anticipo Actual</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                                        <div class="fs-4 fw-bold text-primary mb-1">
+                                                            Bs. {{ number_format($selectedReserva->total, 2) }}
+                                                        </div>
+                                                        <small class="text-muted">Total Reserva</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="text-center p-3 bg-warning bg-opacity-10 rounded border border-warning border-opacity-25">
+                                                        <div class="fs-4 fw-bold text-warning mb-1">
+                                                            Bs. {{ number_format($selectedReserva->saldo_pendiente, 2) }}
+                                                        </div>
+                                                        <small class="text-muted">Saldo Pendiente de la Reserva</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="fw-bold mb-2 mt-3">Productos Reservados</h6>
+                                    <div class="card">
+                                        <div class="card-body p-2">
+                                            @foreach ($selectedReserva->detalles as $detalle)
+                                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                                    <div class="small">
+                                                        <strong>{{ $detalle->producto->nombre }}</strong>
+                                                        <br>Cantidad: {{ $detalle->cantidad }} x Bs. {{ number_format($detalle->precio_unitario, 2) }}
+                                                    </div>
+                                                    <strong class="small">Bs. {{ number_format($detalle->subtotal, 2) }}</strong>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="fas fa-calendar-alt text-info me-2"></i>
+                                        Datos del Alquiler
+                                    </h6>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    <i class="fas fa-calendar-plus text-success me-1"></i>
+                                                    Fecha de Entrega *
+                                                </label>
+                                                <input type="date"
+                                                       class="form-control @error('fechaAlquiler') is-invalid @enderror"
+                                                       wire:model="fechaAlquiler"
+                                                       min="{{ date('Y-m-d') }}">
+                                                @error('fechaAlquiler')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    <i class="fas fa-calendar-minus text-danger me-1"></i>
+                                                    Fecha de Devolución *
+                                                </label>
+                                                <input type="date"
+                                                       class="form-control @error('fechaDevolucion') is-invalid @enderror"
+                                                       wire:model="fechaDevolucion"
+                                                       min="{{ date('Y-m-d') }}">
+                                                @error('fechaDevolucion')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    <i class="fas fa-clock text-info me-1"></i>
+                                                    Días de Alquiler
+                                                </label>
+                                                <div class="form-control bg-light text-center fw-bold fs-5">
+                                                    @if($fechaAlquiler && $fechaDevolucion)
+                                                        @php
+                                                            $fechaInicio = \Carbon\Carbon::parse($fechaAlquiler);
+                                                            $fechaFin = \Carbon\Carbon::parse($fechaDevolucion);
+                                                            $diasCalculados = $fechaInicio->diffInDays($fechaFin) + 1;
+                                                        @endphp
+                                                        {{ $diasCalculados }} día{{ $diasCalculados != 1 ? 's' : '' }}
+                                                    @else
+                                                        -- días
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Anticipo Adicional (Bs.)</label>
+                                                <input type="number"
+                                                       step="0.01"
+                                                       min="0"
+                                                       class="form-control @error('anticipoAdicional') is-invalid @enderror"
+                                                       wire:model="anticipoAdicional"
+                                                       placeholder="0.00">
+                                                @error('anticipoAdicional')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                                <small class="form-text text-muted">
+                                                    Monto adicional al anticipo de la reserva
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            @if($requiereDeposito)
+                                                <div class="mb-3">
+                                                    <label class="form-label">Depósito de Garantía (Bs.)</label>
+                                                    <input type="number"
+                                                           step="0.01"
+                                                           min="0"
+                                                           class="form-control @error('depositoGarantia') is-invalid @enderror"
+                                                           wire:model="depositoGarantia"
+                                                           placeholder="0.00">
+                                                    @error('depositoGarantia')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="requiereDeposito"
+                                                   wire:model="requiereDeposito">
+                                            <label class="form-check-label" for="requiereDeposito">
+                                                <i class="fas fa-shield-alt text-secondary me-1"></i>
+                                                Requiere Depósito de Garantía
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Observaciones del Alquiler</label>
+                                        <textarea class="form-control"
+                                                  rows="3"
+                                                  wire:model="observacionesAlquiler"
+                                                  placeholder="Observaciones adicionales para el alquiler..."></textarea>
+                                    </div>
+
+                                    {{-- Resumen Financiero --}}
+                                    <div class="card bg-light">
+                                        <div class="card-header py-2">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-calculator text-success me-2"></i>
+                                                Resumen Financiero
+                                            </h6>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <div class="row small">
+                                                <div class="col-12">
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Total del Alquiler:</span>
+                                                        <strong>Bs. {{ number_format($selectedReserva->total, 2) }}</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1 text-success">
+                                                        <span>Anticipo de Reserva:</span>
+                                                        <strong>Bs. {{ number_format($selectedReserva->anticipo, 2) }}</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1 text-info">
+                                                        <span>Anticipo Adicional:</span>
+                                                        <strong>Bs. {{ number_format($anticipoAdicional ?? 0, 2) }}</strong>
+                                                    </div>
+                                                    @if($requiereDeposito && $depositoGarantia)
+                                                        <div class="d-flex justify-content-between mb-1 text-secondary">
+                                                            <span>Depósito de Garantía:</span>
+                                                            <strong>Bs. {{ number_format($depositoGarantia, 2) }}</strong>
+                                                        </div>
+                                                    @endif
+                                                    <hr class="my-1">
+                                                    @php
+                                                        $totalAnticipo = $selectedReserva->anticipo + ($anticipoAdicional ?? 0);
+                                                        $saldoPendiente = $selectedReserva->total - $totalAnticipo;
+                                                    @endphp
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Total Pagado:</span>
+                                                        <strong class="text-success">Bs. {{ number_format($totalAnticipo, 2) }}</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>Saldo Pendiente:</span>
+                                                        <strong class="{{ $saldoPendiente <= 0 ? 'text-success' : 'text-warning' }}">
+                                                            Bs. {{ number_format($saldoPendiente, 2) }}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light border-top-0 pt-4">
+                            <div class="d-flex justify-content-between w-100">
+                                <div class="d-flex align-items-center text-muted small">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    La reserva se confirmará automáticamente al crear el alquiler
+                                </div>
+                                <div>
+                                    <button type="button"
+                                            class="btn btn-light me-2"
+                                            wire:click="closeConvertToAlquilerModal">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-primary btn-lg px-4"
+                                            wire:click="saveConvertToAlquiler"
+                                            wire:loading.attr="disabled">
+                                        <span wire:loading.remove>
+                                            <i class="fas fa-handshake me-2"></i>Crear Contrato de Alquiler
+                                        </span>
+                                        <span wire:loading>
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Creando Contrato...
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

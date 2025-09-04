@@ -22,8 +22,7 @@
                     </svg>
                 </div>
             </div>
-        </div>
-      
+        </div>      
         <div class="shadow-bottom"></div>
         <ul class="list-unstyled menu-categories" id="accordionExample">
             <li class="menu">
@@ -115,6 +114,11 @@
                     <li class="menu">
                         <a href="{{ route('alquiler') }}">Alquileres</a>
                     </li>
+                    <li class="menu">
+                        <a href="{{ route('garantias') }}">
+                            <i class="fas fa-shield-alt me-2"></i>Garantías
+                        </a>
+                    </li>
                 </ul>
             </li>
 
@@ -148,7 +152,7 @@
                         <a href="#">Caja</a>
                     </li>
                     <li class="menu">
-                        <a href="#">Garantías</a>
+                        <a href="{{ route('garantia') }}" >Garantías</a>
                     </li>
                 </ul>
             </li>
