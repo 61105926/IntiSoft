@@ -1,7 +1,6 @@
 <div class="sidebar-wrapper sidebar-theme">
 
     <nav id="sidebar">
-
         <div class="navbar-nav theme-brand flex-row  text-center">
             <div class="nav-logo">
                 <div class="nav-item theme-logo">
@@ -10,7 +9,7 @@
                     </a>
                 </div>
                 <div class="nav-item theme-text">
-                    <a href="./" style="font-size: 20px !important;" class="nav-link"> Veterinaria </a>
+                    <a href="./" style="font-size: 20px !important;" class="nav-link"> IntiSoft </a>
                 </div>
             </div>
             <div class="nav-item sidebar-toggle">
@@ -27,7 +26,6 @@
       
         <div class="shadow-bottom"></div>
         <ul class="list-unstyled menu-categories" id="accordionExample">
-
             <li class="menu">
                 <a href="#" class="dropdown-toggle">
                     <div class="">
@@ -39,6 +37,8 @@
                         </svg>
                         <span>Dashboard</span>
                     </div>
+                </a>
+                </a>
                 </a>
             </li>
 
@@ -192,3 +192,4 @@
         </ul>
     </nav>
 </div>
+

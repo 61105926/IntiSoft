@@ -17,7 +17,7 @@
                     @endphp
 
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>Código:</strong> {{ $detailProducto->codigo ?? 'N/A' }}</li>
+                        <li class="list-group-item"><strong>Código:</strong> {{ $detailProducto->codigo ?? 'N /A' }}</li>
                         <li class="list-group-item"><strong>Nombre:</strong> {{ $detailProducto->nombre ?? 'N/A' }}</li>
                         <li class="list-group-item"><strong>Descripción:</strong> {{ $detailProducto->descripcion ?? 'Sin descripción' }}</li>
                         <li class="list-group-item"><strong>Categoría:</strong> {{ optional($detailProducto->categoria)->nombre ?? 'Sin categoría' }}</li>
