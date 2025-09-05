@@ -932,6 +932,53 @@
                                                   placeholder="Observaciones adicionales para el alquiler..."></textarea>
                                     </div>
 
+                                    {{-- Garantía --}}
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-shield-alt text-warning me-2"></i>
+                                            Garantía (Opcional)
+                                        </label>
+                                        <select class="form-select" wire:model="garantia_id">
+                                            <option value="">🛡️ Sin garantía</option>
+                                            @foreach ($garantiasDisponibles as $garantia)
+                                                <option value="{{ $garantia->id }}">
+                                                    {{ $garantia->numero_ticket }} - {{ $garantia->tipoGarantia->nombre }}
+                                                    @if($garantia->monto > 0)
+                                                        - Bs. {{ number_format($garantia->monto, 2) }}
+                                                    @endif
+                                                    ({{ $garantia->descripcion }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="form-text text-info">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Solo se muestran garantías activas del cliente
+                                        </small>
+
+                                        {{-- Mostrar información de la garantía seleccionada --}}
+                                        @if($garantia_id)
+                                            @php
+                                                $selectedGarantia = $garantiasDisponibles->find($garantia_id);
+                                            @endphp
+                                            @if($selectedGarantia)
+                                                <div class="alert alert-info mt-2 mb-0">
+                                                    <div class="row small">
+                                                        <div class="col-md-6">
+                                                            <strong>Tipo:</strong> {{ $selectedGarantia->tipoGarantia->nombre }}<br>
+                                                            <strong>Ticket:</strong> {{ $selectedGarantia->numero_ticket }}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            @if($selectedGarantia->monto > 0)
+                                                                <strong>Monto:</strong> Bs. {{ number_format($selectedGarantia->monto, 2) }}<br>
+                                                            @endif
+                                                            <strong>Vence:</strong> {{ $selectedGarantia->fecha_vencimiento ? \Carbon\Carbon::parse($selectedGarantia->fecha_vencimiento)->format('d/m/Y') : 'Sin vencimiento' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </div>
+
                                     {{-- Resumen Financiero --}}
                                     <div class="card bg-light">
                                         <div class="card-header py-2">

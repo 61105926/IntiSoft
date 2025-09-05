@@ -2,552 +2,474 @@
 
 namespace App\Http\Livewire\Venta;
 
-use App\Models\Caja;
-use App\Models\CajaEntrada;
-use App\Models\CajaOperaciones;
-use App\Models\CajaSalida;
-use App\Models\Client;
-use App\Models\Company;
-use App\Models\DetalleVenta;
-use App\Models\Product;
-use App\Models\StockHistories;
-use App\Models\Ventas;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\Venta;
+use App\Models\VentaDetalle;
+use App\Models\Cliente;
+use App\Models\Producto;
+use App\Models\Sucursal;
+use App\Models\Caja;
+use App\Models\StockPorSucursal;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
 class VentaController extends Component
 {
     use WithPagination;
 
-    // public $componentName = 'Venta',
-    //     $pageTitle = 'Listado',
-    //     $selected_id,
-    //     $search,
-    //     $client_id;
-    // public $cart = [],
-    //     $selected_product_id,
-    //     $quantity = 1,
-    //     $price,
-    //     $subtotal = 0,
-    //     $price_total_product,
-    //     $caja_id="",
-    //     $total = 0;
-    // public $payment_method = 'Efectivo',
-    //     $discount = 0;
-    // public $localStock = [];
+    // Propiedades para filtros y búsqueda
+    public $busqueda = '';
+    public $filtroEstado = '';
+    public $filtroEstadoPago = '';
+    public $fechaDesde = '';
+    public $fechaHasta = '';
+    public $clienteSeleccionado = '';
 
-    // public $pagination = 10;
-    // public $startDate, $endDate;
-    // public $type_product;
+    // Propiedades para modales
+    public $mostrarModalVenta = false;
+    public $mostrarModalDetalle = false;
+    public $mostrarModalPago = false;
 
-    // public $created_at;
-    // public function updatedPagination($value)
-    // {
-    //     $this->pagination = $value;
-    // }
+    // Propiedades para venta
+    public $ventaSeleccionada = null;
+    public $numero_venta = '';
+    public $cliente_id = '';
+    public $sucursal_id = '';
+    public $fecha_venta = '';
+    public $fecha_entrega = '';
+    public $estado = 'PENDIENTE';
+    public $estado_pago = 'PENDIENTE';
+    public $metodo_pago = 'EFECTIVO';
+    public $observaciones = '';
+    public $documento_referencia = '';
+    public $descuento = 0;
+    public $impuestos = 0;
 
-    // public function resetUI()
-    // {
-    //     $this->reset();
-    //     $this->componentName = 'Venta';
-    // }
-    // public function mount()
-    // {
-    //     $this->localStock = Product::pluck('stock', 'id')->toArray();
-    //     $this->created_at = \Carbon\Carbon::now()->format('Y-m-d');
+    // Propiedades para productos en la venta
+    public $productosEnVenta = [];
+    public $productoSeleccionado = '';
+    public $cantidadProducto = 1;
+    public $precioProducto = 0;
+    public $descuentoProducto = 0;
 
-    // }
+    // Propiedades para pago
+    public $montoPago = 0;
+    public $cajaParaPago = '';
+    public $metodoPagoVenta = 'EFECTIVO';
 
-    // public function paginationView()
-    // {
-    //     return 'vendor.livewire.bootstrap';
-    // }
-    // // Variables para gestionar el carrito
-    // // Actualiza el precio total cuando se cambia el producto o la cantidad
-    // public function updatedSelectedProductId()
-    // {
-    //     $this->loadProductDetails();
-    //     $this->calculatePriceTotal();
-    // }
+    // Colecciones
+    public $clientes;
+    public $productos;
+    public $sucursales;
+    public $cajas;
 
-    // public function updatedQuantity()
-    // {
-    //     $this->calculatePriceTotal();
-    // }
+    protected $paginationTheme = 'bootstrap';
+    protected $listeners = ['refreshComponent' => '$refresh'];
 
-    // private function loadProductDetails()
-    // {
-    //     $product = Product::find($this->selected_product_id);
-    //     if ($product) {
-    //         $this->price = $product->precio;
-    //         $this->type_product = $product->categoria;
+    public function mount()
+    {
+        $this->fecha_venta = Carbon::now()->format('Y-m-d\TH:i');
+        $this->fechaDesde = Carbon::now()->startOfMonth()->format('Y-m-d');
+        $this->fechaHasta = Carbon::now()->format('Y-m-d');
+        $this->sucursal_id = auth()->user()->sucursal_id ?? '';
+        
+        $this->cargarDatos();
+    }
 
-    //         $this->localStock[$product->id] = $this->localStock[$product->id] ?? $product->stock;
-    //         $this->price = $product->precio;
-    //     }
-    // }
+    public function cargarDatos()
+    {
+        $this->clientes = Cliente::orderBy('nombre')->get();
+        $this->productos = Producto::with('stockPorSucursal')->orderBy('nombre')->get();
+        $this->sucursales = Sucursal::orderBy('nombre')->get();
+        $this->cajas = Caja::where('estado', 'ABIERTA')->orderBy('nombre')->get();
+    }
 
-    // public function calculatePriceTotal()
-    // {
-    //     // Asegúrate de que price y quantity sean numéricos, convierte si es necesario
-    //     $price = is_numeric($this->price) ? (float) $this->price : 0;
-    //     $quantity = is_numeric($this->quantity) ? (int) $this->quantity : 0;
+    public function updatedBusqueda()
+    {
+        $this->resetPage();
+    }
 
-    //     // Realiza la multiplicación
-    //     $this->price_total_product = $price * $quantity;
-    // }
+    public function updatedFiltroEstado()
+    {
+        $this->resetPage();
+    }
 
-    // // Añadir producto al carrito
-    // public function addProduct()
-    // {
-    //     $product = Product::find($this->selected_product_id);
+    public function updatedFiltroEstadoPago()
+    {
+        $this->resetPage();
+    }
 
-    //     if ($product && $this->isStockAvailable($product)) {
-    //         $this->cart[] = [
-    //             'unique_id' => uniqid(),
-    //             'id' => $product->id,
-    //             'code' => $product->codigo_producto,
-    //             'description' => $product->nombre_producto,
-    //             'quantity' => $this->quantity,
-    //             'price' => $this->price,
-    //             'total' => $this->price_total_product,
-    //         ];
+    // Modal de nueva venta
+    public function abrirModalVenta($ventaId = null)
+    {
+        $this->resetearFormulario();
+        
+        if ($ventaId) {
+            $this->ventaSeleccionada = Venta::with('detalles.producto')->find($ventaId);
+            if ($this->ventaSeleccionada) {
+                $this->cargarDatosVenta();
+            }
+        }
+        
+        $this->mostrarModalVenta = true;
+    }
 
-    //         $this->localStock[$product->id] -= $this->quantity;
-    //         $this->resetProductSelection();
-    //         $this->calculateTotals();
-    //         $this->calculatePriceTotal();
-    //     }
-    // }
+    public function cerrarModalVenta()
+    {
+        $this->mostrarModalVenta = false;
+        $this->resetearFormulario();
+    }
 
-    // private function isStockAvailable($product)
-    // {
-    //     if ($this->localStock[$product->id] < $this->quantity) {
-    //         $this->emit('mostrarAlertaFaild', 'No hay suficiente stock disponible.');
+    public function resetearFormulario()
+    {
+        $this->ventaSeleccionada = null;
+        $this->numero_venta = '';
+        $this->cliente_id = '';
+        $this->fecha_venta = Carbon::now()->format('Y-m-d\TH:i');
+        $this->fecha_entrega = '';
+        $this->estado = 'PENDIENTE';
+        $this->estado_pago = 'PENDIENTE';
+        $this->metodo_pago = 'EFECTIVO';
+        $this->observaciones = '';
+        $this->documento_referencia = '';
+        $this->descuento = 0;
+        $this->impuestos = 0;
+        $this->productosEnVenta = [];
+        $this->productoSeleccionado = '';
+        $this->cantidadProducto = 1;
+        $this->precioProducto = 0;
+        $this->descuentoProducto = 0;
+    }
 
-    //         return false;
-    //     }
-    //     return true;
-    // }
+    public function cargarDatosVenta()
+    {
+        if (!$this->ventaSeleccionada) return;
 
-    // private function resetProductSelection()
-    // {
-    //     $this->quantity = 1;
-    //     $this->price_total_product = null;
-    // }
+        $venta = $this->ventaSeleccionada;
+        $this->numero_venta = $venta->numero_venta;
+        $this->cliente_id = $venta->cliente_id;
+        $this->sucursal_id = $venta->sucursal_id;
+        $this->fecha_venta = $venta->fecha_venta->format('Y-m-d\TH:i');
+        $this->fecha_entrega = $venta->fecha_entrega ? $venta->fecha_entrega->format('Y-m-d\TH:i') : '';
+        $this->estado = $venta->estado;
+        $this->estado_pago = $venta->estado_pago;
+        $this->metodo_pago = $venta->metodo_pago;
+        $this->observaciones = $venta->observaciones;
+        $this->documento_referencia = $venta->documento_referencia;
+        $this->descuento = $venta->descuento;
+        $this->impuestos = $venta->impuestos;
 
-    // // Remover producto del carrito
-    // public function removeProduct($uniqueId)
-    // {
-    //     // Encuentra el producto que se está eliminando
-    //     $productToRemove = collect($this->cart)->firstWhere('unique_id', $uniqueId);
-    //     // dd($productToRemove);
-    //     // Si existe el producto, incrementa el stock disponible
-    //     if ($productToRemove) {
-    //         $productId = $productToRemove['id']; // Asumiendo que tienes 'product_id' en el carrito
-    //         $quantity = $productToRemove['quantity']; // Asumiendo que tienes 'quantity' en el carrito
+        // Cargar productos de la venta
+        $this->productosEnVenta = [];
+        foreach ($venta->detalles as $detalle) {
+            $this->productosEnVenta[] = [
+                'id' => $detalle->id,
+                'producto_id' => $detalle->producto_id,
+                'nombre' => $detalle->nombre_producto,
+                'codigo' => $detalle->codigo_producto,
+                'cantidad' => $detalle->cantidad,
+                'precio_unitario' => $detalle->precio_unitario,
+                'descuento_unitario' => $detalle->descuento_unitario,
+                'subtotal' => $detalle->subtotal,
+                'estado' => $detalle->estado
+            ];
+        }
+    }
 
-    //         // Recupera el stock del producto en localStock y lo incrementa
-    //         if (isset($this->localStock[$productId])) {
-    //             $this->localStock[$productId] += $quantity;
-    //         }
-    //     }
+    // Manejo de productos
+    public function updatedProductoSeleccionado()
+    {
+        if ($this->productoSeleccionado) {
+            $producto = Producto::find($this->productoSeleccionado);
+            if ($producto) {
+                $this->precioProducto = $producto->precio_venta;
+            }
+        }
+    }
 
-    //     // Filtra el carrito para eliminar el producto
-    //     $this->cart = array_filter($this->cart, function ($item) use ($uniqueId) {
-    //         return $item['unique_id'] !== $uniqueId;
-    //     });
+    public function agregarProducto()
+    {
+        $this->validate([
+            'productoSeleccionado' => 'required|exists:productos,id',
+            'cantidadProducto' => 'required|numeric|min:1',
+            'precioProducto' => 'required|numeric|min:0'
+        ]);
 
-    //     $this->cart = array_values($this->cart); // Reindexar el array
-
-    //     // Recalcular los totales después de eliminar el producto
-    //     $this->calculateTotals();
-    // }
-
-    // // Calcular subtotales y totales
-    // private function calculateTotals()
-    // {
-    //     $this->subtotal = collect($this->cart)->sum('total');
-    //     $this->total = floatval($this->subtotal) - floatval($this->discount);
-    // }
-
-    // public function updatedDiscount()
-    // {
-    //     $this->calculateTotals();
-    // }
-
-    // // Guardar la venta y sus detalles
-    // public $efectivo;
-    // public $debito;
-    // public $transferencia;
-    // // Dentro de la clase VentaController
-    // public $total_paid = 0; // Total pagado por el cliente
-    // public $change = 0; // Cambio devuelto
-
-    // public function store()
-    // {
-    //     if ($this->isCartValid() && $this->isClientSelected() && $this->isCajaSelected()) {
-    //         //  dd($this->cash_amount);
-    //         $totalPagado = $this->cash_amount + $this->deposit_amount + $this->transfer_amount;
-
-    //         if ($totalPagado < $this->total) {
-    //             $this->emit('mostrarAlertaFaild', 'El monto total no cubre el total a pagar.');
-    //             return;
-    //         }
-
-    //         DB::beginTransaction();
-    //         try {
-    //             $venta = $this->createSale();
-    //             // dd($venta);
-    //             $this->createSaleDetails($venta->id);
-
-    //             DB::commit();
-    //             $this->resetCart();
-    //             $this->emit('person-added', 'Venta Registrada');
-    //             $this->emit('mostrarAlertaSuccess', 'Venta Registrada');
-    //         } catch (\Exception $e) {
-    //             DB::rollBack();
-    //             //dd($e);
-    //             $this->emit('mostrarAlertaFaild', $e);
-    //         }
-    //     }
-    // }
-
-    // private function isCartValid()
-    // {
-    //     if (empty($this->cart)) {
-    //         $this->emit('mostrarAlertaFaild', 'Debe agregar al menos un producto al carrito');
-
-    //         return false;
-    //     }
-    //     return true;
-    // }
-    // private function isCajaSelected()
-    // {
-    //     if (!$this->caja_id) {
-    //         $this->emit('mostrarAlertaFaild', 'Debe seleccionar una Caja.');
-
-    //         return false;
-    //     }
-    //     return true;
-    // }
-    // private function isClientSelected()
-    // {
-    //     if (!$this->client_id) {
-    //         $this->emit('mostrarAlertaFaild', 'Debe seleccionar un cliente.');
-
-    //         return false;
-    //     }
-    //     return true;
-    // }
-    // // Dentro de la clase VentaController
-    // public $cash_amount = 0;
-    // public $deposit_amount = 0;
-    // public $transfer_amount = 0;
-
-    // private function createSale()
-    // {
-    //     // Supongamos que el cliente paga en efectivo y el monto ya fue capturado en $this->cash_amount
-    //     $this->total_paid = (float) $this->cash_amount + (float) $this->deposit_amount + (float) $this->transfer_amount;
-
-    //     // Calcula el cambio devuelto
-    //     if ($this->total_paid > $this->total) {
-    //         $this->change = $this->total_paid - $this->total;
-    //     } else {
-    //         $this->change = 0; // No hay cambio si no pagó de más
-    //     }
-    //     $venta = Ventas::create([
-    //         'client_id' => $this->client_id,
-    //         'user_id' => Auth::id(),
-    //         'subtotal' => $this->subtotal,
-    //         'descuento' => $this->discount,
-    //         'total' => $this->total,
-    //         'cash_amount' => $this->cash_amount,
-    //         'deposit_amount' => $this->deposit_amount,
-    //         'transfer_amount' => $this->transfer_amount,
-    //         'total_paid' => $this->total_paid,
-    //         'change' => $this->change,
-    //         'created_at' =>$this->created_at
-
-    //     ]);
-
-    //     // Registrar movimientos en las cajas
-    //     $this->registerCajaEntries($venta);
-
-    //     return $venta;
-    // }
-
-    // private function registerCajaEntries($venta)
-    // {
-    //     // Validar que las cantidades no sean nulas
-    //     $this->cash_amount = $this->cash_amount ?? 0;
-    //     $this->deposit_amount = $this->deposit_amount ?? 0;
-    //     $this->transfer_amount = $this->transfer_amount ?? 0;
-
-    //     $totalPago = $this->cash_amount + $this->deposit_amount + $this->transfer_amount;
-    //     $cambio = $totalPago - $venta->total; // Calcula el cambio
-
-    // // Registrar el cambio como salida si es mayor a 0
-    // if ($cambio > 0) {
-    //     $clienteNombre = $venta->cliente->nombre_completo ?? 'Cliente desconocido'; // Obtén el nombre del cliente
-
-    //     $cajaCambio = new CajaSalida();
-    //     $cajaCambio->caja_id = $this->caja_id; // ID de la caja asociada
-    //     $cajaCambio->type = 'Cambio';
-    //     $cajaCambio->monto = $cambio;
-    //     $cajaCambio->description = 'Cambio a cliente: ' . $clienteNombre . ' - Nº Venta: ' . $venta->id;
-    //     $cajaCambio->created_at = now();
-    //     $cajaCambio->save();
-    // }
-    //     // Manejar el efectivo (Caja de Efectivo)
-    //     if ($this->cash_amount > 0) {
-    //         $cajaEfectivo = new CajaEntrada();
-    //         $cajaEfectivo->caja_id = $this->caja_id; // Asegúrate de que este ID corresponde a la caja de efectivo
-    //         $cajaEfectivo->type = 'Efectivo';
-    //         $cajaEfectivo->monto = $this->cash_amount;
-    //         $cajaEfectivo->description = 'Nº Venta: ' . $venta->id;
-    //         $cajaEfectivo->created_at =  $this->created_at;
+        $producto = Producto::find($this->productoSeleccionado);
+        
+        // Verificar stock disponible
+        $stock = StockPorSucursal::where('producto_id', $this->productoSeleccionado)
+            ->where('sucursal_id', $this->sucursal_id)
+            ->first();
             
-    //         $cajaEfectivo->save();
+        if (!$stock || $stock->cantidad_disponible < $this->cantidadProducto) {
+            session()->flash('error', 'Stock insuficiente para el producto seleccionado');
+            return;
+        }
 
-    //         // Actualizar saldo de la caja de efectivo
-    //         // $this->updateCajaSaldo($cajaEfectivo->caja_id);
-    //     }
+        // Verificar si el producto ya está en la lista
+        $productoExistente = false;
+        foreach ($this->productosEnVenta as $key => $item) {
+            if ($item['producto_id'] == $this->productoSeleccionado) {
+                $this->productosEnVenta[$key]['cantidad'] += $this->cantidadProducto;
+                $this->productosEnVenta[$key]['subtotal'] = 
+                    ($this->productosEnVenta[$key]['precio_unitario'] - $this->productosEnVenta[$key]['descuento_unitario']) 
+                    * $this->productosEnVenta[$key]['cantidad'];
+                $productoExistente = true;
+                break;
+            }
+        }
 
-    //     // Manejar depósito (Caja de Operaciones)
-    //     if ($this->deposit_amount > 0) {
-    //         $cajaDeposito = new CajaOperaciones(); // Asegúrate de usar CajaEntrada si la tabla de operaciones es la misma
-    //         $cajaDeposito->caja_id = $this->caja_id; // ID de la caja de operaciones (puedes ajustarlo según corresponda)
-    //         $cajaDeposito->type = 'Deposito';
-    //         $cajaDeposito->monto = $this->deposit_amount;
-    //         $cajaDeposito->description = 'Nº Venta: ' . $venta->id;
-    //         $cajaDeposito->created_at = $this->created_at;
-    //         $cajaDeposito->save();
-
-    //         // Actualizar saldo de la caja de operaciones
-    //         // $this->updateCajaSaldo($cajaDeposito->caja_id);
-    //     }
-
-    //     // Manejar transferencia (Caja de Operaciones)
-    //     if ($this->transfer_amount > 0) {
-    //         $cajaTransferencia = new CajaOperaciones(); // Mismo caso, usa CajaEntrada si se trata de la misma tabla
-    //         $cajaTransferencia->caja_id = $this->caja_id; // ID de la caja de operaciones
-    //         $cajaTransferencia->type = 'Transferencia';
-    //         $cajaTransferencia->monto = $this->transfer_amount;
-    //         $cajaTransferencia->description = 'Nº Venta: ' . $venta->id;
-    //         $cajaTransferencia->created_at = $this->created_at;
-    //         $cajaTransferencia->save();
-
-    //         // Actualizar saldo de la caja de operaciones
-    //         // $this->updateCajaSaldo($cajaTransferencia->caja_id);
-    //     }
-    // }
-
-    // // Método para actualizar el saldo de la caja
-    // private function updateCajaSaldo($cajaId)
-    // {
-    //     $cajaModelo = Caja::find($cajaId);
-    //     if ($cajaModelo) {
-    //         $cajaModelo->calculteEntradasSaldias();
-    //     }
-    // }
-    // private function createSaleDetails($saleId)
-    // {
-    //     foreach ($this->cart as $item) {
-    //         // Crear el detalle de venta
-    //         DetalleVenta::create([
-    //             'venta_id' => $saleId,
-    //             'product_id' => $item['id'],
-    //             'quantity' => $item['quantity'],
-    //             'price' => $item['price'],
-    //             'total' => $item['total'],
-    //         ]);
-
-    //         // Actualizar el stock del producto
-    //         $product = Product::find($item['id']);
-    //         if ($product) {
-    //             // Registrar en el historial de stock
-    //             StockHistories::create([
-    //                 'product_id' => $product->id,
-    //                 'cantidad' => $item['quantity'],
-    //                 'stock_anterior' => $product->stock,
-    //                 'stock_nuevo' => $product->stock - $item['quantity'],
-    //                 'tipo_movimiento' => 'salida',
-    //                 'referencia' => 'venta',
-    //                 'referencia_id' => $saleId,
-    //                 'observacion' => 'Venta #' . $saleId,
-    //                 'created_at' =>$this->created_at
-
-    //             ]);
-
-    //             // Actualizar el stock del producto
-    //             $product->stock -= $item['quantity'];
-    //             $product->save();
-    //         }
-    //     }
-    // }
-
-    // // Limpiar el carrito y las variables relacionadas
-    // private function resetCart()
-    // {
-    //     $this->cart = [];
-    //     $this->subtotal = 0;
-    //     $this->discount = 0;
-    //     $this->total = 0;
-    //     $this->client_id = null;
-    //     $this->payment_method = 'Efectivo';
-    // }
-
-    // // Buscar ventas
-    // public function searchData()
-    // {
-    //     $query = Ventas::with('cliente')
-    //         ->when($this->startDate && $this->endDate, function ($q) {
-    //             $q->whereBetween('created_at', [$this->startDate, $this->endDate]);
-    //         })
-    //         ->where(function ($q) {
-    //             $q->where('id', 'like', '%' . $this->search . '%')
-    //                 ->orWhere('total', 'like', '%' . $this->search . '%')
-    //                 ->orWhereHas('cliente', function ($q) {
-    //                     $q->where('nombre_completo', 'like', '%' . $this->search . '%');
-    //                 });
-    //         });
-
-    //     return $query->orderBy('id', 'desc')->paginate($this->pagination);
-    // }
-
-    // public function generateSalesReportPdf()
-    // {
-    //     $ventas = Ventas::with('cliente')
-    //         ->where('estado', 1) // Condición para que state sea 1
-    //         ->when($this->startDate && $this->endDate, function ($query) {
-    //             $query->whereBetween('created_at', [$this->startDate, $this->endDate]);
-    //         })
-    //         ->when($this->search, function ($query) {
-    //             $query->whereHas('cliente', function ($q) {
-    //                 $q->where('nombre_completo', 'like', '%' . $this->search . '%');
-    //             });
-    //         })
-    //         ->get();
-
-    //     // Calcula los totales
-    //     $totalVentas = $ventas->count();
-    //     $totalProductosVendidos = $ventas->sum(function ($venta) {
-    //         return $venta->detalles->sum('quantity');
-    //     });
-    //     $totalMontoCompra = $ventas->sum('monto_compra');
-
-    //     $data = [
-    //         'totalVentas' => $totalVentas,
-    //         'totalProductosVendidos' => $totalProductosVendidos,
-    //         'totalMontoCompra' => $totalMontoCompra,
-    //         'fechaInicio' => $this->startDate,
-    //         'fechaFin' => $this->endDate,
-    //         'ventas' => $ventas,
-    //     ];
-
-    //     $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales_report', $data);
-    //     return response()->stream(
-    //         function () use ($pdf) {
-    //             echo $pdf->output();
-    //         },
-    //         200,
-    //         [
-    //             'Content-Type' => 'application/pdf',
-    //             'Content-Disposition' => 'inline; filename=ReporteVentas.pdf',
-    //         ],
-    //     );
-    // }
-
-    // // Generar PDF
-    // public function generatePdf($id)
-    // {
-    //     $venta = Ventas::with('cliente', 'detalles.producto')->findOrFail($id);
-    //     $data = [
-    //         'venta' => $venta,
-    //         'subtotal' => $venta->subtotal,
-    //         'discount' => $venta->descuento,
-    //         'total_price' => $venta->subtotal - $venta->descuento,
-    //         'company' => Company::first(),
-    //     ];
-
-    //     $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.venta', $data);
-    //     return $pdf->stream('DetalleVenta.pdf');
-    // }
-    // protected $listeners = [
-    //     'deleteRow' => 'destroy',
-    // ];
-    // public function destroy(Ventas $venta)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         // Devolver el stock de los productos
-    //         foreach ($venta->detalles as $detalle) {
-    //             $product = Product::find($detalle->product_id);
-    //             if ($product) {
-    //                 // Registrar en el historial de stock
-    //                 StockHistories::create([
-    //                     'product_id' => $product->id,
-    //                     'cantidad' => $detalle->quantity,
-    //                     'stock_anterior' => $product->stock,
-    //                     'stock_nuevo' => $product->stock + $detalle->quantity,
-    //                     'tipo_movimiento' => 'entrada',
-    //                     'referencia' => 'anulación_venta',
-    //                     'referencia_id' => $venta->id,
-    //                     'observacion' => 'Anulación de Venta #' . $venta->id
-    //                 ]);
-
-    //                 // Actualizar el stock del producto
-    //                 $product->stock += $detalle->quantity;
-    //                 $product->save();
-    //             }
-    //         }
-
-    //         // Cambiar el estado de la venta (0 = anulada, 1 = activa)
-    //         $venta->estado = $venta->estado == 0 ? 1 : 0;
-    //         $venta->save();
-
-    //         // Si la venta ha sido anulada (estado = 0), también actualizar el estado de los movimientos en caja
-    //         if ($venta->estado == 0) {
-    //             $this->anularMovimientosCaja($venta);
-    //         }
-
-    //         DB::commit();
+        if (!$productoExistente) {
+            $subtotal = ($this->precioProducto - $this->descuentoProducto) * $this->cantidadProducto;
             
-    //         // Restablecer la interfaz de usuario si es necesario
-    //         $this->resetUI();
-    //         $this->emit('mostrarAlertaSuccess', 'Venta Anulada y Stock Restaurado');
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         $this->emit('mostrarAlertaFaild', 'Error al anular la venta: ' . $e->getMessage());
-    //     }
-    // }
+            $this->productosEnVenta[] = [
+                'producto_id' => $this->productoSeleccionado,
+                'nombre' => $producto->nombre,
+                'codigo' => $producto->codigo,
+                'cantidad' => $this->cantidadProducto,
+                'precio_unitario' => $this->precioProducto,
+                'descuento_unitario' => $this->descuentoProducto,
+                'subtotal' => $subtotal,
+                'estado' => 'ACTIVO'
+            ];
+        }
 
-    // // Método para anular los movimientos de caja
-    // private function anularMovimientosCaja(Ventas $venta)
-    // {
-    //     // Anular el movimiento de efectivo si existe
-    //     CajaEntrada::where('description', 'like', '%Nº Venta: ' . $venta->id . '%')->update(['estado' => 0]); // Cambiar el estado a 0 (inactivo/anulado)
+        $this->productoSeleccionado = '';
+        $this->cantidadProducto = 1;
+        $this->precioProducto = 0;
+        $this->descuentoProducto = 0;
+    }
 
-    //     // Anular el movimiento de transferencia o depósito si existen
-    //     CajaOperaciones::where('description', 'like', '%Nº Venta: ' . $venta->id . '%')->update(['estado' => 0]); // Cambiar el estado a 0 (inactivo/anulado)
+    public function eliminarProducto($index)
+    {
+        unset($this->productosEnVenta[$index]);
+        $this->productosEnVenta = array_values($this->productosEnVenta);
+    }
 
-    //         CajaSalida::where('description', 'like', '%Nº Venta: ' . $venta->id . '%')->update(['estado' => 0]);
+    public function calcularTotalVenta()
+    {
+        $subtotal = collect($this->productosEnVenta)->sum('subtotal');
+        return $subtotal - $this->descuento + $this->impuestos;
+    }
 
-    // }
-    // public function render()
-    // {
-    //     $clients = Client::where('state', 1)->get();
-    //     $products = Product::where('state', 1)->get();
-    //     $user = Auth::user(); // O auth()->user();
+    // Guardar venta
+    public function guardarVenta()
+    {
+        $this->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'sucursal_id' => 'required|exists:sucursals,id',
+            'fecha_venta' => 'required|date',
+            'metodo_pago' => 'required|string',
+            'productosEnVenta' => 'required|array|min:1'
+        ]);
 
-    //     $atm = Caja::where('user_id', $user->id)
-    //         ->where('state', 0)
-    //         ->get(); // Asumiendo que tienes un campo user_id en la tabla Caja
+        DB::beginTransaction();
+        try {
+            if ($this->ventaSeleccionada) {
+                // Actualizar venta existente
+                $venta = $this->ventaSeleccionada;
+                $venta->update([
+                    'cliente_id' => $this->cliente_id,
+                    'sucursal_id' => $this->sucursal_id,
+                    'fecha_venta' => $this->fecha_venta,
+                    'fecha_entrega' => $this->fecha_entrega ?: null,
+                    'estado' => $this->estado,
+                    'metodo_pago' => $this->metodo_pago,
+                    'observaciones' => $this->observaciones,
+                    'documento_referencia' => $this->documento_referencia,
+                    'descuento' => $this->descuento,
+                    'impuestos' => $this->impuestos
+                ]);
+                
+                // Eliminar detalles existentes y crear nuevos
+                $venta->detalles()->delete();
+            } else {
+                // Crear nueva venta
+                $venta = new Venta([
+                    'cliente_id' => $this->cliente_id,
+                    'sucursal_id' => $this->sucursal_id,
+                    'usuario_id' => Auth::id(),
+                    'fecha_venta' => $this->fecha_venta,
+                    'fecha_entrega' => $this->fecha_entrega ?: null,
+                    'estado' => $this->estado,
+                    'estado_pago' => 'PENDIENTE',
+                    'metodo_pago' => $this->metodo_pago,
+                    'observaciones' => $this->observaciones,
+                    'documento_referencia' => $this->documento_referencia,
+                    'descuento' => $this->descuento,
+                    'impuestos' => $this->impuestos,
+                    'subtotal' => 0,
+                    'total' => 0,
+                    'monto_pagado' => 0,
+                    'saldo_pendiente' => 0
+                ]);
+                
+                $venta->numero_venta = $venta->generarNumeroVenta();
+                $venta->save();
+            }
 
-    //     $data = $this->searchData();
+            // Crear detalles
+            foreach ($this->productosEnVenta as $item) {
+                $producto = Producto::find($item['producto_id']);
+                VentaDetalle::create([
+                    'venta_id' => $venta->id,
+                    'producto_id' => $item['producto_id'],
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio_unitario'],
+                    'descuento_unitario' => $item['descuento_unitario'],
+                    'subtotal' => $item['subtotal'],
+                    'nombre_producto' => $producto->nombre,
+                    'codigo_producto' => $producto->codigo,
+                    'estado' => 'ACTIVO'
+                ]);
+            }
 
-    //     return view('livewire.venta.venta', compact('clients', 'products', 'data', 'atm'))->extends('layouts.theme.app')->section('content');
-    // }
+            // Recalcular totales
+            $venta->calcularTotales();
+            $venta->save();
+
+            DB::commit();
+            
+            session()->flash('message', $this->ventaSeleccionada ? 'Venta actualizada correctamente' : 'Venta creada correctamente');
+            $this->cerrarModalVenta();
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            session()->flash('error', 'Error al guardar la venta: ' . $e->getMessage());
+        }
+    }
+
+    // Modal de pago
+    public function abrirModalPago($ventaId)
+    {
+        $this->ventaSeleccionada = Venta::find($ventaId);
+        $this->montoPago = $this->ventaSeleccionada->saldo_pendiente;
+        $this->metodoPagoVenta = $this->ventaSeleccionada->metodo_pago;
+        $this->cajaParaPago = '';
+        $this->mostrarModalPago = true;
+    }
+
+    public function cerrarModalPago()
+    {
+        $this->mostrarModalPago = false;
+        $this->montoPago = 0;
+        $this->cajaParaPago = '';
+        $this->metodoPagoVenta = 'EFECTIVO';
+    }
+
+    public function procesarPago()
+    {
+        $this->validate([
+            'montoPago' => 'required|numeric|min:0.01',
+            'cajaParaPago' => 'required|exists:cajas,id',
+            'metodoPagoVenta' => 'required|string'
+        ]);
+
+        try {
+            $this->ventaSeleccionada->metodo_pago = $this->metodoPagoVenta;
+            $this->ventaSeleccionada->procesarPago($this->montoPago, $this->cajaParaPago);
+            
+            session()->flash('message', 'Pago procesado correctamente');
+            $this->cerrarModalPago();
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al procesar el pago: ' . $e->getMessage());
+        }
+    }
+
+    // Acciones de venta
+    public function completarVenta($ventaId)
+    {
+        $venta = Venta::find($ventaId);
+        if ($venta && $venta->estado === 'PENDIENTE') {
+            try {
+                $venta->completar();
+                session()->flash('message', 'Venta completada correctamente');
+            } catch (\Exception $e) {
+                session()->flash('error', 'Error al completar la venta: ' . $e->getMessage());
+            }
+        }
+    }
+
+    public function cancelarVenta($ventaId)
+    {
+        $venta = Venta::find($ventaId);
+        if ($venta && $venta->estado !== 'COMPLETADA') {
+            $venta->estado = 'CANCELADA';
+            $venta->save();
+            session()->flash('message', 'Venta cancelada correctamente');
+        }
+    }
+
+    public function eliminarVenta($ventaId)
+    {
+        $venta = Venta::find($ventaId);
+        if ($venta && $venta->estado === 'PENDIENTE') {
+            $venta->delete();
+            session()->flash('message', 'Venta eliminada correctamente');
+        }
+    }
+
+    // Modal detalle
+    public function verDetalle($ventaId)
+    {
+        $this->ventaSeleccionada = Venta::with(['detalles.producto', 'cliente', 'sucursal', 'usuario', 'caja'])
+            ->find($ventaId);
+        $this->mostrarModalDetalle = true;
+    }
+
+    public function cerrarModalDetalle()
+    {
+        $this->mostrarModalDetalle = false;
+        $this->ventaSeleccionada = null;
+    }
+
+    public function getVentasFiltradas()
+    {
+        $query = Venta::with(['cliente', 'sucursal', 'usuario'])
+            ->orderBy('fecha_venta', 'desc');
+
+        // Aplicar filtros
+        if ($this->busqueda) {
+            $query->where(function($q) {
+                $q->where('numero_venta', 'like', '%' . $this->busqueda . '%')
+                  ->orWhereHas('cliente', function($subq) {
+                      $subq->where('nombre', 'like', '%' . $this->busqueda . '%');
+                  });
+            });
+        }
+
+        if ($this->filtroEstado) {
+            $query->where('estado', $this->filtroEstado);
+        }
+
+        if ($this->filtroEstadoPago) {
+            $query->where('estado_pago', $this->filtroEstadoPago);
+        }
+
+        if ($this->fechaDesde) {
+            $query->whereDate('fecha_venta', '>=', $this->fechaDesde);
+        }
+
+        if ($this->fechaHasta) {
+            $query->whereDate('fecha_venta', '<=', $this->fechaHasta);
+        }
+
+        if ($this->clienteSeleccionado) {
+            $query->where('cliente_id', $this->clienteSeleccionado);
+        }
+
+        return $query->paginate(15);
+    }
+
+    public function render()
+    {
+        $ventas = $this->getVentasFiltradas();
+        $resumenHoy = Venta::resumenVentasHoy($this->sucursal_id);
+        
+        return view('livewire.venta.venta', compact('ventas', 'resumenHoy'));
+    }
 }

@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\AlquileresController;
+use App\Http\Controllers\CajaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\GarantiaController;
+use App\Http\Controllers\HistorialProductoController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\StockSucursal;
+use App\Http\Controllers\VentaController as ControllersVentaController;
 use App\Http\Livewire\Roles\RolesController;
 use App\Http\Livewire\Usuario\UsuarioController;
 
@@ -75,7 +78,6 @@ Route::middleware(['auth'])->group(function () {
 
   
 
-    Route::get('/ventas', VentaController::class)->middleware('can:sale.view')->name('ventas');
 
 
 
@@ -95,10 +97,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/producto', [ProductoController::class, 'index'])->name('producto');
     Route::get('/sucursal', [StockSucursal::class, 'index'])->name('sucursal');
     Route::get('/reserva', [ReservaController::class, 'index'])->name('reserva');
-    Route::get('/reserva', [ReservaController::class, 'index'])->name('reserva');
 
     Route::get('/alquiler', [AlquileresController::class, 'index'])->name('alquiler');
-    Route::get('/garantias', \App\Http\Livewire\Garantias\GarantiasController::class)->name('garantias');
+    Route::get('/garantias', [GarantiaController::class, 'index'])->name('garantia');
+    Route::get('/historial-producto', [HistorialProductoController::class, 'index'])->name('historial-producto');
+    Route::get('/venta', [ControllersVentaController::class, 'index'])->name('venta');
+    Route::get('/caja', [CajaController::class, 'index'])->name('caja');
 
 
 });

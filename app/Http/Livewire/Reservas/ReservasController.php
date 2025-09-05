@@ -61,6 +61,7 @@ class ReservasController extends Component
     public $requiereDeposito = false;
     public $depositoGarantia = 0;
     public $observacionesAlquiler = '';
+    public $garantia_id = '';
 
     protected $rules = [
         'cliente_id' => 'required|exists:clientes,id',
@@ -86,6 +87,19 @@ class ReservasController extends Component
         $productos =  Producto::all();
         $sucursales = Sucursal::orderBy('nombre')->get();
         $estadisticas = $this->getEstadisticas();
+        
+        // Garantías disponibles para conversión a alquiler
+        $garantiasDisponibles = collect();
+        if ($this->selectedReserva) {
+            $garantiasDisponibles = \App\Models\Garantia::with('tipoGarantia', 'cliente')
+                ->leftJoin('alquileres', 'garantias.id', '=', 'alquileres.garantia_id')
+                ->where('garantias.estado', \App\Models\Garantia::ESTADO_RECIBIDA)
+                ->where('garantias.cliente_id', $this->selectedReserva->cliente_id)
+                ->whereNull('alquileres.id') // Sin asignar a ningún alquiler
+                ->select('garantias.*')
+                ->orderBy('garantias.fecha_recepcion', 'desc')
+                ->get();
+        }
 
         return view('livewire.reservas.reservas', [
             'reservas' => $reservas,
@@ -93,6 +107,7 @@ class ReservasController extends Component
             'productos' => $productos,
             'sucursales' => $sucursales,
             'estadisticas' => $estadisticas,
+            'garantiasDisponibles' => $garantiasDisponibles,
         ])->extends('layouts.theme.app')->section('content');
     }
 
@@ -509,6 +524,7 @@ class ReservasController extends Component
         $this->anticipoAdicional = 0;
         $this->requiereDeposito = false;
         $this->depositoGarantia = 0;
+        $this->garantia_id = '';
         
         $this->showConvertToAlquilerModal = true;
     }
@@ -533,6 +549,14 @@ class ReservasController extends Component
         try {
             DB::beginTransaction();
 
+            // Validar garantía si se seleccionó
+            if ($this->garantia_id) {
+                $garantia = \App\Models\Garantia::find($this->garantia_id);
+                if (!$garantia || !$garantia->puede_usarse) {
+                    throw new \Exception('La garantía seleccionada no está disponible para su uso.');
+                }
+            }
+
             // Calcular días de alquiler automáticamente
             $fechaInicio = \Carbon\Carbon::parse($this->fechaAlquiler);
             $fechaFin = \Carbon\Carbon::parse($this->fechaDevolucion);
@@ -546,6 +570,7 @@ class ReservasController extends Component
                 'anticipo' => $this->anticipoAdicional, // Pago adicional
                 'requiere_deposito' => $this->requiereDeposito,
                 'deposito_garantia' => $this->depositoGarantia,
+                'garantia_id' => $this->garantia_id ?: null,
                 'observaciones' => $this->observacionesAlquiler ?? '',
                 'usuario_creacion' => Auth::id(),
             ]);
@@ -579,6 +604,7 @@ class ReservasController extends Component
         $this->requiereDeposito = false;
         $this->depositoGarantia = 0;
         $this->observacionesAlquiler = '';
+        $this->garantia_id = '';
     }
 
     public function updatedDiasAlquiler()

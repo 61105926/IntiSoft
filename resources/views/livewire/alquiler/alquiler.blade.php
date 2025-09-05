@@ -239,9 +239,34 @@
                                             <i class="fas fa-print"></i>
                                         </button>
                                         @if($alquiler->estado === 'ACTIVO')
-                                            <button type="button" class="btn btn-sm btn-success" wire:click="markReturned({{ $alquiler->id }})">
+                                            <button type="button" class="btn btn-sm btn-success" wire:click="openDevolucionModal({{ $alquiler->id }})">
                                                 <i class="fas fa-undo"></i>
                                             </button>
+                                            @if($alquiler->tieneGarantia())
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-shield-alt"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" href="#" wire:click="openGarantiaModal({{ $alquiler->id }})">
+                                                                <i class="fas fa-minus-circle me-2"></i>Aplicar Penalización
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="#" wire:click="devolverGarantiaCompleta({{ $alquiler->id }})">
+                                                                <i class="fas fa-undo me-2"></i>Devolver Garantía
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="#" wire:click="liberarGarantia({{ $alquiler->id }})">
+                                                                <i class="fas fa-unlink me-2"></i>Liberar Garantía
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
@@ -380,6 +405,66 @@
                                         </div>
                                     </div>
 
+                                    <!-- Sección Garantía -->
+                                    <div class="card border-0 bg-light mb-4">
+                                        <div class="card-header bg-warning text-dark py-2">
+                                            <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Garantía (Opcional)</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-12">
+                                                    <label class="form-label fw-bold">🛡️ Seleccionar Garantía</label>
+                                                    <select class="form-select form-select-sm" wire:model="garantia_id">
+                                                        <option value="">Opcional - Sin garantía</option>
+                                                        @if($cliente_id)
+                                                            @foreach ($garantiasDisponibles->where('cliente_id', $cliente_id) as $garantia)
+                                                                <option value="{{ $garantia->id }}">
+                                                                    {{ $garantia->numero_ticket }} - {{ $garantia->tipoGarantia->nombre }}
+                                                                    @if($garantia->monto > 0)
+                                                                        - Bs. {{ number_format($garantia->monto, 2) }}
+                                                                    @endif
+                                                                    ({{ $garantia->descripcion }})
+                                                                </option>
+                                                            @endforeach
+                                                        @else
+                                                            <option value="" disabled>Primero seleccione un cliente</option>
+                                                        @endif
+                                                    </select>
+                                                    <div class="form-text">
+                                                        <small class="text-info">
+                                                            <i class="fas fa-info-circle me-1"></i>
+                                                            Solo se muestran garantías activas del cliente seleccionado
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Mostrar información de la garantía seleccionada -->
+                                            @if($garantia_id)
+                                                @php
+                                                    $selectedGarantia = $garantiasDisponibles->find($garantia_id);
+                                                @endphp
+                                                @if($selectedGarantia)
+                                                    <div class="alert alert-info mt-3 mb-0">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong>Tipo:</strong> {{ $selectedGarantia->tipoGarantia->nombre }}<br>
+                                                                <strong>Ticket:</strong> {{ $selectedGarantia->numero_ticket }}<br>
+                                                                <strong>Cliente:</strong> {{ $selectedGarantia->cliente->nombres }} {{ $selectedGarantia->cliente->apellidos }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                @if($selectedGarantia->monto > 0)
+                                                                    <strong>Monto:</strong> Bs. {{ number_format($selectedGarantia->monto, 2) }}<br>
+                                                                    <strong>Disponible:</strong> Bs. {{ number_format($selectedGarantia->monto_disponible, 2) }}<br>
+                                                                @endif
+                                                                <strong>Vence:</strong> {{ $selectedGarantia->fecha_vencimiento ? \Carbon\Carbon::parse($selectedGarantia->fecha_vencimiento)->format('d/m/Y') : 'Sin vencimiento' }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
 
                                     <!-- Sección Observaciones -->
                                     <div class="card border-0 bg-light">
@@ -512,6 +597,59 @@
                         <button type="button" class="btn btn-primary btn-lg" wire:click="saveNewAlquiler" 
                                 {{ empty($selectedProducts) || !$cliente_id || !$sucursal_id ? 'disabled' : '' }}>
                             <i class="fas fa-handshake me-2"></i>Crear Contrato de Alquiler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
+
+    <!-- Modal Gestión de Garantías -->
+    @if ($showGarantiaModal && $selectedAlquiler)
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="fas fa-shield-alt me-2"></i>Aplicar Penalización a Garantía
+                        </h5>
+                        <button type="button" class="btn-close" wire:click="closeGarantiaModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <strong>Alquiler:</strong> {{ $selectedAlquiler->numero_contrato }}<br>
+                            <strong>Garantía:</strong> {{ $selectedAlquiler->garantia->numero_ticket }}<br>
+                            <strong>Monto disponible:</strong> Bs. {{ number_format($selectedAlquiler->garantia->monto_disponible, 2) }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Monto a aplicar (Bs.) *</label>
+                            <input type="number" step="0.01" class="form-control @error('monto_aplicar_garantia') is-invalid @enderror" 
+                                   wire:model="monto_aplicar_garantia" max="{{ $selectedAlquiler->garantia->monto_disponible }}">
+                            @error('monto_aplicar_garantia')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Motivo de la aplicación *</label>
+                            <textarea class="form-control @error('motivo_aplicacion') is-invalid @enderror" rows="3" 
+                                      wire:model="motivo_aplicacion" placeholder="Describe el motivo por el cual se aplica este monto..."></textarea>
+                            @error('motivo_aplicacion')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atención:</strong> Este monto será descontado de la garantía y no podrá ser revertido.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeGarantiaModal">Cancelar</button>
+                        <button type="button" class="btn btn-warning" wire:click="aplicarMontoGarantia">
+                            <i class="fas fa-check me-1"></i>Aplicar Penalización
                         </button>
                     </div>
                 </div>

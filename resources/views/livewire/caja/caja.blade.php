@@ -1,488 +1,485 @@
+@php
+    $cajasFiltradas = $this->getCajasFiltradas();
+    $totalCajas = $cajasFiltradas->count();
+    $cajasAbiertas = $cajasFiltradas->where('estado', 'ABIERTA')->count();
+    $saldoTotal = $cajasFiltradas->sum('saldo_actual');
+@endphp
+
 <div>
-
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-sm-6">
-                <h4>Detalles de Caja</h4>
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold text-dark">Caja</h1>
+                <p class="text-muted">Gestión de cajas y movimientos</p>
             </div>
-            @include('caja.form.header')
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="card">
-                        <div class="card-header">
-                            <h6 class="h6">Datos técnicos</h6>
+            <div class="d-flex gap-2">
+                <button wire:click="abrirModalCaja" class="btn btn-primary d-flex align-items-center">
+                    <i class="bi bi-plus-lg me-2"></i>
+                    Crear/Abrir Caja
+                </button>
+                <button wire:click="abrirModalMovimiento" class="btn btn-warning d-flex align-items-center text-dark" 
+                        @if($cajasAbiertas === 0) disabled @endif>
+                    <i class="bi bi-cash-coin me-2"></i>
+                    Nuevo Movimiento
+                </button>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1">Total Cajas</p>
+                            <h4 class="fw-bold mb-0">{{ $totalCajas }}</h4>
                         </div>
-                        <div class="card-body">
-                            <div class="form-row">
-                                <div class="form-group col-md-4">
-                                    <label class="small mb-1">Usuario</label>
-                                    <input class="form-control" type="text" name="dni"
-                                        value="{{ $caja->user->name }}" readonly="">
+                        <i class="bi bi-wallet2 fs-2 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1">Cajas Abiertas</p>
+                            <h4 class="fw-bold text-success mb-0">{{ $cajasAbiertas }}</h4>
+                        </div>
+                        <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1">Saldo Total en Cajas</p>
+                            <h4 class="fw-bold text-purple mb-0">Bs. {{ number_format($saldoTotal, 2) }}</h4>
+                        </div>
+                        <i class="bi bi-cash-stack fs-2 text-purple"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body d-flex flex-column flex-md-row gap-3">
+                <div class="flex-fill position-relative">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" wire:model.live="busqueda" class="form-control ps-5" placeholder="Buscar caja o movimiento..." />
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-filter text-muted"></i>
+                    <select wire:model.live="filtroEstado" class="form-select">
+                        <option value="">TODOS</option>
+                        <option value="ABIERTA">ABIERTA</option>
+                        <option value="CERRADA">CERRADA</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Cajas -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">Cajas ({{ $cajasFiltradas->count() }})</h5>
+                    </div>
+                    <div class="card-body">
+                        @forelse($cajasFiltradas as $caja)
+                            <div class="border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div>
+                                        <h6 class="fw-bold">{{ $caja->nombre }}</h6>
+                                        <small class="text-muted">{{ $caja->sucursal->nombre }}</small>
+                                    </div>
+                                    <span class="badge {{ $caja->estado === 'ABIERTA' ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ ucfirst(strtolower($caja->estado)) }}
+                                    </span>
                                 </div>
-                                <div class="form-group col-md-4">
-                                    <label class="small mb-1">Fecha de apertura </label>
-                                    <input class="form-control" style="text-transform:uppercase" type="text"
-                                        name="first_name" value="{{ $caja->created_at }}" readonly="">
+                                <div class="row mb-2">
+                                    <div class="col">
+                                        <p class="mb-1">
+                                            <i class="bi bi-cash-coin me-1 text-muted"></i>
+                                            Saldo Inicial: Bs. {{ number_format($caja->saldo_inicial, 2) }}
+                                        </p>
+                                        @if($caja->fecha_apertura)
+                                            <p class="mb-1">
+                                                <i class="bi bi-clock me-1 text-muted"></i>
+                                                Apertura: {{ $caja->fecha_apertura->format('d/m/Y H:i') }}
+                                            </p>
+                                        @endif
+                                        @if($caja->fecha_cierre)
+                                            <p class="mb-1">
+                                                <i class="bi bi-x-circle me-1 text-muted"></i>
+                                                Cierre: {{ $caja->fecha_cierre->format('d/m/Y H:i') }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div class="col text-end">
+                                        <h5 class="fw-bold text-success mb-0">Bs. {{ number_format($caja->saldo_actual, 2) }}</h5>
+                                        <small class="text-muted">Saldo Actual</small>
+                                        <br />
+                                        @if($caja->usuarioApertura)
+                                            <small class="text-muted">
+                                                Abierta por: {{ $caja->usuarioApertura->name }}
+                                                @if($caja->usuarioCierre) / Cerrada por: {{ $caja->usuarioCierre->name }} @endif
+                                            </small>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="form-group col-md-4">
-                                    <label class="small mb-1">Fecha de cierre</label>
-                                    <input class="form-control" style="text-transform:uppercase" type="text"
-                                        name="last_name" value="{{ $caja->updated_at }}" readonly="">
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="small mb-1">Identificador</label>
-                                    <input class="form-control" id="id" style="text-transform:uppercase"
-                                        type="text" name="last_name" value="{{ $caja->id }}" readonly="">
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="small mb-1">Tipo de moneda</label>
-                                    <input class="form-control" style="text-transform:uppercase" type="text"
-                                        name="last_name" value="Bolivianos" readonly="">
-                                </div>
-                                @if ($caja->state == '0')
-                                    <div class="form-group col-md-4">
-                                        <label class="small mb-1">Estado</label>
-                                        <button class="form-control btn btn-success" type="button"
-                                            data-bs-toggle="modal" data-bs-target="#confirm" data-placement="top"
-                                            title="Delete">ABIERTO
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button wire:click="verMovimientos({{ $caja->id }})" class="btn btn-outline-secondary btn-sm">
+                                        Ver Movimientos
+                                    </button>
+                                    @if($caja->estado === 'ABIERTA')
+                                        <button wire:click="abrirModalCerrarCaja({{ $caja->id }})" class="btn btn-danger btn-sm">
+                                            Cerrar Caja
                                         </button>
-                                        @include('caja.alert.confirm')
+                                    @else
+                                        <button wire:click="abrirCaja({{ $caja->id }})" class="btn btn-success btn-sm">
+                                            Abrir Caja
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-4">
+                                <i class="bi bi-inbox display-1 text-muted"></i>
+                                <p class="text-muted">No hay cajas disponibles</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Movimientos recientes -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex align-items-center gap-2">
+                        <i class="bi bi-cash-coin"></i>
+                        <h5 class="mb-0">Movimientos Recientes</h5>
+                    </div>
+                    <div class="card-body">
+                        @forelse($movimientosRecientes as $movimiento)
+                            <div class="border rounded p-2 mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <div>
+                                        <p class="fw-semibold mb-0">{{ $movimiento->concepto }}</p>
+                                        <small class="text-muted">Caja: {{ $movimiento->caja->nombre }}</small>
                                     </div>
-                                @else
-                                    <div class="form-group col-md-4">
-                                        <label class="small mb-1">Estado</label>
-                                        <a href="#" class="form-control btn btn-secondary">
-                                            CERRADO
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Entradas de Efectivo</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-
-                                    <table class="table table-bordered responsive ">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Tipo</th>
-                                                <th>Monto</th>
-                                                <th>Descripcion</th>
-                                                <th>Fecha </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($cajaEntrada as $cajaEntradas)
-                                                <tr>
-                                                    <td>{{ $cajaEntradas->id }}</td>
-                                                    <td>{{ $cajaEntradas->type }}</td>
-                                                    <td>{{ $cajaEntradas->monto }}</td>
-                                                    <td>{{ $cajaEntradas->description }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($cajaEntradas->created_at)->format('d/m/Y') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                                <td colspan="2"
-                                                    style="font-size:14px; text-align: right; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    Total:</td>
-                                                <td
-                                                    style="font-size:14px; text-align: left; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    {{ $caTotal }}
-                                                </td>
-                                                <td colspan="2" style="border: 1px solid #ddd;"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                    <span class="badge {{ $movimiento->tipo === 'INGRESO' ? 'bg-success' : 'bg-danger' }}">
+                                        {{ ucfirst(strtolower($movimiento->tipo)) }}
+                                    </span>
                                 </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Salidas de Efectivo</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-
-                                    <table class="table table-bordered responsive ">
-                                        <thead class="">
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Tipo</th>
-                                                <th>Monto</th>
-                                                <th>Descripcion</th>
-                                                <th>Fecha </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($cajaSalida as $cajaSalidas)
-                                                <tr>
-                                                    <td>{{ $cajaSalidas->id }}</td>
-                                                    <td>{{ $cajaSalidas->type }}</td>
-                                                    <td>{{ $cajaSalidas->monto }}</td>
-                                                    <td>{{ $cajaSalidas->description }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($cajaSalidas->created_at)->format('d/m/Y') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                                <td colspan="2"
-                                                    style="font-size:14px; text-align: right; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    Total:</td>
-                                                <td
-                                                    style="font-size:14px; text-align: left; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    {{ $csTotal }}
-                                                </td>
-                                                <td colspan="2" style="border: 1px solid #ddd;"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                <div class="d-flex justify-content-between small">
+                                    <strong>Bs. {{ number_format($movimiento->monto, 2) }}</strong>
+                                    <span>{{ $movimiento->fecha_movimiento->format('d/m/Y H:i') }}</span>
                                 </div>
+                                <small class="text-muted">
+                                    Registrado por: {{ $movimiento->usuarioRegistro->name }}
+                                </small>
                             </div>
-
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Entradas por Debito</h3>
+                        @empty
+                            <div class="text-center py-4">
+                                <i class="bi bi-receipt display-1 text-muted"></i>
+                                <p class="text-muted">No hay movimientos recientes</p>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered responsive">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Tipo</th>
-                                                <th>Monto</th>
-                                                <th>Descripción</th>
-                                                <th>Fecha</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($cajaOperacion->where('type', 'Deposito') as $cajaDeposito)
-                                                <tr>
-                                                    <td>{{ $cajaDeposito->id }}</td>
-                                                    <td>{{ $cajaDeposito->type }}</td>
-                                                    <td>{{ $cajaDeposito->monto }}</td>
-                                                    <td>{{ $cajaDeposito->description }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($cajaDeposito->created_at)->format('d/m/Y') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                                <td colspan="2"
-                                                    style="font-size:14px; text-align: right; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    Total:
-                                                </td>
-                                                <td
-                                                    style="font-size:14px; text-align: left; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    {{ $cajaOperacion->where('type', 'Deposito')->sum('monto') }}
-                                                </td>
-                                                <td colspan="2" style="border: 1px solid #ddd;"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Entradas por Transferencia</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered responsive">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Tipo</th>
-                                                <th>Monto</th>
-                                                <th>Descripción</th>
-                                                <th>Fecha</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($cajaOperacion->where('type', 'Transferencia') as $cajaTransferencia)
-                                                <tr>
-                                                    <td>{{ $cajaTransferencia->id }}</td>
-                                                    <td>{{ $cajaTransferencia->type }}</td>
-                                                    <td>{{ $cajaTransferencia->monto }}</td>
-                                                    <td>{{ $cajaTransferencia->description }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($cajaTransferencia->created_at)->format('d/m/Y') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                                <td colspan="2"
-                                                    style="font-size:14px; text-align: right; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    Total:
-                                                </td>
-                                                <td
-                                                    style="font-size:14px; text-align: left; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    {{ $cajaOperacion->where('type', 'Transferencia')->sum('monto') }}
-                                                </td>
-                                                <td colspan="2" style="border: 1px solid #ddd;"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Salidas por Operaciones</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered responsive ">
-                                        <thead class="">
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Tipo</th>
-                                                <th>Monto</th>
-                                                <th>Descripcion</th>
-                                                <th>Fecha </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($cajaOperacionSalida as $cajaOperacionsalidas)
-                                                <tr>
-                                                    <td>{{ $cajaOperacionsalidas->id }}</td>
-                                                    <td>{{ $cajaOperacionsalidas->type }}</td>
-                                                    <td>{{ $cajaOperacionsalidas->monto }}</td>
-                                                    <td>{{ $cajaOperacionsalidas->description }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($cajaOperacionsalidas->created_at)->format('d/m/Y') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                                <td colspan="2"
-                                                    style="font-size:14px; text-align: right; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    Total:</td>
-                                                <td
-                                                    style="font-size:14px; text-align: left; font-weight: bold; padding: 6px; border: 1px solid #ddd;">
-                                                    {{ $cosTotal }}
-                                                </td>
-                                                <td colspan="2" style="border: 1px solid #ddd;"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Resumen General</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table responsive">
-                                    <table id="" class="table table-bordered responsive ">
-                                        <thead class=" ">
-                                            <tr>
-                                                <th>Descripcion</th>
-                                                <th>Efectivo</th>
-                                                <th>Operacion</th>
-                                                <th>Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td><b>Entradas</b></td>
-                                                <td><b>{{ $caTotal }}</b></td>
-                                                <td><b>{{ $coTotal }}</b></td>
-                                                <td><b>{{ $caTotal + $coTotal }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Salidas</b></td>
-                                                <td><b>{{ $csTotal }}</b></td>
-                                                <td><b>{{ $cosTotal }}</b></td>
-                                                <td><b>{{ $csTotal + $cosTotal }}</b></td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Total</b></td>
-                                                <td><b>{{ $caTotal - $csTotal }}</b></td>
-                                                <td><b>{{ $coTotal - $cosTotal }}</b></td>
-                                                <td><b>{{ $caTotal + $coTotal - ($csTotal + $cosTotal) }}</b></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                            </div>
-                        </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    @section('css')
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
-        <link rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.dataTables.min.css">
-        <link rel="stylesheet" href="css/styles.css">
-        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    @stop
-    @section('js')
-        <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <!-- Modal Caja -->
+    @if($mostrarModalCaja)
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            @if($cajaSeleccionada) Editar Caja @else Nueva Caja @endif
+                        </h5>
+                        <button type="button" class="btn-close" wire:click="cerrarModalCaja"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form wire:submit.prevent="guardarCaja">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nombre *</label>
+                                        <input type="text" class="form-control @error('nombre') is-invalid @enderror" 
+                                               wire:model="nombre" placeholder="Caja Principal">
+                                        @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Sucursal *</label>
+                                        <select class="form-select @error('sucursal_id') is-invalid @enderror" 
+                                                wire:model="sucursal_id">
+                                            <option value="">Seleccione sucursal</option>
+                                            @foreach($sucursales as $sucursal)
+                                                <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('sucursal_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" wire:model="descripcion" 
+                                          placeholder="Descripción de la caja" rows="2"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Saldo Inicial *</label>
+                                        <input type="number" step="0.01" min="0" 
+                                               class="form-control @error('saldo_inicial') is-invalid @enderror" 
+                                               wire:model="saldo_inicial" placeholder="0.00">
+                                        @error('saldo_inicial') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" wire:model="es_caja_principal" id="esCajaPrincipal">
+                                        <label class="form-check-label" for="esCajaPrincipal">
+                                            Es caja principal
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Observaciones de Apertura</label>
+                                <textarea class="form-control" wire:model="observaciones_apertura" 
+                                          placeholder="Observaciones iniciales" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cerrarModalCaja">Cancelar</button>
+                        <button type="button" class="btn btn-primary" wire:click="guardarCaja">
+                            @if($cajaSeleccionada) Actualizar @else Crear y Abrir @endif
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Modal Movimiento -->
+    @if($mostrarModalMovimiento)
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nuevo Movimiento</h5>
+                        <button type="button" class="btn-close" wire:click="cerrarModalMovimiento"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form wire:submit.prevent="guardarMovimiento">
+                            <div class="mb-3">
+                                <label class="form-label">Caja *</label>
+                                <select class="form-select @error('movimiento_caja_id') is-invalid @enderror" 
+                                        wire:model="movimiento_caja_id">
+                                    <option value="">Seleccione caja</option>
+                                    @foreach($cajas->where('estado', 'ABIERTA') as $caja)
+                                        <option value="{{ $caja->id }}">{{ $caja->nombre }} - Bs. {{ number_format($caja->saldo_actual, 2) }}</option>
+                                    @endforeach
+                                </select>
+                                @error('movimiento_caja_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tipo *</label>
+                                        <select class="form-select @error('tipo') is-invalid @enderror" 
+                                                wire:model="tipo" wire:change="actualizarCategorias">
+                                            <option value="">Seleccione tipo</option>
+                                            <option value="INGRESO">Ingreso</option>
+                                            <option value="EGRESO">Egreso</option>
+                                        </select>
+                                        @error('tipo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Categoría *</label>
+                                        <select class="form-select @error('categoria') is-invalid @enderror" 
+                                                wire:model="categoria">
+                                            <option value="">Seleccione categoría</option>
+                                            @foreach($categoriasDisponibles as $valor => $etiqueta)
+                                                <option value="{{ $valor }}">{{ $etiqueta }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('categoria') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Monto *</label>
+                                <input type="number" step="0.01" min="0" 
+                                       class="form-control @error('monto') is-invalid @enderror" 
+                                       wire:model="monto" placeholder="0.00">
+                                @error('monto') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Concepto *</label>
+                                <input type="text" class="form-control @error('concepto') is-invalid @enderror" 
+                                       wire:model="concepto" placeholder="Descripción del movimiento">
+                                @error('concepto') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Método de Pago</label>
+                                <select class="form-select" wire:model="metodo_pago">
+                                    <option value="EFECTIVO">Efectivo</option>
+                                    <option value="TRANSFERENCIA">Transferencia</option>
+                                    <option value="TARJETA">Tarjeta</option>
+                                    <option value="CHEQUE">Cheque</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Referencia</label>
+                                <input type="text" class="form-control" wire:model="referencia" 
+                                       placeholder="Número de factura, recibo, etc.">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Observaciones</label>
+                                <textarea class="form-control" wire:model="observaciones" 
+                                          placeholder="Observaciones adicionales" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cerrarModalMovimiento">Cancelar</button>
+                        <button type="button" class="btn btn-primary" wire:click="guardarMovimiento">
+                            Registrar Movimiento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
-        @if (session('venta') == 'ok')
-            <script>
-                Swal.fire({
-                    position: 'center',
-                    icon: 'success',
-                    title: 'La venta se realizo correctamente.',
-                    showConfirmButton: false,
-                    timer: 1500
-                })
-            </script>
-        @endif
+    <!-- Modal Cerrar Caja -->
+    @if($mostrarModalCerrarCaja)
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cerrar Caja</h5>
+                        <button type="button" class="btn-close" wire:click="cerrarModalCerrarCaja"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($cajaParaCerrar)
+                            <div class="alert alert-info">
+                                <h6>{{ $cajaParaCerrar->nombre }}</h6>
+                                <p class="mb-1">Saldo Sistema: Bs. {{ number_format($cajaParaCerrar->saldo_actual, 2) }}</p>
+                                <p class="mb-0">Fecha Apertura: {{ $cajaParaCerrar->fecha_apertura?->format('d/m/Y H:i') }}</p>
+                            </div>
+                        @endif
+                        
+                        <form wire:submit.prevent="cerrarCaja">
+                            <div class="mb-3">
+                                <label class="form-label">Arqueo Físico *</label>
+                                <input type="number" step="0.01" min="0" 
+                                       class="form-control @error('arqueo_fisico') is-invalid @enderror" 
+                                       wire:model.live="arqueo_fisico" placeholder="0.00">
+                                @error('arqueo_fisico') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            
+                            @if($arqueo_fisico && $cajaParaCerrar)
+                                @php $diferencia = $arqueo_fisico - $cajaParaCerrar->saldo_actual; @endphp
+                                <div class="alert {{ $diferencia == 0 ? 'alert-success' : ($diferencia > 0 ? 'alert-warning' : 'alert-danger') }}">
+                                    <strong>Diferencia: Bs. {{ number_format($diferencia, 2) }}</strong>
+                                    @if($diferencia > 0) (Sobrante) @elseif($diferencia < 0) (Faltante) @else (Cuadrado) @endif
+                                </div>
+                            @endif
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Observaciones de Cierre</label>
+                                <textarea class="form-control" wire:model="observaciones_cierre" 
+                                          placeholder="Observaciones del cierre" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cerrarModalCerrarCaja">Cancelar</button>
+                        <button type="button" class="btn btn-danger" wire:click="cerrarCaja">
+                            Cerrar Caja
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
-        <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-        <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
-        <script src="https://cdn.datatables.net/responsive/2.3.0/js/dataTables.responsive.min.js"></script>
-        <script>
-            $(document).ready(function() {
-                $('#EM').DataTable({
-                    "order": [
-                        [0, 'desc']
-                    ],
-                    "lengthMenu": [
-                        [5, 10, 50, -1],
-                        [5, 10, 50, "Todo"]
-                    ],
-                    "language": {
-                        "lengthMenu": "Mostrar _MENU_ registros por página",
-                        "zeroRecords": "Ningun registro encontrado",
-                        "info": "Mostrando la página _PAGE_ de _PAGES_",
-                        "infoEmpty": "",
-                        "infoFiltered": "(filtrado de _MAX_ registros totales)",
-                        'search': 'Buscar:',
-                        'paginate': {
-                            'next': 'Siguiente',
-                            'previous': 'Anterior'
-                        }
-                    },
-                    "responsive": 'true',
-                });
-            });
-        </script>
-        <script>
-            $(document).ready(function() {
-                $('#SM').DataTable({
-                    "order": [
-                        [0, 'desc']
-                    ],
-                    "lengthMenu": [
-                        [5, 10, 50, -1],
-                        [5, 10, 50, "Todo"]
-                    ],
-                    "language": {
-                        "lengthMenu": "Mostrar _MENU_ registros por página",
-                        "zeroRecords": "Ningun registro encontrado",
-                        "info": "Mostrando la página _PAGE_ de _PAGES_",
-                        "infoEmpty": "",
-                        "infoFiltered": "(filtrado de _MAX_ registros totales)",
-                        'search': 'Buscar:',
-                        'paginate': {
-                            'next': 'Siguiente',
-                            'previous': 'Anterior'
-                        }
-                    },
-                    "responsive": 'true',
-                });
-            });
-        </script>
-        <script>
-            $(document).ready(function() {
-                $('#RG').DataTable({
-                    "order": [
-                        [0, 'desc']
-                    ],
-                    "lengthMenu": [
-                        [5, 10, 50, -1],
-                        [5, 10, 50, "Todo"]
-                    ],
-                    "language": {
-                        "lengthMenu": "Mostrar _MENU_ registros por página",
-                        "zeroRecords": "Ningun registro encontrado",
-                        "info": "Mostrando la página _PAGE_ de _PAGES_",
-                        "infoEmpty": "",
-                        "infoFiltered": "(filtrado de _MAX_ registros totales)",
-                        'search': 'Buscar:',
-                        'paginate': {
-                            'next': 'Siguiente',
-                            'previous': 'Anterior'
-                        }
-                    },
-                    "responsive": 'true',
-                });
+    <!-- Modal Movimientos -->
+    @if($mostrarModalMovimientos)
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            Movimientos - {{ $cajaSeleccionada?->nombre }}
+                        </h5>
+                        <button type="button" class="btn-close" wire:click="cerrarModalMovimientos"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Concepto</th>
+                                        <th>Monto</th>
+                                        <th>Saldo</th>
+                                        <th>Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($movimientosCaja as $movimiento)
+                                        <tr>
+                                            <td>{{ $movimiento->fecha_movimiento->format('d/m/Y H:i') }}</td>
+                                            <td>
+                                                <span class="badge {{ $movimiento->tipo === 'INGRESO' ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ $movimiento->tipo }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $movimiento->concepto }}</td>
+                                            <td class="{{ $movimiento->tipo === 'INGRESO' ? 'text-success' : 'text-danger' }}">
+                                                {{ $movimiento->tipo === 'INGRESO' ? '+' : '-' }} Bs. {{ number_format($movimiento->monto, 2) }}
+                                            </td>
+                                            <td>Bs. {{ number_format($movimiento->saldo_posterior, 2) }}</td>
+                                            <td>{{ $movimiento->usuarioRegistro->name }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center">No hay movimientos registrados</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
-            });
-        </script>
-        <script>
-            $(document).ready(function() {
-                $('#CO').DataTable({
-                    "order": [
-                        [0, 'desc']
-                    ],
-                    "lengthMenu": [
-                        [5, 10, 50, -1],
-                        [5, 10, 50, "Todo"]
-                    ],
-                    "language": {
-                        "lengthMenu": "Mostrar _MENU_ registros por página",
-                        "zeroRecords": "Ningun registro encontrado",
-                        "info": "Mostrando la página _PAGE_ de _PAGES_",
-                        "infoEmpty": "",
-                        "infoFiltered": "(filtrado de _MAX_ registros totales)",
-                        'search': 'Buscar:',
-                        'paginate': {
-                            'next': 'Siguiente',
-                            'previous': 'Anterior'
-                        }
-                    },
-                    "responsive": 'true',
-                });
-            });
-        </script>
-    @stop
-
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
 </div>

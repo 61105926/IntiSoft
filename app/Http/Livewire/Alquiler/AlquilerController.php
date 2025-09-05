@@ -10,6 +10,8 @@ use App\Models\Reserva;
 use App\Models\Sucursal;
 use App\Models\UnidadEducativa;
 use App\Models\Producto;
+use App\Models\Caja;
+use App\Models\MovimientoCaja;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +38,7 @@ class AlquilerController extends Component
     public $cliente_id = '';
     public $reserva_id = '';
     public $unidad_educativa_id = '';
+    public $garantia_id = '';
     public $fecha_alquiler;
     public $hora_entrega = '09:00';
     public $fecha_devolucion_programada;
@@ -65,6 +68,13 @@ class AlquilerController extends Component
     public $monto_pago = 0;
     public $referencia_pago = '';
     public $observaciones_pago = '';
+    public $caja_id = '';
+    public $metodo_pago = 'EFECTIVO';
+
+    // Gestión de garantías
+    public $showGarantiaModal = false;
+    public $monto_aplicar_garantia = 0;
+    public $motivo_aplicacion = '';
 
     protected $rules = [
         'cliente_id' => 'required|exists:clientes,id',
@@ -90,6 +100,7 @@ class AlquilerController extends Component
         $sucursales = Sucursal::orderBy('nombre')->get();
         $unidadesEducativas = UnidadEducativa::orderBy('nombre')->get();
         $productos = Producto::all();
+        $cajas = Caja::where('estado', 'ABIERTA')->orderBy('nombre')->get();
         $estadisticas = $this->getEstadisticas();
         
         // Garantías disponibles para asignar
@@ -110,6 +121,7 @@ class AlquilerController extends Component
             'sucursales' => $sucursales,
             'unidadesEducativas' => $unidadesEducativas,
             'productos' => $productos,
+            'cajas' => $cajas,
             'estadisticas' => $estadisticas,
             'garantiasDisponibles' => $garantiasDisponibles,
             'tiposGarantia' => $tiposGarantia,
@@ -242,12 +254,21 @@ class AlquilerController extends Component
             $total = $subtotal;
             $saldoPendiente = $total - $this->anticipo;
 
+            // Validar garantía si se seleccionó
+            if ($this->garantia_id) {
+                $garantia = \App\Models\Garantia::find($this->garantia_id);
+                if (!$garantia || !$garantia->puede_usarse) {
+                    throw new \Exception('La garantía seleccionada no está disponible para su uso.');
+                }
+            }
+
             $alquiler = Alquiler::create([
                 'sucursal_id' => $this->sucursal_id,
                 'numero_contrato' => $numeroContrato,
                 'reserva_id' => $this->reserva_id ?: null,
                 'cliente_id' => $this->cliente_id,
                 'unidad_educativa_id' => $this->unidad_educativa_id ?: null,
+                'garantia_id' => $this->garantia_id ?: null,
                 'tipo_pago_id' => 1, // Asumiendo tipo de pago por defecto
                 'fecha_alquiler' => $this->fecha_alquiler,
                 'hora_entrega' => $this->hora_entrega,
@@ -338,6 +359,14 @@ class AlquilerController extends Component
         try {
             DB::beginTransaction();
 
+            // Procesar penalización en garantía si existe y hay monto a aplicar
+            if ($this->selectedAlquiler->tieneGarantia() && $this->penalizacion > 0) {
+                $this->selectedAlquiler->aplicarGarantia(
+                    $this->penalizacion, 
+                    "Penalización por devolución tardía o daños - " . $this->observaciones_devolucion
+                );
+            }
+
             $this->selectedAlquiler->update([
                 'fecha_devolucion_real' => $this->fecha_devolucion_real,
                 'penalizacion' => $this->penalizacion,
@@ -346,11 +375,34 @@ class AlquilerController extends Component
                 'usuario_devolucion' => Auth::id(),
             ]);
 
+            // Devolver garantía automáticamente si no hubo penalizaciones que agoten el monto
+            if ($this->selectedAlquiler->tieneGarantia()) {
+                $garantia = $this->selectedAlquiler->garantia;
+                
+                // Si aún hay monto disponible, devolver la garantía
+                if ($garantia->estado === \App\Models\Garantia::ESTADO_RECIBIDA && $garantia->monto_disponible > 0) {
+                    $motivo = "Devolución automática por finalización de alquiler {$this->selectedAlquiler->numero_contrato}";
+                    if ($this->penalizacion > 0) {
+                        $motivo .= " (después de aplicar penalización de Bs. {$this->penalizacion})";
+                    }
+                    
+                    $garantia->marcarComoDevuelta($garantia->monto_disponible, $motivo);
+                }
+                
+                // Liberar la garantía del alquiler
+                $this->selectedAlquiler->liberarGarantia('Alquiler finalizado');
+            }
+
             DB::commit();
+
+            $mensaje = 'La devolución ha sido registrada exitosamente.';
+            if ($this->selectedAlquiler->tieneGarantia()) {
+                $mensaje .= ' La garantía ha sido procesada automáticamente.';
+            }
 
             $this->dispatchBrowserEvent('swal', [
                 'title' => '¡Devolución Procesada!',
-                'text' => 'La devolución ha sido registrada exitosamente.',
+                'text' => $mensaje,
                 'icon' => 'success'
             ]);
 
@@ -367,6 +419,8 @@ class AlquilerController extends Component
         $this->monto_pago = $this->selectedAlquiler->saldo_pendiente;
         $this->referencia_pago = '';
         $this->observaciones_pago = '';
+        $this->caja_id = '';
+        $this->metodo_pago = 'EFECTIVO';
         $this->showPagoModal = true;
     }
 
@@ -380,6 +434,8 @@ class AlquilerController extends Component
     {
         $this->validate([
             'monto_pago' => 'required|numeric|min:0|max:' . $this->selectedAlquiler->saldo_pendiente,
+            'caja_id' => 'required|exists:cajas,id',
+            'metodo_pago' => 'required|string'
         ]);
 
         try {
@@ -395,11 +451,24 @@ class AlquilerController extends Component
                 'observaciones' => $this->selectedAlquiler->observaciones . "\nPago: Bs. " . $this->monto_pago . " - " . $this->observaciones_pago,
             ]);
 
+            // Registrar movimiento en caja
+            $caja = Caja::find($this->caja_id);
+            if ($caja && $caja->estado === 'ABIERTA') {
+                $caja->registrarMovimiento(
+                    MovimientoCaja::TIPO_INGRESO,
+                    $this->monto_pago,
+                    "Pago alquiler {$this->selectedAlquiler->numero_alquiler}",
+                    MovimientoCaja::CATEGORIA_ALQUILER,
+                    auth()->id(),
+                    $this->referencia_pago ?: $this->selectedAlquiler->numero_alquiler
+                );
+            }
+
             DB::commit();
 
             $this->dispatchBrowserEvent('swal', [
                 'title' => '¡Pago Registrado!',
-                'text' => 'El pago ha sido registrado exitosamente.',
+                'text' => 'El pago ha sido registrado exitosamente en caja.',
                 'icon' => 'success'
             ]);
 
@@ -470,11 +539,163 @@ class AlquilerController extends Component
         return collect($this->selectedProducts)->sum('subtotal');
     }
 
+    // Métodos para gestión de garantías
+    public function updatedClienteId()
+    {
+        // Filtrar garantías disponibles por cliente
+        $this->garantia_id = '';
+    }
+
+    public function asignarGarantia($alquilerId, $garantiaId)
+    {
+        try {
+            $alquiler = Alquiler::find($alquilerId);
+            $alquiler->asignarGarantia($garantiaId);
+
+            $this->dispatchBrowserEvent('swal', [
+                'title' => '¡Garantía Asignada!',
+                'text' => 'La garantía ha sido asignada al alquiler exitosamente.',
+                'icon' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Error al asignar garantía: ' . $e->getMessage(),
+                'icon' => 'error'
+            ]);
+        }
+    }
+
+    public function liberarGarantia($alquilerId)
+    {
+        try {
+            $alquiler = Alquiler::find($alquilerId);
+            $alquiler->liberarGarantia('Liberada manualmente desde interfaz');
+
+            $this->dispatchBrowserEvent('swal', [
+                'title' => '¡Garantía Liberada!',
+                'text' => 'La garantía ha sido liberada del alquiler.',
+                'icon' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Error al liberar garantía: ' . $e->getMessage(),
+                'icon' => 'error'
+            ]);
+        }
+    }
+
+    // Gestión avanzada de garantías
+    public function openGarantiaModal($alquilerId)
+    {
+        $this->selectedAlquiler = Alquiler::with('garantia')->find($alquilerId);
+        
+        if (!$this->selectedAlquiler->tieneGarantia()) {
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Sin Garantía',
+                'text' => 'Este alquiler no tiene una garantía asignada.',
+                'icon' => 'warning'
+            ]);
+            return;
+        }
+
+        $this->monto_aplicar_garantia = 0;
+        $this->motivo_aplicacion = '';
+        $this->showGarantiaModal = true;
+    }
+
+    public function closeGarantiaModal()
+    {
+        $this->showGarantiaModal = false;
+        $this->selectedAlquiler = null;
+        $this->monto_aplicar_garantia = 0;
+        $this->motivo_aplicacion = '';
+    }
+
+    public function aplicarMontoGarantia()
+    {
+        $this->validate([
+            'monto_aplicar_garantia' => 'required|numeric|min:0.01|max:' . ($this->selectedAlquiler->garantia->monto_disponible ?? 0),
+            'motivo_aplicacion' => 'required|string|min:10',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $this->selectedAlquiler->aplicarGarantia(
+                $this->monto_aplicar_garantia,
+                $this->motivo_aplicacion
+            );
+
+            DB::commit();
+
+            $this->dispatchBrowserEvent('swal', [
+                'title' => '¡Monto Aplicado!',
+                'text' => "Se aplicó Bs. {$this->monto_aplicar_garantia} de la garantía.",
+                'icon' => 'success'
+            ]);
+
+            $this->closeGarantiaModal();
+        } catch (\Exception $e) {
+            DB::rollback();
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Error al aplicar monto: ' . $e->getMessage(),
+                'icon' => 'error'
+            ]);
+        }
+    }
+
+    public function devolverGarantiaCompleta($alquilerId)
+    {
+        try {
+            $alquiler = Alquiler::with('garantia')->find($alquilerId);
+            
+            if (!$alquiler->tieneGarantia()) {
+                throw new \Exception('Este alquiler no tiene garantía asignada.');
+            }
+
+            $garantia = $alquiler->garantia;
+            
+            if ($garantia->estado !== \App\Models\Garantia::ESTADO_RECIBIDA) {
+                throw new \Exception('Esta garantía no puede ser devuelta en su estado actual.');
+            }
+
+            DB::beginTransaction();
+
+            // Devolver el monto disponible completo
+            $garantia->marcarComoDevuelta(
+                $garantia->monto_disponible, 
+                "Devolución manual completa desde alquiler {$alquiler->numero_contrato}"
+            );
+
+            // Liberar la garantía del alquiler
+            $alquiler->liberarGarantia('Garantía devuelta manualmente');
+
+            DB::commit();
+
+            $this->dispatchBrowserEvent('swal', [
+                'title' => '¡Garantía Devuelta!',
+                'text' => "Se devolvió Bs. {$garantia->monto_disponible} de la garantía {$garantia->numero_ticket}.",
+                'icon' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Error al devolver garantía: ' . $e->getMessage(),
+                'icon' => 'error'
+            ]);
+        }
+    }
+
     private function resetForm()
     {
         $this->cliente_id = '';
         $this->reserva_id = '';
         $this->unidad_educativa_id = '';
+        $this->garantia_id = '';
         $this->fecha_alquiler = Carbon::now()->format('Y-m-d');
         $this->hora_entrega = '09:00';
         $this->fecha_devolucion_programada = Carbon::now()->addDays(1)->format('Y-m-d');

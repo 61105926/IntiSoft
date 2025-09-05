@@ -74,7 +74,7 @@
                         <a href="{{ route('sucursal') }}">Stock por Sucursal</a>
                     </li>
                     <li class="menu">
-                        <a href="#">Historial de Productos</a>
+                        <a href="{{ route('historial-producto') }}">Historial de Productos</a>
                     </li>
                 </ul>
             </li>
@@ -106,7 +106,7 @@
                 </a>
                 <ul class="collapse submenu list-unstyled" id="submenu-operaciones" data-bs-parent="#accordionExample">
                     <li class="menu">
-                        <a href="#">Ventas</a>
+                        <a href="{{ route('venta') }}">Ventas</a>
                     </li>
                     <li class="menu">
                         <a href="{{ route('reserva') }}">Reservas</a>
@@ -114,11 +114,7 @@
                     <li class="menu">
                         <a href="{{ route('alquiler') }}">Alquileres</a>
                     </li>
-                    <li class="menu">
-                        <a href="{{ route('garantias') }}">
-                            <i class="fas fa-shield-alt me-2"></i>Garantías
-                        </a>
-                    </li>
+                 
                 </ul>
             </li>
 
@@ -149,7 +145,7 @@
                 </a>
                 <ul class="collapse submenu list-unstyled" id="submenu-finanzas" data-bs-parent="#accordionExample">
                     <li class="menu">
-                        <a href="#">Caja</a>
+                        <a href="{{ route('caja') }}">Caja</a>
                     </li>
                     <li class="menu">
                         <a href="{{ route('garantia') }}" >Garantías</a>
