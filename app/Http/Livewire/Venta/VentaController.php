@@ -31,6 +31,7 @@ class VentaController extends Component
     public $mostrarModalVenta = false;
     public $mostrarModalDetalle = false;
     public $mostrarModalPago = false;
+    public $mostrarModalComprobante = false;
 
     // Propiedades para venta
     public $ventaSeleccionada = null;
@@ -70,7 +71,7 @@ class VentaController extends Component
 
     public function mount()
     {
-        $this->fecha_venta = Carbon::now()->format('Y-m-d\TH:i');
+        $this->fecha_venta = Carbon::now()->format('Y-m-d');
         $this->fechaDesde = Carbon::now()->startOfMonth()->format('Y-m-d');
         $this->fechaHasta = Carbon::now()->format('Y-m-d');
         $this->sucursal_id = auth()->user()->sucursal_id ?? '';
@@ -80,7 +81,7 @@ class VentaController extends Component
 
     public function cargarDatos()
     {
-        $this->clientes = Cliente::orderBy('nombre')->get();
+        $this->clientes = Cliente::orderBy('nombres')->get();
         $this->productos = Producto::with('stockPorSucursal')->orderBy('nombre')->get();
         $this->sucursales = Sucursal::orderBy('nombre')->get();
         $this->cajas = Caja::where('estado', 'ABIERTA')->orderBy('nombre')->get();
@@ -127,7 +128,7 @@ class VentaController extends Component
         $this->ventaSeleccionada = null;
         $this->numero_venta = '';
         $this->cliente_id = '';
-        $this->fecha_venta = Carbon::now()->format('Y-m-d\TH:i');
+        $this->fecha_venta = Carbon::now()->format('Y-m-d');
         $this->fecha_entrega = '';
         $this->estado = 'PENDIENTE';
         $this->estado_pago = 'PENDIENTE';
@@ -204,7 +205,7 @@ class VentaController extends Component
             ->where('sucursal_id', $this->sucursal_id)
             ->first();
             
-        if (!$stock || $stock->cantidad_disponible < $this->cantidadProducto) {
+        if (!$stock || $stock->stock_actual < $this->cantidadProducto) {
             session()->flash('error', 'Stock insuficiente para el producto seleccionado');
             return;
         }
@@ -424,6 +425,20 @@ class VentaController extends Component
     public function cerrarModalDetalle()
     {
         $this->mostrarModalDetalle = false;
+        $this->ventaSeleccionada = null;
+    }
+
+    // Modal comprobante
+    public function verComprobante($ventaId)
+    {
+        $this->ventaSeleccionada = Venta::with(['detalles.producto', 'cliente', 'sucursal', 'usuario'])
+            ->find($ventaId);
+        $this->mostrarModalComprobante = true;
+    }
+
+    public function cerrarModalComprobante()
+    {
+        $this->mostrarModalComprobante = false;
         $this->ventaSeleccionada = null;
     }
 

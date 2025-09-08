@@ -26,13 +26,27 @@ class Cliente extends Model
         return $this->belongsTo(User::class, 'user_id'); // o como tengas tu relación con usuario creador
     }
 
+    public function getNombreAttribute()
+    {
+        if ($this->tipo_cliente === 'INDIVIDUAL') {
+            return trim(($this->nombres ?? '') . ' ' . ($this->apellidos ?? ''));
+        }
+        if ($this->tipo_cliente === 'EMPRESA') {
+            return $this->clienteEmpresa->razon_social ?? '';
+        }
+        if ($this->tipo_cliente === 'UNIDAD_EDUCATIVA') {
+            return $this->unidadEducativa->nombre ?? '';
+        }
+        return '';
+    }
+
     public function getRazonSocialAttribute()
     {
         if ($this->tipo_cliente === 'INDIVIDUAL') {
             return $this->nombres . ' ' . $this->apellidos;
         }
         if ($this->tipo_cliente === 'EMPRESA') {
-            return $this->empresa->razon_social ?? '';
+            return $this->clienteEmpresa->razon_social ?? '';
         }
         if ($this->tipo_cliente === 'UNIDAD_EDUCATIVA') {
             return $this->unidadEducativa->nombre ?? '';

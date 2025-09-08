@@ -4,6 +4,9 @@ use App\Http\Controllers\AlquileresController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\Dashboard;
+use App\Http\Livewire\EntradaFolclorica\EntradaFolcloricaController;
+use App\Http\Controllers\EntradaFolcloricaViewController;
 use App\Http\Controllers\GarantiaController;
 use App\Http\Controllers\HistorialProductoController;
 use App\Http\Controllers\ProductoController;
@@ -103,6 +106,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/historial-producto', [HistorialProductoController::class, 'index'])->name('historial-producto');
     Route::get('/venta', [ControllersVentaController::class, 'index'])->name('venta');
     Route::get('/caja', [CajaController::class, 'index'])->name('caja');
+    Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
+    Route::get('/entrada-folklorica', [EntradaFolcloricaViewController::class, 'index'])->name('entrada-folklorica');
+    Route::get('/entrada-folklorica/{id}/participantes', [EntradaFolcloricaViewController::class, 'participantes'])->name('entrada-folklorica.participantes');
+    Route::get('/entrada-folklorica/{id}/devoluciones', [EntradaFolcloricaViewController::class, 'devoluciones'])->name('entrada-folklorica.devoluciones');
 
 
 });

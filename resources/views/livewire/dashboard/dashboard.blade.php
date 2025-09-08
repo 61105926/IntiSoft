@@ -1,748 +1,541 @@
 <div>
-    <div class="container">
-        <!-- BREADCRUMB -->
-        <div class="page-meta">
-            <nav class="breadcrumb-style-one" aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Administrativo</li>
-                </ol>
-            </nav>
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label for="fechaInicio" class="form-label">Fecha Inicio</label>
+            <input type="date" wire:model.live="fechaInicio" id="fechaInicio" class="form-control">
         </div>
-  <!-- Alertas y Notificaciones -->
-        @if($stats['productos']['stock_bajo'] > 0 || $stats['productos']['por_vencer'] > 0)
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-warning">
-                    <div class="card-header bg-warning text-white">
-                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Alertas del Sistema</h5>
-                    </div>
-                    <div class="card-body">
-                        @if($stats['productos']['stock_bajo'] > 0)
-                        <div class="alert alert-warning mb-2">
-                            <h6><i class="fas fa-box"></i> Productos con Stock Bajo</h6>
-                            <button class="btn btn-secondary btn-sm mb-2" onclick="printTable('stockBajoTable')">
-                                <i class="fas fa-print"></i> Imprimir
-                            </button>
-                            <div class="table-responsive mt-2">
-                                <table class="table table-sm table-bordered" id="stockBajoTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Código</th>
-                                            <th>Producto</th>
-                                            <th>Stock Actual</th>
-                                        </tr>
-                                    </thead>
-                                    {{-- {{ $stats['productos']['stock_bajo_detalles'] }} --}}
-                                    <tbody>
-                                        @foreach(collect($stats['productos']['stock_bajo_detalles']) as $producto)
-                                            <tr>
-                                                <td>{{ $producto->codigo_producto }}</td>
-                                                <td>{{ $producto->nombre_producto }}</td>
-                                                <td class="text-danger">{{ $producto->stock }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                                {{-- {{ $stats['productos']['stock_bajo']->links() }} --}}
-
-                            </div>
-                        </div>
-                    @endif
-                    
-                    @if($stats['productos']['por_vencer'] > 0)
-                        <div class="alert alert-danger mb-2">
-                            <h6><i class="fas fa-calendar-times"></i> Productos Próximos a Vencer</h6>
-                            <input type="text" class="form-control form-control-sm mb-2" id="searchInput" onkeyup="filterTable('vencerTable', this.value)" placeholder="Buscar producto...">
-                            <button class="btn btn-secondary btn-sm mb-2" onclick="printTable('vencerTable')">
-                                <i class="fas fa-print"></i> Imprimir
-                            </button>
-                            <div class="table-responsive mt-2">
-                                <table class="table table-sm table-bordered" id="vencerTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Código</th>
-                                            <th>Producto</th>
-                                            <th>Fecha Vencimiento</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($stats['productos']['por_vencer_detalles'] as $producto)
-                                            <tr>
-                                                <td>{{ $producto->codigo_producto }}</td>
-                                                <td>{{ $producto->nombre_producto }}</td>
-                                                <td class="text-danger">{{ \Carbon\Carbon::parse($producto->fecha_vencimiento)->format('d/m/Y') }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @endif
-                    
-                    <script>
-                        // Filtrar tabla
-                        function filterTable(tableId, searchValue) {
-                            const table = document.getElementById(tableId);
-                            const rows = table.getElementsByTagName('tr');
-                            const lowerSearch = searchValue.toLowerCase();
-                    
-                            for (let i = 1; i < rows.length; i++) {
-                                const cells = rows[i].getElementsByTagName('td');
-                                let match = false;
-                    
-                                for (let j = 0; j < cells.length; j++) {
-                                    if (cells[j].textContent.toLowerCase().includes(lowerSearch)) {
-                                        match = true;
-                                        break;
-                                    }
-                                }
-                    
-                                rows[i].style.display = match ? '' : 'none';
-                            }
-                        }
-                    
-                        // Imprimir tabla
-                        function printTable(tableId) {
-                            const table = document.getElementById(tableId).outerHTML;
-                            const newWindow = window.open('', '_blank');
-                            newWindow.document.write(`
-                                <html>
-                                    <head>
-                                        <title>Imprimir Tabla</title>
-                                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
-                                    </head>
-                                    <body>
-                                        ${table}
-                                    </body>
-                                </html>
-                            `);
-                            newWindow.document.close();
-                            newWindow.print();
-                        }
-                    </script>
-                    
-                    </div>
-                </div>
-            </div>
+        <div class="col-md-3">
+            <label for="fechaFin" class="form-label">Fecha Fin</label>
+            <input type="date" wire:model.live="fechaFin" id="fechaFin" class="form-control">
         </div>
-        @endif
-        <!-- Tarjetas de Resumen -->
-        <div class="row mb-4">
-            <!-- Ventas -->
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
-                <div class="card bg-gradient-primary">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-dark">Ventas Hoy</h6>
-                                <h4 class="text-dark mb-0">Bs. {{ number_format($stats['ventas']['hoy'], 2) }}</h4>
-                            </div>
-                            <div class="icon-box">
-                                <i class="fas fa-shopping-cart text-dark fa-2x"></i>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <span class="{{ $stats['ventas']['tendencia'] >= 0 ? 'text-success' : 'text-danger' }} bg-light px-2 py-1 rounded">
-                                <i class="fas {{ $stats['ventas']['tendencia'] >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
-                                {{ abs(round($stats['ventas']['tendencia'], 1)) }}%
-                            </span>
-                            <span class="text-dark ms-2">vs mes anterior</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-md-3">
+            <label for="sucursalId" class="form-label">Sucursal</label>
+            <select wire:model.live="sucursalId" id="sucursalId" class="form-select">
+                <option value="">Todas las sucursales</option>
+                @foreach(\App\Models\Sucursal::all() as $sucursal)
+                    <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
 
-            <!-- Clientes -->
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
-                <div class="card bg-gradient-success">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-dark">Clientes Totales</h6>
-                                <h4 class="text-dark mb-0">{{ $stats['clientes']['total'] }}</h4>
-                            </div>
-                            <div class="icon-box">
-                                <i class="fas fa-users text-dark fa-2x"></i>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <span class="text-dark">{{ $stats['clientes']['nuevos'] }} nuevos este mes</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mascotas -->
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
-                <div class="card bg-gradient-info">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-dark">Mascotas</h6>
-                                <h4 class="text-dark mb-0">{{ $stats['mascotas']['total'] }}</h4>
-                            </div>
-                            <div class="icon-box">
-                                <i class="fas fa-paw text-dark fa-2x"></i>
+    <!-- Métricas principales -->
+    <div class="row g-3 mb-5">
+        <!-- Ventas Hoy -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-cart text-warning fs-4"></i>
                             </div>
                         </div>
-                        <div class="mt-2">
-                            <span class="text-dark">{{ $stats['mascotas']['nuevas'] }} nuevas este mes</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Productos -->
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-4">
-                <div class="card bg-gradient-warning">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-dark">Productos</h6>
-                                <h4 class="text-dark mb-0">{{ $stats['productos']['total'] }}</h4>
-                            </div>
-                            <div class="icon-box">
-                                <i class="fas fa-box text-dark fa-2x"></i>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <span class="text-danger bg-light px-2 py-1 rounded">
-                                {{ $stats['productos']['stock_bajo'] }} con stock bajo
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Caja -->
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-cash-register"></i> Estado de Caja
-                            <span class="float-end">
-                                Actualizado: {{ now()->format('H:i') }}
-                            </span>
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Balance Actual -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-primary h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                    Balance Actual</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    Bs. {{ number_format($stats['caja']['stats']['balance_actual'] ?? 0, 2) }}
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Entradas -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-success h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                    Entradas</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    Bs. {{ number_format($stats['caja']['stats']['entradas']['total'], 2) }}
-                                                </div>
-                                                <div class="text-xs text-muted">
-                                                    Hoy: Bs. {{ number_format($stats['caja']['stats']['entradas']['hoy'], 2) }}
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-arrow-up fa-2x text-success"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Salidas -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-danger h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                                    Salidas</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    Bs. {{ number_format($stats['caja']['stats']['salidas']['total'], 2) }}
-                                                </div>
-                                                <div class="text-xs text-muted">
-                                                    Hoy: Bs. {{ number_format($stats['caja']['stats']['salidas']['hoy'], 2) }}
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-arrow-down fa-2x text-danger"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Operaciones -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-info h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                    Operaciones</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    Entradas: Bs. {{ number_format($stats['caja']['stats']['operaciones']['total'], 2) }}
-                                                </div>
-                                                <div class="text-xs text-muted">
-                                                    Salidas: Bs. {{ number_format($stats['caja']['stats']['operaciones_salida']['total'], 2) }}
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-exchange-alt fa-2x text-info"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Resumen Mensual -->
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Tipo</th>
-                                                <th class="text-end">Hoy</th>
-                                                <th class="text-end">Este Mes</th>
-                                                <th class="text-end">Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Entradas</td>
-                                                <td class="text-end text-success">
-                                                    Bs. {{ number_format($stats['caja']['stats']['entradas']['hoy'], 2) }}
-                                                </td>
-                                                <td class="text-end text-success">
-                                                    Bs. {{ number_format($stats['caja']['stats']['entradas']['mes'], 2) }}
-                                                </td>
-                                                <td class="text-end text-success">
-                                                    Bs. {{ number_format($stats['caja']['stats']['entradas']['total'], 2) }}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Salidas</td>
-                                                <td class="text-end text-danger">
-                                                    Bs. {{ number_format($stats['caja']['stats']['salidas']['hoy'], 2) }}
-                                                </td>
-                                                <td class="text-end text-danger">
-                                                    Bs. {{ number_format($stats['caja']['stats']['salidas']['mes'], 2) }}
-                                                </td>
-                                                <td class="text-end text-danger">
-                                                    Bs. {{ number_format($stats['caja']['stats']['salidas']['total'], 2) }}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1 text-muted">Ventas Hoy</h6>
+                            <h3 class="mb-0 fw-bold">{{ $metricas['ventas_hoy'] ?? 0 }}</h3>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> Bs. {{ number_format($metricas['ingresos_hoy'] ?? 0, 2) }}
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-      
-
-        <!-- Productos Más Vendidos -->
-        <div class="row mb-4">
-            <div class="col-xl-6 col-lg-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Productos Más Vendidos</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Código</th>
-                                        <th>Vendidos</th>
-                                        <th>Stock</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($stats['productos_populares'] as $producto)
-                                        <tr>
-                                            <td>{{ $producto->producto->nombre_producto }}</td>
-                                            <td>{{ $producto->producto->codigo_producto }}</td>
-                                            <td>{{ $producto->total_vendido }}</td>
-                                            <td>
-                                                <span class="badge bg-{{ $producto->producto->stock <= 10 ? 'danger' : 'success' }}">
-                                                    {{ $producto->producto->stock }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráficos existentes -->
-            <div class="col-xl-6 col-lg-12">
-                <div id="chartColumnStacked" class="layout-spacing">
-                    <div class="statbox widget box box-shadow">
-                        <div class="widget-header">
-                            <div class="row">
-                                <div class="col-xl-12 col-md-12 col-sm-12 col-12">
-                                    <h4>Reporte Citas</h4>
-                                </div>
+        <!-- Ventas del Período -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-graph-up text-primary fs-4"></i>
                             </div>
                         </div>
-                        <div class="widget-content widget-content-area">
-                            <div id="s-col-stackeds"></div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1 text-muted">Ventas Período</h6>
+                            <h3 class="mb-0 fw-bold">{{ $metricas['ventas_periodo'] ?? 0 }}</h3>
+                            <small class="text-primary">
+                                {{ $metricas['ventas_completadas'] ?? 0 }} completadas
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Gráfico de Ventas -->
-        <div class="row">
-            <div class="col-12">
-                <div id="chartColumns" class="layout-spacing">
-                    <div class="statbox widget box box-shadow">
-                        <div class="widget-header">
-                            <div class="row">
-                                <div class="col-xl-12 col-md-12 col-sm-12 col-12">
-                                    <h4>Reporte Ingresos Mensuales</h4>
-                                </div>
+        <!-- Ingresos Totales del Período -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-currency-dollar text-success fs-4"></i>
                             </div>
                         </div>
-                        <div class="widget-content widget-content-area">
-                            <div id="s-col-das"></div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1 text-muted">Ingresos Total</h6>
+                            <h3 class="mb-0 fw-bold">Bs. {{ number_format($metricas['ingresos_total'] ?? 0, 2) }}</h3>
+                            <small class="text-success">
+                                Hoy: Bs. {{ number_format($metricas['ingresos_total_hoy'] ?? 0, 2) }}
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Después de las tarjetas principales -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Entradas de Efectivo</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo</th>
-                                        <th>Monto</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($stats['caja']['stats']['entradas'] as $key => $entrada)
-                                        <tr>
-                                            <td>{{ ucfirst($key) }}</td>
-                                            <td>Bs. {{ number_format($entrada, 2) }}</td>
-                                            <td>{{ now()->format('d/m/Y') }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot>
-                                    <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                        <td style="text-align: right; font-weight: bold;">Total:</td>
-                                        <td colspan="2" style="font-weight: bold;">
-                                            Bs. {{ number_format($stats['caja']['stats']['entradas']['total'], 2) }}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+        <!-- Clientes -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-people text-info fs-4"></i>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Salidas de Efectivo</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo</th>
-                                        <th>Monto</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($stats['caja']['stats']['salidas'] as $key => $salida)
-                                        <tr>
-                                            <td>{{ ucfirst($key) }}</td>
-                                            <td>Bs. {{ number_format($salida, 2) }}</td>
-                                            <td>{{ now()->format('d/m/Y') }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot>
-                                    <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                        <td style="text-align: right; font-weight: bold;">Total:</td>
-                                        <td colspan="2" style="font-weight: bold;">
-                                            Bs. {{ number_format($stats['caja']['stats']['salidas']['total'], 2) }}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Operaciones</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo</th>
-                                        <th>Monto</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($stats['caja']['stats']['operaciones'] as $key => $operacion)
-                                        <tr>
-                                            <td>{{ ucfirst($key) }}</td>
-                                            <td>Entradas. {{ number_format($operacion, 2) }}</td>
-                                            <td>{{ now()->format('d/m/Y') }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot>
-                                    <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                        <td style="text-align: right; font-weight: bold;">Total:</td>
-                                        <td colspan="2" style="font-weight: bold;">
-                                            Entradas. {{ number_format($stats['caja']['stats']['operaciones']['total'], 2) }}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Salidas por Operaciones</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo</th>
-                                        <th>Monto</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($stats['caja']['stats']['operaciones_salida'] as $key => $operacionSalida)
-                                        <tr>
-                                            <td>{{ ucfirst($key) }}</td>
-                                            <td>Bs. {{ number_format($operacionSalida, 2) }}</td>
-                                            <td>{{ now()->format('d/m/Y') }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot>
-                                    <tr style="background-color: #f2f2f2; border-top: 2px solid #000;">
-                                        <td style="text-align: right; font-weight: bold;">Total:</td>
-                                        <td colspan="2" style="font-weight: bold;">
-                                            Bs. {{ number_format($stats['caja']['stats']['operaciones_salida']['total'], 2) }}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1 text-muted">Clientes</h6>
+                            <h3 class="mb-0 fw-bold">{{ $metricas['total_clientes'] ?? 0 }}</h3>
+                            <small class="text-info">
+                                +{{ $metricas['clientes_nuevos'] ?? 0 }} nuevos
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Métricas adicionales -->
+    <div class="row g-3 mb-5">
+        <!-- Ingresos Reservas -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-purple bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-calendar-check" style="color: #6f42c1; font-size: 1.5rem;"></i>
+                    </div>
+                    <h4 class="mt-3 mb-1 fw-bold">Bs. {{ number_format($metricas['ingresos_reservas_periodo'] ?? 0, 2) }}</h4>
+                    <p class="text-muted mb-1">Reservas</p>
+                    <small class="text-muted">{{ $metricas['reservas_activas'] ?? 0 }} activas</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ingresos Alquileres -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-orange bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-house-door" style="color: #fd7e14; font-size: 1.5rem;"></i>
+                    </div>
+                    <h4 class="mt-3 mb-1 fw-bold">Bs. {{ number_format($metricas['ingresos_alquileres_periodo'] ?? 0, 2) }}</h4>
+                    <p class="text-muted mb-1">Alquileres</p>
+                    <small class="text-muted">{{ $metricas['alquileres_activos'] ?? 0 }} activos</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-teal bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-box-seam" style="color: #20c997; font-size: 1.5rem;"></i>
+                    </div>
+                    <h4 class="mt-3 mb-1 fw-bold">{{ $metricas['total_productos'] ?? 0 }}</h4>
+                    <p class="text-muted mb-1">Productos</p>
+                    <small class="text-muted">Total inventario</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado Cajas -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-dark bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-cash-stack text-dark fs-4"></i>
+                    </div>
+                    <h4 class="mt-3 mb-1 fw-bold">{{ $estadoCajas->where('estado', 'ABIERTA')->count() }}</h4>
+                    <p class="text-muted mb-1">Cajas Abiertas</p>
+                    <small class="text-muted">de {{ $estadoCajas->count() }} total</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desglose de Ingresos -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>
+                        Desglose de Ingresos por Categoría
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <!-- Ventas -->
+                        <div class="col-md-4">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-4 text-center">
+                                <i class="bi bi-cart fs-1 text-primary mb-3"></i>
+                                <h5 class="text-primary">Ventas</h5>
+                                <h4 class="fw-bold mb-2">Bs. {{ number_format($metricas['ingresos_periodo'] ?? 0, 2) }}</h4>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Hoy:</span>
+                                    <span class="fw-semibold">Bs. {{ number_format($metricas['ingresos_hoy'] ?? 0, 2) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Cantidad:</span>
+                                    <span class="fw-semibold">{{ $metricas['ventas_completadas'] ?? 0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reservas -->
+                        <div class="col-md-4">
+                            <div class="bg-purple bg-opacity-10 rounded-3 p-4 text-center" style="--bs-bg-opacity: 0.1; background-color: #6f42c1 !important;">
+                                <i class="bi bi-calendar-check fs-1 mb-3" style="color: #6f42c1;"></i>
+                                <h5 style="color: #6f42c1;">Reservas</h5>
+                                <h4 class="fw-bold mb-2">Bs. {{ number_format($metricas['ingresos_reservas_periodo'] ?? 0, 2) }}</h4>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Hoy:</span>
+                                    <span class="fw-semibold">Bs. {{ number_format($metricas['ingresos_reservas_hoy'] ?? 0, 2) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Estimado:</span>
+                                    <span class="fw-semibold">Bs. {{ number_format($metricas['total_estimado_reservas'] ?? 0, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alquileres -->
+                        <div class="col-md-4">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-4 text-center">
+                                <i class="bi bi-house-door fs-1 text-warning mb-3"></i>
+                                <h5 class="text-warning">Alquileres</h5>
+                                <h4 class="fw-bold mb-2">Bs. {{ number_format($metricas['ingresos_alquileres_periodo'] ?? 0, 2) }}</h4>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Anticipos:</span>
+                                    <span class="fw-semibold">Bs. {{ number_format($metricas['anticipos_alquileres'] ?? 0, 2) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span>Pendientes:</span>
+                                    <span class="fw-semibold text-danger">Bs. {{ number_format($metricas['saldos_pendientes_alquileres'] ?? 0, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total General -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="text-success mb-1">
+                                            <i class="bi bi-currency-dollar me-2"></i>
+                                            Total de Ingresos del Período
+                                        </h5>
+                                        <small class="text-muted">
+                                            Ventas + Reservas + Alquileres
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h3 class="text-success fw-bold mb-0">
+                                            Bs. {{ number_format($metricas['ingresos_total'] ?? 0, 2) }}
+                                        </h3>
+                                        <small class="text-success">
+                                            Hoy: Bs. {{ number_format($metricas['ingresos_total_hoy'] ?? 0, 2) }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos y Tablas -->
+    <div class="row g-4">
+        <!-- Gráfico de Ventas por Día -->
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Ventas por Día
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ventasChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribución por Estado -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>
+                        Estados de Venta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="estadosChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-0">
+        <!-- Ventas Recientes -->
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Ventas Recientes
+                    </h5>
+                    <a href="/venta" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($ventasRecientes as $venta)
+                                    <tr>
+                                        <td>
+                                            <span class="fw-semibold">{{ $venta->numero_venta }}</span><br>
+                                            <small class="text-muted">{{ $venta->sucursal->nombre }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="fw-medium">{{ $venta->cliente->nombre }}</div>
+                                        </td>
+                                        <td>
+                                            <div>{{ $venta->fecha_venta->format('d/m/Y') }}</div>
+                                            <small class="text-muted">{{ $venta->fecha_venta->format('H:i') }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ $venta->estado_badge_class }}">
+                                                {{ $venta->estado_display }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end fw-semibold">
+                                            Bs. {{ number_format($venta->total, 2) }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            No hay ventas recientes
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Más Vendidos -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-trophy me-2"></i>
+                        Productos Populares
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @forelse($productosPopulares as $index => $producto)
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="bg-{{ $index == 0 ? 'warning' : ($index == 1 ? 'secondary' : ($index == 2 ? 'success' : 'light')) }} rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                    <span class="fw-bold {{ $index < 3 ? 'text-white' : 'text-muted' }}">{{ $index + 1 }}</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="fw-medium">{{ $producto->nombre }}</div>
+                                <small class="text-muted">{{ $producto->codigo }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">{{ $producto->total_vendido }}</div>
+                                <small class="text-muted">Bs. {{ number_format($producto->ingresos_totales, 0) }}</small>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-3 text-muted">
+                            <i class="bi bi-box-seam fs-1"></i>
+                            <p class="mb-0">No hay datos disponibles</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado de Cajas -->
+    @if($estadoCajas->count() > 0)
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-cash-stack me-2"></i>
+                            Estado de Cajas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach($estadoCajas as $caja)
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="fw-bold mb-0">{{ $caja->nombre }}</h6>
+                                                <span class="badge {{ $caja->estado === 'ABIERTA' ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $caja->estado }}
+                                                </span>
+                                            </div>
+                                            <p class="text-muted mb-2">{{ $caja->sucursal->nombre }}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-muted">Saldo:</span>
+                                                <span class="fw-bold">Bs. {{ number_format($caja->saldo_actual, 2) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gráfico de Ventas por Día
+            const ventasCtx = document.getElementById('ventasChart');
+            if (ventasCtx) {
+                const ventasData = @json($chartData['ventas_por_dia'] ?? []);
+                
+                new Chart(ventasCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ventasData.map(item => item.fecha_display),
+                        datasets: [
+                            {
+                                label: 'Ventas',
+                                data: ventasData.map(item => item.ventas),
+                                borderColor: '#ffc107',
+                                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                                tension: 0.4,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Ingresos (Bs.)',
+                                data: ventasData.map(item => item.ingresos),
+                                borderColor: '#0d6efd',
+                                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                                tension: 0.4,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de Ventas'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Ingresos (Bs.)'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Gráfico de Estados
+            const estadosCtx = document.getElementById('estadosChart');
+            if (estadosCtx) {
+                const estadosData = @json($chartData['ventas_por_estado'] ?? []);
+                
+                const colores = {
+                    'PENDIENTE': '#ffc107',
+                    'COMPLETADA': '#198754',
+                    'CANCELADA': '#dc3545',
+                    'DEVUELTA': '#6c757d'
+                };
+
+                new Chart(estadosCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: estadosData.map(item => item.estado),
+                        datasets: [{
+                            data: estadosData.map(item => item.total),
+                            backgroundColor: estadosData.map(item => colores[item.estado] || '#6c757d'),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </div>
-
-<style>
-.card {
-    border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.bg-gradient-primary {
-    background: linear-gradient(45deg, #ffffff, #e3f2fd);
-}
-
-.bg-gradient-success {
-    background: linear-gradient(45deg, #ffffff, #e8f5e9);
-}
-
-.bg-gradient-warning {
-    background: linear-gradient(45deg, #ffffff, #fff3e0);
-}
-
-.bg-gradient-danger {
-    background: linear-gradient(45deg, #ffffff, #ffebee);
-}
-
-.icon-box {
-    padding: 10px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.text-dark {
-    color: #2c3e50 !important;
-}
-</style>
-
-<!-- Mantener los scripts existentes -->
-
-@push('scripts')
-{{-- <script src="{{ asset('plugins/apex/apexcharts.min.js') }}"></script> --}}
-
-<script>
-    document.addEventListener('livewire:load', function() {
-        // Gráfico de Ingresos Mensuales
-        var options1 = {
-            chart: {
-                height: 350,
-                type: 'bar',
-                toolbar: {
-                    show: false,
-                }
-            },
-            series: [{
-                name: '2024',
-                data: @json($montosActual ?? [])
-            }, {
-                name: '2023',
-                data: @json($montosAnterior ?? [])
-            }],
-            xaxis: {
-                categories: @json($fechas ?? []),
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                },
-            },
-            dataLabels: {
-                enabled: false
-            },
-            stroke: {
-                show: true,
-                width: 2,
-                colors: ['transparent']
-            },
-            colors: ['#650abb', '#805dca'],
-            fill: {
-                opacity: 1
-            },
-            tooltip: {
-                y: {
-                    formatter: function(val) {
-                        return 'Bs ' + val.toFixed(2)
-                    }
-                }
-            },
-            yaxis: {
-                labels: {
-                    formatter: function(val) {
-                        return 'Bs ' + val.toFixed(2)
-                    }
-                }
-            }
-        }
-
-        // Gráfico de Citas
-        var options2 = {
-            chart: {
-                height: 350,
-                type: 'bar',
-                stacked: true,
-                toolbar: {
-                    show: false,
-                }
-            },
-            series: @json($series ?? []),
-            xaxis: {
-                categories: @json($fechas ?? []),
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                },
-            },
-            dataLabels: {
-                enabled: false
-            },
-            colors: ['#00ab55', '#ffc107', '#dc3545'],
-            fill: {
-                opacity: 1
-            }
-        }
-
-        try {
-            if(document.querySelector("#s-col-das")) {
-                const chart1 = new ApexCharts(
-                    document.querySelector("#s-col-das"),
-                    options1
-                );
-                chart1.render();
-            }
-
-            if(document.querySelector("#s-col-stackeds")) {
-                const chart2 = new ApexCharts(
-                    document.querySelector("#s-col-stackeds"),
-                    options2
-                );
-                chart2.render();
-            }
-        } catch (error) {
-            console.error('Error al renderizar gráficos:', error);
-        }
-    });
-</script>
-@endpush

@@ -208,8 +208,8 @@ class Venta extends Model
                         $monto,
                         "Pago venta {$this->numero_venta}",
                         MovimientoCaja::CATEGORIA_VENTA,
-                        auth()->id(),
-                        $this->numero_venta
+                        $this->numero_venta,
+                        "Pago de venta"
                     );
                 }
             }
@@ -235,7 +235,7 @@ class Venta extends Model
                     ->first();
                     
                 if ($stockSucursal) {
-                    $stockSucursal->cantidad_disponible -= $detalle->cantidad;
+                    $stockSucursal->stock_actual -= $detalle->cantidad;
                     $stockSucursal->save();
                 }
             }

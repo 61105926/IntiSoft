@@ -57,4 +57,17 @@ class Producto extends Model
     {
         return $this->stockPorSucursal()->sum('stock_actual');
     }
+
+    public function getPrecioVentaAttribute()
+    {
+        // Precio por defecto de la primera sucursal disponible
+        $stock = $this->stocks()->first();
+        return $stock ? $stock->precio_venta_sucursal ?? 0 : 0;
+    }
+
+    public function getPrecioVentaEnSucursal($sucursalId)
+    {
+        $stock = $this->getStockEnSucursal($sucursalId);
+        return $stock ? $stock->precio_venta_sucursal ?? 0 : 0;
+    }
 }

@@ -1,0 +1,159 @@
+/* Estilos personalizados para módulo de ventas */
+
+/* Animaciones suaves */
+.card, .btn {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Gradientes personalizados */
+.gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-success {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.gradient-warning {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Tabla con hover mejorado */
+.table-hover tbody tr:hover {
+    background-color: rgba(103, 126, 234, 0.05);
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* Botones con efectos */
+.btn-group .btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-group .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-group .btn:hover::before {
+    left: 100%;
+}
+
+/* Cards de métricas con animación */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.metric-card:hover {
+    animation: pulse 2s infinite;
+}
+
+/* Filtros con estilo */
+.filter-card {
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+/* Estado badges mejorados */
+.badge {
+    border-radius: 25px;
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Iconos con animación */
+.icon-container {
+    transition: all 0.3s ease;
+}
+
+.icon-container:hover {
+    transform: rotate(10deg);
+}
+
+/* Tabla responsive mejorada */
+.table-responsive {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* Modal mejorado */
+.modal-content {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-radius: 20px 20px 0 0;
+}
+
+/* Formularios elegantes */
+.form-control:focus,
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(103, 126, 234, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #1a1a1a;
+        border-color: #333;
+    }
+    
+    .table {
+        background-color: #1a1a1a;
+        color: #fff;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(255,255,255,0.05);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 5px;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
