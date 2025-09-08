@@ -8,6 +8,6 @@ class StockSucursal extends Controller
 {
     public function index()
     {
-        return view('sucursal.index')->extends('layouts.theme.app')->section('content');
+        return view('sucursal.index');
     }
 }

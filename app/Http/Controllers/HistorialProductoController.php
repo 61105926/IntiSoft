@@ -6,10 +6,8 @@ use Illuminate\Http\Request;
 
 class HistorialProductoController extends Controller
 {
-    //
-      public function index()
+    public function index()
     {
-
-        return view('historial-producto.index')->extends('layouts.theme.app')->section('content');
+        return view('historial-producto.index');
     }
 }

@@ -10,6 +10,6 @@ class CajaController extends Controller
        public function index()
     {
 
-        return view('caja.index')->extends('layouts.theme.app')->section('content');
+        return view('caja.index');
     }
 }

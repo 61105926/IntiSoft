@@ -658,6 +658,106 @@
         <div class="modal-backdrop fade show"></div>
     @endif
 
+    <!-- Modal Devolución -->
+    @if ($showDevolucionModal && $selectedAlquiler)
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-undo me-2"></i>Devolución de Alquiler: {{ $selectedAlquiler->numero_contrato }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="closeDevolucionModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if (session()->has('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Fecha y hora de devolución</label>
+                                <input type="datetime-local" class="form-control @error('fecha_devolucion_real') is-invalid @enderror" wire:model="fecha_devolucion_real">
+                                @error('fecha_devolucion_real')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Penalización (Bs.)</label>
+                                <input type="number" step="0.01" class="form-control @error('penalizacion') is-invalid @enderror" wire:model="penalizacion" placeholder="0.00">
+                                @error('penalizacion')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Observaciones generales</label>
+                                <input type="text" class="form-control" wire:model="observaciones_devolucion" placeholder="Notas generales de la devolución">
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-boxes me-2"></i>Detalle de productos</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 35%">Producto</th>
+                                                <th style="width: 10%">Cantidad</th>
+                                                <th style="width: 20%">Estado devolución</th>
+                                                <th>Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($devolucionDetalles as $idx => $item)
+                                                <tr>
+                                                    <td class="align-middle">{{ $item['producto'] }}</td>
+                                                    <td class="align-middle">{{ $item['cantidad'] }}</td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm" wire:model="devolucionDetalles.{{ $idx }}.estado">
+                                                            <option value="PENDIENTE">Pendiente</option>
+                                                            <option value="DEVUELTO">Devuelto</option>
+                                                            <option value="DAÑADO">Dañado</option>
+                                                            <option value="PERDIDO">Perdido</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" class="form-control form-control-sm" wire:model="devolucionDetalles.{{ $idx }}.observaciones" placeholder="Observaciones del ítem">
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                            @if (empty($devolucionDetalles))
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted py-3">Sin detalles para devolver</td>
+                                                </tr>
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeDevolucionModal">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" wire:click="procesarDevolucion">
+                            <i class="fas fa-check me-1"></i>Confirmar Devolución
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
+
     <!-- Otros modales (Ver, Devolución, Pago) aquí -->
 
     <!-- SweetAlert -->

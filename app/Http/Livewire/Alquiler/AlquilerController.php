@@ -12,6 +12,10 @@ use App\Models\UnidadEducativa;
 use App\Models\Producto;
 use App\Models\Caja;
 use App\Models\MovimientoCaja;
+use App\Models\StockPorSucursal;
+use App\Models\MovimientoStockSucursal;
+use App\Models\AlquilerDetalle;
+use App\Models\ReservaDetalle;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -63,6 +67,7 @@ class AlquilerController extends Component
     public $fecha_devolucion_real;
     public $penalizacion = 0;
     public $observaciones_devolucion = '';
+    public $devolucionDetalles = [];
 
     // Pago
     public $monto_pago = 0;
@@ -306,6 +311,46 @@ class AlquilerController extends Component
                 }
             }
 
+            // Crear detalles del alquiler y ajustar stock
+            foreach ($this->selectedProducts as $producto) {
+                AlquilerDetalle::create([
+                    'alquiler_id' => $alquiler->id,
+                    'producto_id' => $producto['id'],
+                    'cantidad' => (int) $producto['cantidad'],
+                    'precio_unitario' => $producto['precio_unitario'] ?? 0,
+                    'subtotal' => $producto['subtotal'] ?? (($producto['precio_unitario'] ?? 0) * (int) $producto['cantidad']),
+                    'estado_devolucion' => 'PENDIENTE',
+                ]);
+
+                $stockSucursal = StockPorSucursal::where('producto_id', $producto['id'])
+                    ->where('sucursal_id', $this->sucursal_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($stockSucursal) {
+                    $cantidad = (int) $producto['cantidad'];
+                    $stockAnterior = (int) $stockSucursal->stock_actual;
+                    $stockSucursal->stock_actual = max(0, (int) $stockSucursal->stock_actual - $cantidad);
+                    if (isset($stockSucursal->stock_alquilado)) {
+                        $stockSucursal->stock_alquilado = (int) $stockSucursal->stock_alquilado + $cantidad;
+                    }
+                    $stockSucursal->save();
+
+                    MovimientoStockSucursal::create([
+                        'producto_id' => $producto['id'],
+                        'sucursal_id' => $this->sucursal_id,
+                        'tipo_movimiento' => 'SALIDA',
+                        'cantidad' => $cantidad,
+                        'stock_anterior' => $stockAnterior,
+                        'stock_nuevo' => $stockSucursal->stock_actual,
+                        'referencia' => $numeroContrato,
+                        'motivo' => 'Salida por alquiler',
+                        'usuario_id' => Auth::id(),
+                        'fecha_movimiento' => now(),
+                    ]);
+                }
+            }
+
             DB::commit();
 
             $this->dispatchBrowserEvent('swal', [
@@ -336,10 +381,35 @@ class AlquilerController extends Component
 
     public function openDevolucionModal($alquilerId)
     {
-        $this->selectedAlquiler = Alquiler::find($alquilerId);
+        $this->selectedAlquiler = Alquiler::with(['detalles.producto'])->find($alquilerId);
         $this->fecha_devolucion_real = now()->format('Y-m-d\TH:i');
         $this->penalizacion = 0;
         $this->observaciones_devolucion = '';
+        // Si no hay detalles, reconstruir desde reserva asociada (contratos antiguos)
+        if ($this->selectedAlquiler && $this->selectedAlquiler->detalles()->count() === 0 && $this->selectedAlquiler->reserva_id) {
+            $detallesReserva = ReservaDetalle::where('reserva_id', $this->selectedAlquiler->reserva_id)->get();
+            foreach ($detallesReserva as $dr) {
+                AlquilerDetalle::create([
+                    'alquiler_id' => $this->selectedAlquiler->id,
+                    'producto_id' => $dr->producto_id,
+                    'cantidad' => (int) $dr->cantidad,
+                    'precio_unitario' => $dr->precio_unitario,
+                    'subtotal' => $dr->subtotal,
+                    'estado_devolucion' => 'PENDIENTE',
+                ]);
+            }
+            $this->selectedAlquiler->load('detalles.producto');
+        }
+        // Precargar detalles para marcar estado por ítem (por defecto DEVUELTO)
+        $this->devolucionDetalles = $this->selectedAlquiler->detalles->map(function ($d) {
+            return [
+                'detalle_id' => $d->id,
+                'producto' => $d->producto->nombre ?? 'Producto',
+                'cantidad' => (int) $d->cantidad,
+                'estado' => $d->estado_devolucion ?? 'PENDIENTE',
+                'observaciones' => $d->observaciones_devolucion ?? '',
+            ];
+        })->toArray();
         $this->showDevolucionModal = true;
     }
 
@@ -359,6 +429,25 @@ class AlquilerController extends Component
         try {
             DB::beginTransaction();
 
+            // Actualizar estados por detalle según selección de UI
+            foreach ($this->devolucionDetalles as $item) {
+                $detalle = $this->selectedAlquiler->detalles->firstWhere('id', $item['detalle_id']);
+                if ($detalle) {
+                    $estado = $item['estado'] ?: 'PENDIENTE';
+                    if ($estado === 'DEVUELTO' && $detalle->estado_devolucion !== 'DEVUELTO') {
+                        $detalle->marcarComoDevuelto($item['observaciones'] ?? null);
+                    } elseif ($estado === 'DAÑADO' && $detalle->estado_devolucion !== 'DAÑADO') {
+                        $detalle->marcarComoDañado(0, $item['observaciones'] ?? null);
+                    } elseif ($estado === 'PERDIDO' && $detalle->estado_devolucion !== 'PERDIDO') {
+                        $detalle->update([
+                            'estado_devolucion' => 'PERDIDO',
+                            'fecha_devolucion' => now(),
+                            'observaciones_devolucion' => $item['observaciones'] ?? null,
+                        ]);
+                    }
+                }
+            }
+
             // Procesar penalización en garantía si existe y hay monto a aplicar
             if ($this->selectedAlquiler->tieneGarantia() && $this->penalizacion > 0) {
                 $this->selectedAlquiler->aplicarGarantia(
@@ -370,10 +459,68 @@ class AlquilerController extends Component
             $this->selectedAlquiler->update([
                 'fecha_devolucion_real' => $this->fecha_devolucion_real,
                 'penalizacion' => $this->penalizacion,
-                'estado' => 'DEVUELTO',
                 'observaciones' => $this->selectedAlquiler->observaciones . "\nDevolución: " . $this->observaciones_devolucion,
                 'usuario_devolucion' => Auth::id(),
             ]);
+
+            // Ajuste de stock por detalle según estado_devolucion
+            $detalles = $this->selectedAlquiler->detalles()->get();
+            foreach ($detalles as $detalle) {
+                // Solo procesar detalles que ya no estén PENDIENTE
+                if (in_array($detalle->estado_devolucion, ['DEVUELTO', 'DAÑADO', 'PERDIDO'])) {
+                    $stockSucursal = StockPorSucursal::where('producto_id', $detalle->producto_id)
+                        ->where('sucursal_id', $this->selectedAlquiler->sucursal_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($stockSucursal) {
+                        $stockAnterior = $stockSucursal->stock_actual;
+
+                        // Liberar del alquilado
+                        if (isset($stockSucursal->stock_alquilado)) {
+                            $stockSucursal->stock_alquilado = max(0, (int) $stockSucursal->stock_alquilado - (int) $detalle->cantidad);
+                        }
+
+                        if ($detalle->estado_devolucion === 'DEVUELTO') {
+                            // Vuelve al stock
+                            $stockSucursal->stock_actual += (int) $detalle->cantidad;
+                            $stockSucursal->save();
+
+                            MovimientoStockSucursal::create([
+                                'producto_id' => $detalle->producto_id,
+                                'sucursal_id' => $this->selectedAlquiler->sucursal_id,
+                                'tipo_movimiento' => 'ENTRADA',
+                                'cantidad' => (int) $detalle->cantidad,
+                                'stock_anterior' => $stockAnterior,
+                                'stock_nuevo' => $stockSucursal->stock_actual,
+                                'referencia' => $this->selectedAlquiler->numero_contrato,
+                                'motivo' => 'Devolución de alquiler',
+                                'usuario_id' => Auth::id(),
+                                'fecha_movimiento' => now(),
+                            ]);
+                        } else {
+                            // DAÑADO o PERDIDO: no incrementa stock_actual, solo ajuste de baja
+                            $stockSucursal->save();
+
+                            MovimientoStockSucursal::create([
+                                'producto_id' => $detalle->producto_id,
+                                'sucursal_id' => $this->selectedAlquiler->sucursal_id,
+                                'tipo_movimiento' => 'AJUSTE',
+                                'cantidad' => (int) $detalle->cantidad,
+                                'stock_anterior' => $stockAnterior,
+                                'stock_nuevo' => $stockSucursal->stock_actual,
+                                'referencia' => $this->selectedAlquiler->numero_contrato,
+                                'motivo' => $detalle->estado_devolucion === 'DAÑADO' ? 'Baja por daño en alquiler' : 'Baja por pérdida en alquiler',
+                                'usuario_id' => Auth::id(),
+                                'fecha_movimiento' => now(),
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Actualizar el estado general del alquiler según los detalles
+            $this->selectedAlquiler->completarDevolucion($this->observaciones_devolucion);
 
             // Devolver garantía automáticamente si no hubo penalizaciones que agoten el monto
             if ($this->selectedAlquiler->tieneGarantia()) {

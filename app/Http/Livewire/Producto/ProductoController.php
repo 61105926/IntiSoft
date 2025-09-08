@@ -3,12 +3,12 @@
 namespace App\Http\Livewire\Producto;
 
 use App\Models\{CategoriaProducto, MovimientoStockSucursal, Producto, StockPorSucursal, Sucursal};
-use Illuminate\Support\Facades\{Auth, Validator};
-use Livewire\{Component, WithPagination};
+use Illuminate\Support\Facades\{Auth, Validator, Storage};
+use Livewire\{Component, WithPagination, WithFileUploads};
 
 class ProductoController extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     protected $paginationTheme = 'bootstrap';
     protected $listeners = ['productoSeleccionado', 'productoSeleccionadoActualizado'];
@@ -30,6 +30,7 @@ class ProductoController extends Component
 
     // Form fields
     public $productoSeleccionadoId = null;
+    public $producto_id = null;
     public $nombre;
     public $descripcion;
     public $talla;
@@ -47,6 +48,11 @@ class ProductoController extends Component
     public $stockProductoId = null;
     public $detailProducto = null;
     public $productosExistentes = false;
+    
+    // Image handling
+    public $imagen_principal;
+    public $imagenes_adicionales = [];
+    public $codigo_barras;
 
     public function updatingSearch() { $this->resetPage(); }
     public function updatingSucursalId() { $this->resetPage(); }
@@ -60,7 +66,7 @@ class ProductoController extends Component
             'sucursales' => Sucursal::activo()->get(),
             'categorias' => CategoriaProducto::all(),
             'estadisticas' => $this->getEstadisticas(), // Add statistics
-        ])->extends('layouts.theme.app')->section('content');
+        ]);
     }
 
     private function getEstadisticas()
@@ -107,7 +113,7 @@ class ProductoController extends Component
     {
         $this->resetForm();
         $this->isEdit = false;
-        $this->emit('showModal');
+        $this->showModal = true;
     }
 
     public function showEditModal($productoId, $sucursalId)
@@ -119,6 +125,7 @@ class ProductoController extends Component
             ->firstOrFail();
 
         $this->productoSeleccionadoId = $producto->id;
+        $this->producto_id = $producto->id;
         $this->fill([
             'nombre' => $producto->nombre,
             'descripcion' => $producto->descripcion,
@@ -133,10 +140,11 @@ class ProductoController extends Component
             'stock_minimo' => $stockSucursal->stock_minimo ?? 0,
             'precio_venta' => $stockSucursal->precio_venta_sucursal ?? 0,
             'precio_alquiler' => $stockSucursal->precio_alquiler_sucursal ?? 0,
+            'codigo_barras' => $producto->codigo_barras,
             'productosExistentes' => true,
         ]);
 
-        $this->emit('showModal');
+        $this->showModal = true;
     }
 
     public function showStockModal($productoId)
@@ -181,7 +189,7 @@ class ProductoController extends Component
             $this->createProducto($validated);
         }
 
-        $this->emit('hideModal');
+        $this->showModal = false;
         $this->resetForm();
     }
 
@@ -195,6 +203,9 @@ class ProductoController extends Component
             'precio_alquiler' => 'nullable|numeric|min:0',
             'stock_actual' => 'nullable|integer|min:0',
             'stock_minimo' => 'nullable|integer|min:0',
+            'imagen_principal' => 'nullable|image|max:2048',
+            'imagenes_adicionales.*' => 'nullable|image|max:2048',
+            'codigo_barras' => 'nullable|string|max:100',
         ]);
 
         if (!$this->isEdit && $this->productoSeleccionadoId) {
@@ -225,13 +236,17 @@ class ProductoController extends Component
             'precio_alquiler' => $this->precio_alquiler,
             'stock_actual' => $this->stock_actual,
             'stock_minimo' => $this->stock_minimo,
+            'imagen_principal' => $this->imagen_principal,
+            'imagenes_adicionales' => $this->imagenes_adicionales,
+            'codigo_barras' => $this->codigo_barras,
         ];
     }
 
     private function updateProducto($validated)
     {
         $producto = Producto::findOrFail($this->productoSeleccionadoId);
-        $producto->update([
+        
+        $updateData = [
             'descripcion' => $this->descripcion,
             'categoria_id' => $validated['categoria_id_form'],
             'talla' => $this->talla,
@@ -239,7 +254,32 @@ class ProductoController extends Component
             'material' => $this->material,
             'disponible_venta' => $this->disponible_venta_form,
             'disponible_alquiler' => $this->disponible_alquiler_form,
-        ]);
+            'codigo_barras' => $this->codigo_barras,
+        ];
+        
+        // Handle image upload
+        if ($this->imagen_principal) {
+            // Delete old image if exists
+            if ($producto->imagen_principal) {
+                Storage::disk('public')->delete($producto->imagen_principal);
+            }
+            $updateData['imagen_principal'] = $this->imagen_principal->store('productos', 'public');
+        }
+        
+        // Handle additional images
+        if (!empty($this->imagenes_adicionales)) {
+            $imagenesUrls = [];
+            foreach ($this->imagenes_adicionales as $imagen) {
+                if ($imagen) {
+                    $imagenesUrls[] = $imagen->store('productos', 'public');
+                }
+            }
+            if (!empty($imagenesUrls)) {
+                $updateData['imagenes_adicionales'] = $imagenesUrls;
+            }
+        }
+        
+        $producto->update($updateData);
 
         $stock = StockPorSucursal::where('producto_id', $producto->id)
             ->where('sucursal_id', $validated['sucursal_id_form'])
@@ -262,7 +302,7 @@ class ProductoController extends Component
 
     private function createProducto($validated)
     {
-        $producto = Producto::where('nombre', $validated['nombre'])->first() ?? Producto::create([
+        $createData = [
             'nombre' => $validated['nombre'],
             'descripcion' => $this->descripcion,
             'talla' => $this->talla,
@@ -273,7 +313,28 @@ class ProductoController extends Component
             'categoria_id' => $validated['categoria_id_form'],
             'usuario_creacion' => Auth::id(),
             'codigo' => $this->generateCode(),
-        ]);
+            'codigo_barras' => $this->codigo_barras,
+        ];
+        
+        // Handle image upload
+        if ($this->imagen_principal) {
+            $createData['imagen_principal'] = $this->imagen_principal->store('productos', 'public');
+        }
+        
+        // Handle additional images
+        if (!empty($this->imagenes_adicionales)) {
+            $imagenesUrls = [];
+            foreach ($this->imagenes_adicionales as $imagen) {
+                if ($imagen) {
+                    $imagenesUrls[] = $imagen->store('productos', 'public');
+                }
+            }
+            if (!empty($imagenesUrls)) {
+                $createData['imagenes_adicionales'] = $imagenesUrls;
+            }
+        }
+        
+        $producto = Producto::where('nombre', $validated['nombre'])->first() ?? Producto::create($createData);
 
         $stock = StockPorSucursal::create([
             'producto_id' => $producto->id,
@@ -320,6 +381,7 @@ class ProductoController extends Component
     {
         $this->reset([
             'productoSeleccionadoId',
+            'producto_id',
             'nombre',
             'descripcion',
             'categoria_id_form',
@@ -327,6 +389,9 @@ class ProductoController extends Component
             'precio_venta',
             'precio_alquiler',
             'stock_actual',
+            'imagen_principal',
+            'imagenes_adicionales',
+            'codigo_barras',
             'stock_minimo',
             'talla',
             'color',
@@ -336,6 +401,7 @@ class ProductoController extends Component
             'isEdit',
             'productosExistentes',
         ]);
+        $this->showModal = false;
         $this->resetValidation();
         $this->resetErrorBag();
     }

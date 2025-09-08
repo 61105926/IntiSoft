@@ -6,10 +6,8 @@ use Illuminate\Http\Request;
 
 class GarantiaController extends Controller
 {
-    //
     public function index()
     {
-
-        return view('garantia.index')->extends('layouts.theme.app')->section('content');
+        return view('garantia.index');
     }
 }

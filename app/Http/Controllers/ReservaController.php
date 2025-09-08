@@ -8,7 +8,6 @@ class ReservaController extends Controller
 {
     public function index()
     {
-
-        return view('reserva.index')->extends('layouts.theme.app')->section('content');
+        return view('reserva.index');
     }
 }

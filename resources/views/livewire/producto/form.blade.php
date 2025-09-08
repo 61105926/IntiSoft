@@ -1,27 +1,19 @@
-{{-- resources/views/livewire/producto/partials/_form_modal.blade.php --}}
-<div
-    wire:ignore.self
-    class="modal fade"
-    id="productoModal"
-    tabindex="-1"
-    aria-labelledby="productoModalLabel"
-    aria-hidden="true"
-    data-bs-backdrop="static"
-    data-bs-keyboard="false"
->
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <form wire:submit.prevent="save">
+{{-- Modal Produto - Igual estructura que alquiler --}}
+@if ($showModal)
+    <div class="modal fade show" id="productoModal" style="display: block;" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+            <form wire:submit.prevent="save" enctype="multipart/form-data">
                 {{-- Modal Header --}}
-                <div class="modal-header">
-                    <h5 class="modal-title" id="productoModalLabel">
-                        {{ $isEdit ? 'Editar Producto' : 'Nuevo Producto' }}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-{{ $isEdit ? 'edit' : 'plus' }} me-2"></i>{{ $isEdit ? 'Editar Produto' : 'Nuevo Produto' }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" wire:click="resetForm"></button>
                 </div>
 
                 {{-- Modal Body --}}
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                     <div class="row g-3">
                         @if ($isEdit)
                             <div class="col-md-6">
@@ -175,6 +167,75 @@
                             @enderror
                         </div>
 
+                        {{-- Código de Barras --}}
+                        <div class="col-md-12">
+                            <label class="form-label">Código de Barras</label>
+                            <input
+                                type="text"
+                                wire:model.defer="codigo_barras"
+                                placeholder="Código de barras del producto"
+                                class="form-control @error('codigo_barras') is-invalid @enderror"
+                            />
+                            @error('codigo_barras')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Imagen del Producto --}}
+                        <div class="col-md-12">
+                            <label class="form-label">Imagen del Producto</label>
+                            <input
+                                type="file"
+                                wire:model="imagen_principal"
+                                accept="image/*"
+                                class="form-control @error('imagen_principal') is-invalid @enderror"
+                                id="imageInput"
+                                onchange="previewImage(this)"
+                            />
+                            @error('imagen_principal')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            
+                            <div wire:loading wire:target="imagen_principal" class="mt-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <small class="text-muted ms-2">Subiendo imagen...</small>
+                            </div>
+
+                            {{-- Vista previa --}}
+                            <div id="imagePreview" class="mt-3 text-center" style="display: none;">
+                                <img id="previewImg" 
+                                     alt="Vista previa" 
+                                     class="img-thumbnail" 
+                                     style="max-width: 250px; max-height: 250px; object-fit: cover;">
+                            </div>
+                            
+                            @if ($isEdit && $producto_id && !$imagen_principal)
+                                @php
+                                    $producto = \App\Models\Producto::find($producto_id);
+                                @endphp
+                                @if ($producto && $producto->imagen_principal)
+                                    <div class="mt-3 text-center">
+                                        <small class="text-muted d-block">Imagen actual:</small>
+                                        <img src="{{ asset('storage/' . $producto->imagen_principal) }}" 
+                                             alt="Imagen actual" 
+                                             class="img-thumbnail mt-1" 
+                                             style="max-width: 250px; max-height: 250px; object-fit: cover;"
+                                             onerror="this.src='{{ asset('images/produto-default.jpg') }}'">
+                                    </div>
+                                @else
+                                    <div class="mt-3 text-center">
+                                        <small class="text-muted d-block">Sin imagen:</small>
+                                        <img src="{{ asset('images/produto-default.jpg') }}" 
+                                             alt="Sin imagen" 
+                                             class="img-thumbnail mt-1" 
+                                             style="max-width: 250px; max-height: 250px; object-fit: cover;">
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
+
                         {{-- Stock Actual --}}
                         <div class="col-md-6">
                             <label class="form-label">Stock Actual</label>
@@ -233,22 +294,64 @@
                 </div>
 
                 {{-- Modal Footer --}}
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="resetForm()" data-bs-dismiss="modal">
-                        Cancelar
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" wire:click="resetForm">
+                        <i class="fas fa-times me-2"></i>Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary">
-                        {{ $isEdit ? 'Actualizar' : 'Guardar' }}
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-{{ $isEdit ? 'save' : 'plus' }} me-2"></i>{{ $isEdit ? 'Actualizar Produto' : 'Crear Produto' }}
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+<div class="modal-backdrop fade show"></div>
+@endif
 
 @push('scripts')
     <script>
         // Variables globales accesibles para el frontend
         window.productos = @json($productosAll);
+        
+        // Función para vista previa de imagen
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Mejorar el manejo de archivos y previews
+        document.addEventListener('DOMContentLoaded', function() {
+            // El scroll ya está manejado por modal-dialog-scrollable
+            // Removemos la interferencia con overflow del body
+        });
+
+        // Livewire hooks para manejar archivos
+        document.addEventListener('livewire:load', function () {
+            // Limpiar previews cuando se cierra el modal
+            Livewire.on('hideModal', function() {
+                // Reset file input y vista previa
+                const imageInput = document.getElementById('imageInput');
+                const imagePreview = document.getElementById('imagePreview');
+                
+                if (imageInput) imageInput.value = '';
+                if (imagePreview) imagePreview.style.display = 'none';
+            });
+        });
     </script>
+@endpush
+
+@push('styles')
+  
 @endpush

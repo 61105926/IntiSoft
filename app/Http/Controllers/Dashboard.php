@@ -10,6 +10,6 @@ class Dashboard extends Controller
      public function index()
     {
 
-        return view('dashboard.index')->extends('layouts.theme.app')->section('content');
+        return view('dashboard.index');
     }
 }

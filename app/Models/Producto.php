@@ -10,6 +10,12 @@ class Producto extends Model
     protected $guarded = [];
 
     use HasFactory;
+
+    protected $casts = [
+        'imagenes_adicionales' => 'array',
+        'disponible_venta' => 'boolean',
+        'disponible_alquiler' => 'boolean',
+    ];
     public function sucursal()
     {
         return $this->belongsTo(Sucursal::class);
@@ -69,5 +75,29 @@ class Producto extends Model
     {
         $stock = $this->getStockEnSucursal($sucursalId);
         return $stock ? $stock->precio_venta_sucursal ?? 0 : 0;
+    }
+
+    public function getImagenPrincipalUrlAttribute()
+    {
+        if ($this->imagen_principal) {
+            return asset('storage/' . $this->imagen_principal);
+        }
+        return asset('images/produto-default.jpg');
+    }
+
+    public function getImagenesAdicionalesUrlsAttribute()
+    {
+        if ($this->imagenes_adicionales && is_array($this->imagenes_adicionales)) {
+            return array_map(function($imagen) {
+                return asset('storage/' . $imagen);
+            }, $this->imagenes_adicionales);
+        }
+        return [];
+    }
+
+    public function getTodasImagenesAttribute()
+    {
+        $imagenes = [$this->imagen_principal_url];
+        return array_merge($imagenes, $this->imagenes_adicionales_urls);
     }
 }

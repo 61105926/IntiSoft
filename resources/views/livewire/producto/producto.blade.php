@@ -139,6 +139,7 @@
                 <table class="table-striped table">
                     <thead>
                         <tr>
+                            <th>Imagen</th>
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Categoría</th>
@@ -152,6 +153,13 @@
                     <tbody>
                         @forelse ($productos as $prod)
                             <tr>
+                                <td>
+                                    <img src="{{ $prod->imagen_principal ? asset('storage/' . $prod->imagen_principal) : asset('images/produto-default.jpg') }}" 
+                                         alt="{{ $prod->nombre }}" 
+                                         class="img-thumbnail" 
+                                         style="width: 50px; height: 50px; object-fit: cover;"
+                                         onerror="this.src='{{ asset('images/produto-default.jpg') }}'">
+                                </td>
                                 <td>{{ $prod->codigo }}</td>
                                 <td>{{ $prod->nombre }}</td>
                                 <td>{{ $prod->categoria->nombre ?? 'Sin categoría' }}</td>
@@ -189,7 +197,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8"
+                                <td colspan="9"
                                     class="text-center">No hay productos</td>
                             </tr>
                         @endforelse

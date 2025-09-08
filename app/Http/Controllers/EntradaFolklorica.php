@@ -10,6 +10,6 @@ class EntradaFolklorica extends Controller
      public function index()
     {
 
-        return view('EntradaFolklorica.index')->extends('layouts.theme.app')->section('content');
+        return view('EntradaFolklorica.index');
     }
 }

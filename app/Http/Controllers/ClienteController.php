@@ -14,7 +14,7 @@ class ClienteController extends Controller
         $sucursales = Sucursal::where('activo', true)->get();
 
         // Retornar vista con sucursales
-        return view('cliente.index', compact('sucursales'))->extends('layouts.theme.app')->section('content');
+        return view('cliente.index', compact('sucursales'));
     }
 }
 
