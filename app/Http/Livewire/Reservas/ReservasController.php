@@ -18,7 +18,10 @@ class ReservasController extends Component
 {
     use WithPagination;
 
-    protected $paginationTheme = 'bootstrap';
+    public function paginationView()
+    {
+        return 'vendor.livewire.bootstrap';
+    }
 
     // Filtros y búsqueda
     public $searchTerm = '';

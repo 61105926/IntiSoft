@@ -17,7 +17,10 @@ class GarantiasController extends Component
 {
     use WithPagination;
 
-    protected $paginationTheme = 'bootstrap';
+    public function paginationView()
+    {
+        return 'vendor.livewire.bootstrap';
+    }
 
     // Filtros
     public $searchTerm = '';

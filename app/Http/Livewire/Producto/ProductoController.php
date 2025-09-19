@@ -10,7 +10,10 @@ class ProductoController extends Component
 {
     use WithPagination, WithFileUploads;
 
-    protected $paginationTheme = 'bootstrap';
+    public function paginationView()
+    {
+        return 'vendor.livewire.bootstrap';
+    }
     protected $listeners = ['productoSeleccionado', 'productoSeleccionadoActualizado'];
 
     // Filters

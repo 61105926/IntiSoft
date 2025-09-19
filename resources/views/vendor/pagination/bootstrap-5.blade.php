@@ -7,13 +7,13 @@
                     <i class="fas fa-chevron-left me-1"></i>Anterior
                 </span>
             @else
-                <a class="btn btn-outline-primary" wire:click="previousPage('{{ $paginator->getPageName() }}')" wire:loading.attr="disabled" rel="prev">
+                <a href="{{ $paginator->previousPageUrl() }}" class="btn btn-outline-primary" rel="prev">
                     <i class="fas fa-chevron-left me-1"></i>Anterior
                 </a>
             @endif
 
             @if ($paginator->hasMorePages())
-                <a class="btn btn-outline-primary" wire:click="nextPage('{{ $paginator->getPageName() }}')" wire:loading.attr="disabled" rel="next">
+                <a href="{{ $paginator->nextPageUrl() }}" class="btn btn-outline-primary" rel="next">
                     Siguiente<i class="fas fa-chevron-right ms-1"></i>
                 </a>
             @else
@@ -24,18 +24,20 @@
         </div>
 
         <!-- Desktop pagination -->
-        <div class="d-none flex-sm-fill d-sm-flex align-items-sm-center justify-content-sm-between">
+        <div class="d-none d-sm-flex align-items-center justify-content-between w-100">
             <!-- Results info -->
             <div>
                 <p class="small text-muted mb-0">
-                    Mostrando <span class="fw-semibold">{{ $paginator->firstItem() }}</span> a <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
-                    de <span class="fw-semibold">{{ $paginator->total() }}</span> resultados
+                    <i class="fas fa-info-circle me-1"></i>
+                    Mostrando <span class="fw-semibold text-primary">{{ $paginator->firstItem() }}</span>
+                    a <span class="fw-semibold text-primary">{{ $paginator->lastItem() }}</span>
+                    de <span class="fw-semibold text-primary">{{ $paginator->total() }}</span> resultados
                 </p>
             </div>
 
             <!-- Pagination links -->
             <div>
-                <ul class="pagination pagination-sm mb-0">
+                <ul class="pagination pagination-sm mb-0 custom-pagination">
                     {{-- Previous Page Link --}}
                     @if ($paginator->onFirstPage())
                         <li class="page-item disabled">
@@ -45,7 +47,7 @@
                         </li>
                     @else
                         <li class="page-item">
-                            <a class="page-link" wire:click="previousPage('{{ $paginator->getPageName() }}')" wire:loading.attr="disabled" rel="prev">
+                            <a class="page-link" href="{{ $paginator->previousPageUrl() }}" rel="prev">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
@@ -65,11 +67,11 @@
                             @foreach ($element as $page => $url)
                                 @if ($page == $paginator->currentPage())
                                     <li class="page-item active">
-                                        <span class="page-link">{{ $page }}</span>
+                                        <span class="page-link bg-primary border-primary">{{ $page }}</span>
                                     </li>
                                 @else
                                     <li class="page-item">
-                                        <a class="page-link" wire:click="gotoPage({{ $page }}, '{{ $paginator->getPageName() }}')">{{ $page }}</a>
+                                        <a class="page-link" href="{{ $url }}">{{ $page }}</a>
                                     </li>
                                 @endif
                             @endforeach
@@ -79,7 +81,7 @@
                     {{-- Next Page Link --}}
                     @if ($paginator->hasMorePages())
                         <li class="page-item">
-                            <a class="page-link" wire:click="nextPage('{{ $paginator->getPageName() }}')" wire:loading.attr="disabled" rel="next">
+                            <a class="page-link" href="{{ $paginator->nextPageUrl() }}" rel="next">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
@@ -96,48 +98,32 @@
     </nav>
 
     <style>
-    .pagination .page-link {
-        background-color: var(--bs-white);
-        border: 1px solid var(--bs-border-color);
-        color: var(--bs-primary);
-        padding: 0.375rem 0.75rem;
-        margin: 0 2px;
-        border-radius: 0.375rem;
-        transition: all 0.15s ease-in-out;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .pagination .page-link:hover {
-        background-color: var(--bs-primary);
-        border-color: var(--bs-primary);
-        color: var(--bs-white);
-        text-decoration: none;
-    }
-
-    .pagination .page-item.active .page-link {
-        background-color: var(--bs-primary);
-        border-color: var(--bs-primary);
-        color: var(--bs-white);
-    }
-
-    .pagination .page-item.disabled .page-link {
-        background-color: var(--bs-gray-100);
-        border-color: var(--bs-border-color);
-        color: var(--bs-gray-600);
-        cursor: not-allowed;
-    }
-
-    .pagination-sm .page-link {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-    }
-
-    @media (max-width: 576px) {
-        .pagination .page-link {
-            padding: 0.25rem 0.5rem;
+        .custom-pagination .page-link {
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            padding: 0.375rem 0.75rem;
+            margin: 0 0.125rem;
+            border-radius: 0.375rem;
             font-size: 0.875rem;
+            transition: all 0.2s ease;
         }
-    }
+
+        .custom-pagination .page-link:hover {
+            color: #2563eb;
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .custom-pagination .page-item.active .page-link {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            color: white;
+        }
+
+        .custom-pagination .page-item.disabled .page-link {
+            color: #94a3b8;
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+        }
     </style>
 @endif

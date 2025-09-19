@@ -1,6 +1,7 @@
 @extends('layouts.theme.app')
 
+@section('page-title', 'Gestión de Alquileres')
+
 @section('content')
     @livewire('alquiler.alquiler-controller')
-    @vite(['resources/css/app.css', 'resources/js/app.ts'])
 @endsection

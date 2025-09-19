@@ -5,21 +5,44 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
-    <title>Login | RRHH </title>
-    <link rel="icon" type="image/x-icon" href="../src/assets/img/favicon.ico" />
-    <link href="../layouts/semi-dark-menu/css/light/loader.css" rel="stylesheet" type="text/css" />
-    <link href="../layouts/semi-dark-menu/css/dark/loader.css" rel="stylesheet" type="text/css" />
-    <script src="../layouts/semi-dark-menu/loader.js"></script>
-    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <title>Login | IntiSoft</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
-    <link href="../src/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 
-    <link href="../layouts/semi-dark-menu/css/light/plugins.css" rel="stylesheet" type="text/css" />
-    <link href="../src/assets/css/light/authentication/auth-cover.css" rel="stylesheet" type="text/css" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="../layouts/semi-dark-menu/css/dark/plugins.css" rel="stylesheet" type="text/css" />
-    <link href="../src/assets/css/dark/authentication/auth-cover.css" rel="stylesheet" type="text/css" />
-    <!-- END GLOBAL MANDATORY STYLES -->
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Vite Assets -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .auth-cover {
+            position: relative;
+            z-index: 2;
+        }
+        .auth-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 1;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+    </style>
 
 </head>
 
@@ -50,14 +73,18 @@
 
                         <div class="position-relative">
 
-                            <img src="../src/assets/img/logo.png" alt="auth-img" width="500px;">
+                            <div class="text-center">
+                                <i class="fas fa-theater-masks fa-5x text-white mb-4"></i>
+                            </div>
 
-                            <h2 class="mt-5 text-white font-weight-bolder px-2">IntiSoft 
-                            </h2>
-                            <h5 class="mt-5 text-white font-weight-bolder px-2">
-                                La Paz - Bolivia
+                            <h2 class="mt-5 text-white fw-bold px-2 text-center">IntiSoft</h2>
+                            <h5 class="mt-3 text-white fw-semibold px-2 text-center">
+                                Sistema de Gestión Folklórica
                             </h5>
-                            <p class="text-white px-2">@2025</p>
+                            <h6 class="mt-2 text-white px-2 text-center">
+                                La Paz - Bolivia
+                            </h6>
+                            <p class="text-white px-2 text-center">©2025</p>
                         </div>
 
                     </div>
@@ -139,9 +166,8 @@
 
     </div>
 
-    <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
-    <script src="../src/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <!-- END GLOBAL MANDATORY SCRIPTS -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
 </body>

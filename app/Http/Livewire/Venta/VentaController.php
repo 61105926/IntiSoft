@@ -66,7 +66,10 @@ class VentaController extends Component
     public $sucursales;
     public $cajas;
 
-    protected $paginationTheme = 'bootstrap';
+    public function paginationView()
+    {
+        return 'vendor.livewire.bootstrap';
+    }
     protected $listeners = ['refreshComponent' => '$refresh'];
 
     public function mount()

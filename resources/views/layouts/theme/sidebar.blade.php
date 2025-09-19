@@ -1,195 +1,109 @@
-<div class="sidebar-wrapper sidebar-theme">
+<div class="sidebar">
+    <!-- Logo -->
+    <div class="logo d-flex align-items-center">
+        <i class="fas fa-theater-masks text-white me-2" style="font-size: 1.5rem;"></i>
+        <h4 class="text-white mb-0">IntiSoft</h4>
+    </div>
 
-    <nav id="sidebar">
-        <div class="navbar-nav theme-brand flex-row  text-center">
-            <div class="nav-logo">
-                <div class="nav-item theme-logo">
-                    <a href="./index.html">
-                        <img src="../src/assets/img/logo.png"  alt="logo">
-                    </a>
-                </div>
-                <div class="nav-item theme-text">
-                    <a href="./" style="font-size: 20px !important;" class="nav-link"> IntiSoft </a>
-                </div>
-            </div>
-            <div class="nav-item sidebar-toggle">
-                <div class="btn-toggle sidebarCollapse">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" class="feather feather-chevrons-left">
-                        <polyline points="11 17 6 12 11 7"></polyline>
-                        <polyline points="18 17 13 12 18 7"></polyline>
-                    </svg>
-                </div>
-            </div>
-        </div>      
-        <div class="shadow-bottom"></div>
-        <ul class="list-unstyled menu-categories" id="accordionExample">
-            <li class="menu">
-                <a href="{{ route('dashboard') }}" class="dropdown-toggle">
-                    <div class="">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" class="feather feather-home">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                        </svg>
-                        <span>Dashboard</span>
-                    </div>
-                </a>
-                </a>
-                </a>
-            </li>
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
 
-            <li class="menu menu-heading">
-                <div class="heading">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" class="feather feather-minus">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>Inventario</span>
-                </div>
-            </li>
+        <!-- Inventario Section -->
+        <div class="nav-section mt-4">
+            <small class="text-muted px-3 text-uppercase fw-bold">Inventario</small>
+        </div>
 
-            <li class="menu">
-                <a href="#submenu-inventario" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                    <div class="">
-                        <i class="fas fa-boxes"></i> <!-- Icono de inventario -->
-                        <span>Inventario</span>
-                    </div>
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" class="feather feather-chevron-right">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </div>
-                </a>
-                <ul class="collapse submenu list-unstyled" id="submenu-inventario" data-bs-parent="#accordionExample">
-                    <li class="menu">
-                        <a href="{{ route('producto') }}">Productos</a>
-                    </li>
-                    <li class="menu">
-                        <a href="{{ route('sucursal') }}">Stock por Sucursal</a>
-                    </li>
-                    <li class="menu">
-                        <a href="{{ route('historial-producto') }}">Historial de Productos</a>
-                    </li>
-                </ul>
-            </li>
+        <a href="{{ route('producto') }}" class="nav-link {{ request()->routeIs('producto*') ? 'active' : '' }}">
+            <i class="fas fa-boxes"></i>
+            <span>Productos</span>
+        </a>
 
-            <li class="menu menu-heading">
-                <div class="heading">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" class="feather feather-minus">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>Operaciones</span>
-                </div>
-            </li>
+        <a href="{{ route('sucursal') }}" class="nav-link {{ request()->routeIs('sucursal*') ? 'active' : '' }}">
+            <i class="fas fa-store"></i>
+            <span>Stock por Sucursal</span>
+        </a>
 
-            <li class="menu">
-                <a href="#submenu-operaciones" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                    <div class="">
-                        <i class="fas fa-shopping-cart"></i> <!-- Icono de ventas y alquileres -->
-                        <span>Operaciones</span>
-                    </div>
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" class="feather feather-chevron-right">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </div>
-                </a>
-                <ul class="collapse submenu list-unstyled" id="submenu-operaciones" data-bs-parent="#accordionExample">
-                    <li class="menu">
-                        <a href="{{ route('venta') }}">Ventas</a>
-                    </li>
-                    <li class="menu">
-                        <a href="{{ route('reserva') }}">Reservas</a>
-                    </li>
-                    <li class="menu">
-                        <a href="{{ route('alquiler') }}">Alquileres</a>
-                    </li>
-                 
-                </ul>
-            </li>
+        <!-- Operaciones Section -->
+        <div class="nav-section mt-4">
+            <small class="text-muted px-3 text-uppercase fw-bold">Operaciones</small>
+        </div>
 
-            <li class="menu menu-heading">
-                <div class="heading">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" class="feather feather-minus">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>Finanzas</span>
-                </div>
-            </li>
+        <a href="{{ route('venta') }}" class="nav-link {{ request()->routeIs('venta*') ? 'active' : '' }}">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Ventas</span>
+        </a>
 
-            <li class="menu">
-                <a href="#submenu-finanzas" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                    <div class="">
-                        <i class="fas fa-credit-card"></i> <!-- Icono de finanzas -->
-                        <span>Finanzas</span>
-                    </div>
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" class="feather feather-chevron-right">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </div>
-                </a>
-                <ul class="collapse submenu list-unstyled" id="submenu-finanzas" data-bs-parent="#accordionExample">
-                    <li class="menu">
-                        <a href="{{ route('caja') }}">Caja</a>
-                    </li>
-                    <li class="menu">
-                        <a href="{{ route('garantia') }}" >Garantías</a>
-                    </li>
-                </ul>
-            </li>
+        <a href="{{ route('reserva') }}" class="nav-link {{ request()->routeIs('reserva*') ? 'active' : '' }}">
+            <i class="fas fa-calendar-check"></i>
+            <span>Reservas</span>
+        </a>
 
-            <li class="menu">
-                <a href="{{ route('cliente') }}" class="dropdown-toggle">
-                    <div class="">
-                        <i class="fas fa-users"></i> <!-- Icono clientes -->
-                        <span>Clientes</span>
-                    </div>
-                </a>
-            </li>
+        <a href="{{ route('alquiler') }}" class="nav-link {{ request()->routeIs('alquiler*') ? 'active' : '' }}">
+            <i class="fas fa-handshake"></i>
+            <span>Alquileres</span>
+        </a>
 
-            <li class="menu">
-                <a href="{{ route('entrada-folklorica') }}"class="dropdown-toggle">
-                    <div class="">
-                        <i class="fas fa-calendar"></i> <!-- Icono entradas folklóricas -->
-                        <span>Entradas Folklóricas</span>
-                    </div>
-                </a>
-            </li>
+        <!-- Finanzas Section -->
+        <div class="nav-section mt-4">
+            <small class="text-muted px-3 text-uppercase fw-bold">Finanzas</small>
+        </div>
 
-            <li class="menu">
-                <a href="#" class="dropdown-toggle">
-                    <div class="">
-                        <i class="fas fa-chart-bar"></i> <!-- Icono reportes -->
-                        <span>Reportes</span>
-                    </div>
-                </a>
-            </li>
+        <a href="{{ route('caja') }}" class="nav-link {{ request()->routeIs('caja*') ? 'active' : '' }}">
+            <i class="fas fa-cash-register"></i>
+            <span>Caja</span>
+        </a>
 
-            <li class="menu">
-                <a href="{{ route('configuracion') }}" class="dropdown-toggle">
-                    <div class="">
-                        <i class="fas fa-cogs"></i> <!-- Icono configuración -->
-                        <span>Configuración</span>
-                    </div>
-                </a>
-            </li>
+        <a href="{{ route('garantia') }}" class="nav-link {{ request()->routeIs('garantia*') ? 'active' : '' }}">
+            <i class="fas fa-shield-alt"></i>
+            <span>Garantías</span>
+        </a>
 
-        </ul>
+        <!-- Gestión Section -->
+        <div class="nav-section mt-4">
+            <small class="text-muted px-3 text-uppercase fw-bold">Gestión</small>
+        </div>
+
+        <a href="{{ route('cliente') }}" class="nav-link {{ request()->routeIs('cliente*') ? 'active' : '' }}">
+            <i class="fas fa-users"></i>
+            <span>Clientes</span>
+        </a>
+
+        <a href="{{ route('entrada-folklorica') }}" class="nav-link {{ request()->routeIs('entrada-folklorica*') ? 'active' : '' }}">
+            <i class="fas fa-calendar"></i>
+            <span>Entradas Folklóricas</span>
+        </a>
+
+        <!-- Sistema Section -->
+        <div class="nav-section mt-4">
+            <small class="text-muted px-3 text-uppercase fw-bold">Sistema</small>
+        </div>
+
+        <a href="#" class="nav-link">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reportes</span>
+        </a>
+
+        <a href="{{ route('configuracion') }}" class="nav-link {{ request()->routeIs('configuracion*') ? 'active' : '' }}">
+            <i class="fas fa-cogs"></i>
+            <span>Configuración</span>
+        </a>
     </nav>
 </div>
+
+<style>
+.nav-section {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-section small {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+}
+</style>
 
