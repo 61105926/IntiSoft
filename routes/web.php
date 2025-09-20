@@ -9,6 +9,7 @@ use App\Http\Livewire\EntradaFolclorica\EntradaFolcloricaController;
 use App\Http\Controllers\EntradaFolcloricaViewController;
 use App\Http\Controllers\GarantiaController;
 use App\Http\Controllers\HistorialProductoController;
+use App\Http\Livewire\HistorialProducto\HistorialProductoController as LivewireHistorialProductoController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\StockSucursal;
@@ -103,7 +104,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/alquiler', [AlquileresController::class, 'index'])->name('alquiler');
     Route::get('/garantias', [GarantiaController::class, 'index'])->name('garantia');
-    Route::get('/historial-producto', [HistorialProductoController::class, 'index'])->name('historial-producto');
+    Route::get('/historial-producto', LivewireHistorialProductoController::class)->name('historial-producto');
     Route::get('/venta', [ControllersVentaController::class, 'index'])->name('venta');
     Route::get('/caja', [CajaController::class, 'index'])->name('caja');
     Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');

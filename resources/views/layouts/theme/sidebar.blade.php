@@ -27,6 +27,11 @@
             <span>Stock por Sucursal</span>
         </a>
 
+        <a href="{{ route('historial-producto') }}" class="nav-link {{ request()->routeIs('historial-producto*') ? 'active' : '' }}">
+            <i class="fas fa-history"></i>
+            <span>Historial de Productos</span>
+        </a>
+
         <!-- Operaciones Section -->
         <div class="nav-section mt-4">
             <small class="text-muted px-3 text-uppercase fw-bold">Operaciones</small>
