@@ -26,13 +26,7 @@
 <body class="form">
 
     <!-- BEGIN LOADER -->
-    <div id="load_screen">
-        <div class="loader">
-            <div class="loader-content">
-                <div class="spinner-grow align-self-center"></div>
-            </div>
-        </div>
-    </div>
+    
     <!--  END LOADER -->
 
     <div class="auth-container d-flex">
@@ -44,7 +38,6 @@
                 <div
                     class="col-6 d-lg-flex d-none h-100 my-auto top-0 start-0 text-center justify-content-center flex-column">
                     <div class="auth-cover-bg-image"></div>
-                    <div class="auth-overlay"></div>
 
                     <div class="auth-cover">
 

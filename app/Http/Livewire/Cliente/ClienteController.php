@@ -372,7 +372,7 @@ class ClienteController extends Component
             'clientes' => $clientes,
             'estadisticas' => $estadisticas,
         ])
-            ->extends('layouts.theme.app')
+            ->extends('layouts.theme.modern-app')
             ->section('content');
     }
 }

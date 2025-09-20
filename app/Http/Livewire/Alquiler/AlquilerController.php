@@ -19,6 +19,7 @@ use App\Models\ReservaDetalle;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AlquilerController extends Component
 {
@@ -40,6 +41,7 @@ class AlquilerController extends Component
     public $showViewAlquilerModal = false;
     public $showDevolucionModal = false;
     public $showPagoModal = false;
+    public $showPrintModal = false;
 
     // Form data para nuevo alquiler
     public $cliente_id = '';
@@ -78,6 +80,9 @@ class AlquilerController extends Component
     public $observaciones_pago = '';
     public $caja_id = '';
     public $metodo_pago = 'EFECTIVO';
+
+    // Modal de pago
+    public $showPaymentModal = false;
 
     // Gestión de garantías
     public $showGarantiaModal = false;
@@ -133,7 +138,7 @@ class AlquilerController extends Component
             'estadisticas' => $estadisticas,
             'garantiasDisponibles' => $garantiasDisponibles,
             'tiposGarantia' => $tiposGarantia,
-        ])->extends('layouts.theme.app')->section('content');
+        ])->extends('layouts.theme.modern-app')->section('content');
     }
 
     private function getFilteredAlquileres()
@@ -354,11 +359,29 @@ class AlquilerController extends Component
                 }
             }
 
+            // Registrar anticipo en caja si hay anticipo directo (no de reserva)
+            if ($this->anticipo > 0) {
+                $cajaAbierta = Caja::where('estado', 'ABIERTA')
+                    ->where('sucursal_id', $this->sucursal_id)
+                    ->first();
+
+                if ($cajaAbierta) {
+                    $cajaAbierta->registrarMovimiento(
+                        MovimientoCaja::TIPO_INGRESO,
+                        $this->anticipo,
+                        "Anticipo alquiler {$numeroContrato}",
+                        MovimientoCaja::CATEGORIA_ALQUILER,
+                        Auth::id(),
+                        "Cliente: {$alquiler->cliente->nombres} {$alquiler->cliente->apellidos}"
+                    );
+                }
+            }
+
             DB::commit();
 
             $this->dispatchBrowserEvent('swal', [
                 'title' => '¡Alquiler Creado!',
-                'text' => 'El alquiler ha sido creado exitosamente.',
+                'text' => 'El alquiler ha sido creado exitosamente y registrado en caja.',
                 'icon' => 'success'
             ]);
 
@@ -379,6 +402,26 @@ class AlquilerController extends Component
     public function closeViewAlquilerModal()
     {
         $this->showViewAlquilerModal = false;
+        $this->selectedAlquiler = null;
+    }
+
+    public function printAlquiler($alquilerId)
+    {
+        $this->selectedAlquiler = Alquiler::with([
+            'cliente',
+            'sucursal',
+            'reserva',
+            'usuarioCreacion',
+            'unidadEducativa',
+            'detalles.producto',
+            'garantia.tipoGarantia'
+        ])->find($alquilerId);
+        $this->showPrintModal = true;
+    }
+
+    public function closePrintModal()
+    {
+        $this->showPrintModal = false;
         $this->selectedAlquiler = null;
     }
 
@@ -580,6 +623,28 @@ class AlquilerController extends Component
         $this->selectedAlquiler = null;
     }
 
+    public function openPaymentModal($alquilerId)
+    {
+        $this->selectedAlquiler = Alquiler::with(['cliente', 'sucursal'])->find($alquilerId);
+        $this->monto_pago = $this->selectedAlquiler->saldo_pendiente;
+        $this->caja_id = '';
+        $this->metodo_pago = 'EFECTIVO';
+        $this->referencia_pago = '';
+        $this->observaciones_pago = '';
+        $this->showPaymentModal = true;
+    }
+
+    public function closePaymentModal()
+    {
+        $this->showPaymentModal = false;
+        $this->selectedAlquiler = null;
+        $this->monto_pago = 0;
+        $this->caja_id = '';
+        $this->metodo_pago = 'EFECTIVO';
+        $this->referencia_pago = '';
+        $this->observaciones_pago = '';
+    }
+
     public function procesarPago()
     {
         $this->validate([
@@ -602,6 +667,12 @@ class AlquilerController extends Component
             ]);
 
             // Registrar movimiento en caja
+            \Log::info('Intentando registrar pago de alquiler', [
+                'monto' => $this->monto_pago,
+                'caja_id' => $this->caja_id,
+                'alquiler' => $this->selectedAlquiler->numero_alquiler
+            ]);
+
             $caja = Caja::find($this->caja_id);
             if ($caja && $caja->estado === 'ABIERTA') {
                 $caja->registrarMovimiento(
@@ -612,6 +683,12 @@ class AlquilerController extends Component
                     auth()->id(),
                     $this->referencia_pago ?: $this->selectedAlquiler->numero_alquiler
                 );
+                \Log::info('Pago de alquiler registrado exitosamente en caja');
+            } else {
+                \Log::warning('Caja no encontrada o no está abierta para alquiler', [
+                    'caja_id' => $this->caja_id,
+                    'caja_estado' => $caja ? $caja->estado : 'no_encontrada'
+                ]);
             }
 
             DB::commit();
@@ -622,7 +699,7 @@ class AlquilerController extends Component
                 'icon' => 'success'
             ]);
 
-            $this->closePagoModal();
+            $this->closePaymentModal();
         } catch (\Exception $e) {
             DB::rollback();
             session()->flash('error', 'Error al registrar el pago: ' . $e->getMessage());

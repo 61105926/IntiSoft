@@ -8,6 +8,7 @@ use App\Models\MovimientoCaja;
 use App\Models\Sucursal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CajaController extends Component
 {
@@ -21,6 +22,8 @@ class CajaController extends Component
     public $mostrarModalMovimiento = false;
     public $mostrarModalCerrarCaja = false;
     public $mostrarModalMovimientos = false;
+    public $mostrarModalResumen = false;
+    public $mostrarModalAbrirCaja = false;
 
     // Form data para nueva caja
     public $nombre = '';
@@ -44,10 +47,16 @@ class CajaController extends Component
     public $arqueo_fisico = 0;
     public $observaciones_cierre = '';
 
+    // Form data para apertura
+    public $saldo_apertura = 0;
+    public $observaciones_apertura_nueva = '';
+
     // Cajas y movimientos seleccionados
     public $cajaSeleccionada = null;
     public $cajaParaCerrar = null;
+    public $cajaParaAbrir = null;
     public $movimientosCaja = [];
+    public $resumenCaja = [];
 
     // Categorías disponibles
     public $categoriasDisponibles = [];
@@ -55,6 +64,7 @@ class CajaController extends Component
     public function mount()
     {
         $this->sucursal_id = Auth::user()->sucursal_id ?? '';
+        $this->saldo_inicial = 1000; // Valor por defecto
         $this->categoriasDisponibles = MovimientoCaja::obtenerCategoriasDisponibles();
     }
 
@@ -137,6 +147,12 @@ class CajaController extends Component
 
     public function guardarCaja()
     {
+        \Log::info('Intentando guardar caja', [
+            'nombre' => $this->nombre,
+            'sucursal_id' => $this->sucursal_id,
+            'saldo_inicial' => $this->saldo_inicial,
+        ]);
+
         $this->validate([
             'nombre' => 'required|string|max:255',
             'sucursal_id' => 'required|exists:sucursals,id',
@@ -168,7 +184,7 @@ class CajaController extends Component
                 ]);
 
                 // Abrir la caja inmediatamente
-                $caja->abrir($this->saldo_inicial, auth()->id(), $this->observaciones_apertura);
+                $caja->abrir($this->saldo_inicial, $this->observaciones_apertura, auth()->id());
                 $mensaje = 'Caja creada y abierta correctamente';
             }
 
@@ -178,6 +194,7 @@ class CajaController extends Component
 
         } catch (\Exception $e) {
             DB::rollback();
+            \Log::error('Error al guardar caja: ' . $e->getMessage());
             session()->flash('error', 'Error al guardar la caja: ' . $e->getMessage());
         }
     }
@@ -225,7 +242,7 @@ class CajaController extends Component
                 $this->concepto,
                 $this->categoria,
                 auth()->id(),
-                $this->referencia
+                $this->observaciones
             );
 
             session()->flash('message', 'Movimiento registrado correctamente');
@@ -288,18 +305,87 @@ class CajaController extends Component
         $this->movimientosCaja = [];
     }
 
-    // Método para reabrir caja
+    // Métodos para resumen de caja
+    public function verResumenCaja($cajaId)
+    {
+        $this->cajaSeleccionada = Caja::with(['movimientos', 'usuarioApertura', 'usuarioCierre'])->find($cajaId);
+
+        if ($this->cajaSeleccionada && $this->cajaSeleccionada->estado === 'ABIERTA') {
+            $this->resumenCaja = $this->cajaSeleccionada->obtenerResumenDia();
+            $this->mostrarModalResumen = true;
+        } else {
+            session()->flash('error', 'Solo se puede ver el resumen de cajas abiertas');
+        }
+    }
+
+    public function cerrarModalResumen()
+    {
+        $this->mostrarModalResumen = false;
+        $this->cajaSeleccionada = null;
+        $this->resumenCaja = [];
+    }
+
+    // Métodos para abrir caja mejorado
+    public function abrirModalAbrirCaja($cajaId)
+    {
+        $this->cajaParaAbrir = Caja::find($cajaId);
+        $this->saldo_apertura = $this->cajaParaAbrir->saldo_inicial ?? 1000;
+        $this->observaciones_apertura_nueva = '';
+        $this->mostrarModalAbrirCaja = true;
+    }
+
+    public function cerrarModalAbrirCaja()
+    {
+        $this->mostrarModalAbrirCaja = false;
+        $this->cajaParaAbrir = null;
+        $this->saldo_apertura = 0;
+        $this->observaciones_apertura_nueva = '';
+    }
+
+    public function confirmarAbrirCaja()
+    {
+        $this->validate([
+            'saldo_apertura' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $this->cajaParaAbrir->abrir(
+                $this->saldo_apertura,
+                $this->observaciones_apertura_nueva,
+                auth()->id()
+            );
+
+            session()->flash('message', 'Caja abierta correctamente');
+            $this->cerrarModalAbrirCaja();
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al abrir caja: ' . $e->getMessage());
+        }
+    }
+
+    // Método para reabrir caja (mantener por compatibilidad)
     public function abrirCaja($cajaId)
     {
-        $caja = Caja::find($cajaId);
-        if ($caja && $caja->estado === 'CERRADA') {
-            try {
-                $caja->abrir(1000, auth()->id(), 'Reapertura de caja');
-                session()->flash('message', 'Caja abierta correctamente');
-            } catch (\Exception $e) {
-                session()->flash('error', 'Error al abrir caja: ' . $e->getMessage());
-            }
-        }
+        $this->abrirModalAbrirCaja($cajaId);
+    }
+
+    // Métodos para reportes
+    public function generarReporte()
+    {
+        // Lógica para generar reporte general de cajas
+        session()->flash('message', 'Generando reporte...');
+    }
+
+    public function exportarPDF()
+    {
+        // Lógica para exportar PDF general
+        session()->flash('message', 'Exportando PDF...');
+    }
+
+    public function exportarResumenPDF()
+    {
+        // Lógica para exportar resumen de caja específica
+        session()->flash('message', 'Exportando resumen en PDF...');
     }
 
     // Métodos de utilidad
@@ -308,9 +394,10 @@ class CajaController extends Component
         $this->cajaSeleccionada = null;
         $this->nombre = '';
         $this->descripcion = '';
-        $this->saldo_inicial = 0;
+        $this->saldo_inicial = 1000; // Valor por defecto
         $this->observaciones_apertura = '';
         $this->es_caja_principal = false;
+        $this->resetValidation(); // Limpiar errores de validación
     }
 
     private function resetFormularioMovimiento()

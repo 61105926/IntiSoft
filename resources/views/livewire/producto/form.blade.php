@@ -181,60 +181,6 @@
                             @enderror
                         </div>
 
-                        {{-- Imagen del Producto --}}
-                        <div class="col-md-12">
-                            <label class="form-label">Imagen del Producto</label>
-                            <input
-                                type="file"
-                                wire:model="imagen_principal"
-                                accept="image/*"
-                                class="form-control @error('imagen_principal') is-invalid @enderror"
-                                id="imageInput"
-                                onchange="previewImage(this)"
-                            />
-                            @error('imagen_principal')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            
-                            <div wire:loading wire:target="imagen_principal" class="mt-2">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">Cargando...</span>
-                                </div>
-                                <small class="text-muted ms-2">Subiendo imagen...</small>
-                            </div>
-
-                            {{-- Vista previa --}}
-                            <div id="imagePreview" class="mt-3 text-center" style="display: none;">
-                                <img id="previewImg" 
-                                     alt="Vista previa" 
-                                     class="img-thumbnail" 
-                                     style="max-width: 250px; max-height: 250px; object-fit: cover;">
-                            </div>
-                            
-                            @if ($isEdit && $producto_id && !$imagen_principal)
-                                @php
-                                    $producto = \App\Models\Producto::find($producto_id);
-                                @endphp
-                                @if ($producto && $producto->imagen_principal)
-                                    <div class="mt-3 text-center">
-                                        <small class="text-muted d-block">Imagen actual:</small>
-                                        <img src="{{ asset('storage/' . $producto->imagen_principal) }}" 
-                                             alt="Imagen actual" 
-                                             class="img-thumbnail mt-1" 
-                                             style="max-width: 250px; max-height: 250px; object-fit: cover;"
-                                             onerror="this.src='{{ asset('images/produto-default.jpg') }}'">
-                                    </div>
-                                @else
-                                    <div class="mt-3 text-center">
-                                        <small class="text-muted d-block">Sin imagen:</small>
-                                        <img src="{{ asset('images/produto-default.jpg') }}" 
-                                             alt="Sin imagen" 
-                                             class="img-thumbnail mt-1" 
-                                             style="max-width: 250px; max-height: 250px; object-fit: cover;">
-                                    </div>
-                                @endif
-                            @endif
-                        </div>
 
                         {{-- Stock Actual --}}
                         <div class="col-md-6">

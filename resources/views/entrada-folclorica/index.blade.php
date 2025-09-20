@@ -1,4 +1,4 @@
-@extends('layouts.theme.app')
+@extends('layouts.theme.modern-app')
 
 @section('content')
     <div class="container-fluid">

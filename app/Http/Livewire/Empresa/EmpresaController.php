@@ -59,6 +59,6 @@ class EmpresaController extends Component
 
     public function render()
     {
-        return view('livewire.empresa.empresa')->extends('layouts.theme.app')->section('content');
+        return view('livewire.empresa.empresa')->extends('layouts.theme.modern-app')->section('content');
     }
 }

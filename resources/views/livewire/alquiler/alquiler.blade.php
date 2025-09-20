@@ -239,6 +239,11 @@
                                             <i class="fas fa-print"></i>
                                         </button>
                                         @if($alquiler->estado === 'ACTIVO')
+                                            @if($alquiler->saldo_pendiente > 0)
+                                                <button type="button" class="btn btn-sm btn-info" wire:click="openPaymentModal({{ $alquiler->id }})" title="Registrar Pago">
+                                                    <i class="fas fa-dollar-sign"></i>
+                                                </button>
+                                            @endif
                                             <button type="button" class="btn btn-sm btn-success" wire:click="openDevolucionModal({{ $alquiler->id }})">
                                                 <i class="fas fa-undo"></i>
                                             </button>
@@ -567,6 +572,74 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
+
+                                            @if($anticipo > 0)
+                                                <div class="alert alert-info mb-3">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    <strong>Registro de Anticipo:</strong> El anticipo de Bs. {{ number_format($anticipo, 2) }} se registrará automáticamente en la caja seleccionada.
+                                                </div>
+
+                                                <div class="card border-warning mb-3">
+                                                    <div class="card-header bg-warning text-dark">
+                                                        <i class="fas fa-cash-register me-2"></i>Información de Caja
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row g-3">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">Caja de Destino *</label>
+                                                                <select class="form-select @error('caja_id') is-invalid @enderror" wire:model="caja_id">
+                                                                    <option value="">Seleccione una caja</option>
+                                                                    @foreach ($cajas as $caja)
+                                                                        <option value="{{ $caja->id }}">
+                                                                            🏪 {{ $caja->nombre }} - {{ $caja->sucursal->nombre }}
+                                                                            💰 Saldo: Bs. {{ number_format($caja->saldo_actual, 2) }}
+                                                                            @if($caja->es_caja_principal) ⭐ @endif
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                @error('caja_id')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                                @if(count($cajas) == 0)
+                                                                    <div class="text-danger small mt-1">
+                                                                        <i class="fas fa-exclamation-triangle"></i> No hay cajas abiertas disponibles
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">Método de Pago *</label>
+                                                                <select class="form-select @error('metodo_pago') is-invalid @enderror" wire:model="metodo_pago">
+                                                                    <option value="EFECTIVO">💵 Efectivo</option>
+                                                                    <option value="QR">📱 QR</option>
+                                                                    <option value="TARJETA">💳 Tarjeta</option>
+                                                                    <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                                                </select>
+                                                                @error('metodo_pago')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
+                                                        </div>
+
+                                                        @if($caja_id)
+                                                            @php
+                                                                $cajaSeleccionadaAlquiler = $cajas->find($caja_id);
+                                                            @endphp
+                                                            @if($cajaSeleccionadaAlquiler)
+                                                                <div class="alert alert-success mt-3 mb-0">
+                                                                    <i class="fas fa-check-circle me-2"></i>
+                                                                    <strong>Caja Seleccionada:</strong> {{ $cajaSeleccionadaAlquiler->nombre }}<br>
+                                                                    <small>
+                                                                        📍 Sucursal: {{ $cajaSeleccionadaAlquiler->sucursal->nombre }} |
+                                                                        💰 Saldo Actual: Bs. {{ number_format($cajaSeleccionadaAlquiler->saldo_actual, 2) }} |
+                                                                        🔄 Nuevo Saldo: Bs. {{ number_format($cajaSeleccionadaAlquiler->saldo_actual + $anticipo, 2) }}
+                                                                        @if($cajaSeleccionadaAlquiler->es_caja_principal) | ⭐ Caja Principal @endif
+                                                                    </small>
+                                                                </div>
+                                                            @endif
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
                                             
                                             <div class="border-top pt-3">
                                                 <div class="d-flex justify-content-between mb-2">
@@ -758,10 +831,202 @@
         <div class="modal-backdrop fade show"></div>
     @endif
 
+    <!-- Modal Comprobante de Alquiler -->
+    @if ($showPrintModal && $selectedAlquiler)
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-print me-2"></i>Comprobante de Alquiler - {{ $selectedAlquiler->numero_contrato }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="closePrintModal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <!-- Comprobante de Alquiler para Impresora Térmica -->
+                        <div id="comprobante-alquiler" class="p-3" style="background: white; font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; font-size: 12px; line-height: 1.2;">
+                            <!-- Header Compacto -->
+                            <div class="text-center mb-2" style="border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                                <div style="font-weight: bold; font-size: 14px; margin-bottom: 2px;">FOLKLORE BOLIVIA</div>
+                                <div style="font-size: 10px; margin-bottom: 1px;">Alquiler de Trajes Típicos</div>
+                                <div style="font-size: 10px; margin-bottom: 4px;">{{ $selectedAlquiler->sucursal->direccion ?? 'Dirección de la sucursal' }}</div>
+                                <div style="font-weight: bold; font-size: 12px; margin-bottom: 2px;">CONTRATO DE ALQUILER</div>
+                                <div style="font-weight: bold; font-size: 11px;">Nº {{ $selectedAlquiler->numero_contrato }}</div>
+                            </div>
+
+                            <!-- Información Básica -->
+                            <div class="mb-2" style="border-bottom: 1px dashed #000; padding-bottom: 6px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-weight: bold;">FECHA:</span>
+                                    <span>{{ $selectedAlquiler->fecha_alquiler->format('d/m/Y') }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-weight: bold;">ENTREGA:</span>
+                                    <span>{{ $selectedAlquiler->hora_entrega ?? '09:00' }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-weight: bold;">DEVOLUCIÓN:</span>
+                                    <span>{{ $selectedAlquiler->fecha_devolucion_programada->format('d/m/Y') }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-weight: bold;">HORA DEV:</span>
+                                    <span>{{ $selectedAlquiler->hora_devolucion_programada ?? '18:00' }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="font-weight: bold;">DÍAS:</span>
+                                    <span>{{ $selectedAlquiler->dias_alquiler }} días</span>
+                                </div>
+                            </div>
+
+                            <!-- Datos del Cliente -->
+                            <div class="mb-2" style="border-bottom: 1px dashed #000; padding-bottom: 6px;">
+                                <div class="text-center" style="font-weight: bold; margin-bottom: 4px; font-size: 11px;">DATOS DEL CLIENTE</div>
+                                <div style="margin-bottom: 2px;">
+                                    <span style="font-weight: bold;">NOMBRE:</span><br>
+                                    <span>{{ $selectedAlquiler->cliente->nombres }} {{ $selectedAlquiler->cliente->apellidos }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <div style="width: 48%;">
+                                        <span style="font-weight: bold; font-size: 10px;">TEL:</span><br>
+                                        <span style="font-size: 10px;">{{ $selectedAlquiler->cliente->telefono ?? 'N/A' }}</span>
+                                    </div>
+                                    <div style="width: 48%;">
+                                        <span style="font-weight: bold; font-size: 10px;">CI:</span><br>
+                                        <span style="font-size: 10px;">{{ $selectedAlquiler->cliente->carnet_identidad ?? 'N/A' }}</span>
+                                    </div>
+                                </div>
+                                @if($selectedAlquiler->unidadEducativa)
+                                    <div style="margin-bottom: 2px;">
+                                        <span style="font-weight: bold; font-size: 10px;">UNIDAD EDUCATIVA:</span><br>
+                                        <span style="font-size: 10px;">{{ $selectedAlquiler->unidadEducativa->nombre }}</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Productos Alquilados -->
+                            <div class="mb-2" style="border-bottom: 1px dashed #000; padding-bottom: 6px;">
+                                <div class="text-center" style="font-weight: bold; margin-bottom: 4px; font-size: 11px;">PRODUCTOS ALQUILADOS</div>
+                                @forelse($selectedAlquiler->detalles as $detalle)
+                                    <div style="margin-bottom: 4px;">
+                                        <div style="font-weight: bold; font-size: 11px;">{{ $detalle->producto->nombre ?? $detalle->nombre_producto }}</div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="font-size: 10px;">
+                                                {{ $detalle->cantidad }} x Bs. {{ number_format($detalle->precio_unitario, 2) }}
+                                            </div>
+                                            <div style="font-weight: bold;">Bs. {{ number_format($detalle->subtotal, 2) }}</div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div style="text-center; color: #666; font-size: 10px;">Sin productos registrados</div>
+                                @endforelse
+                            </div>
+
+                            <!-- Totales -->
+                            <div class="mb-2" style="border-bottom: 1px dashed #000; padding-bottom: 6px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-weight: bold;">SUBTOTAL:</span>
+                                    <span style="font-weight: bold;">Bs. {{ number_format($selectedAlquiler->subtotal, 2) }}</span>
+                                </div>
+                                <div style="border-top: 2px solid #000; padding-top: 4px; margin-top: 4px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-weight: bold; font-size: 14px;">
+                                        <span>TOTAL:</span>
+                                        <span>Bs. {{ number_format($selectedAlquiler->total, 2) }}</span>
+                                    </div>
+                                    @if($selectedAlquiler->anticipo_reserva > 0)
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #0066cc; font-weight: bold;">
+                                            <span>ANTICIPO RESERVA:</span>
+                                            <span>Bs. {{ number_format($selectedAlquiler->anticipo_reserva, 2) }}</span>
+                                        </div>
+                                    @endif
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #198754; font-weight: bold;">
+                                        <span>ANTICIPO TOTAL:</span>
+                                        <span>Bs. {{ number_format($selectedAlquiler->anticipo, 2) }}</span>
+                                    </div>
+                                    @if($selectedAlquiler->saldo_pendiente > 0)
+                                        <div style="display: flex; justify-content: space-between; color: #dc3545; font-weight: bold;">
+                                            <span>SALDO PENDIENTE:</span>
+                                            <span>Bs. {{ number_format($selectedAlquiler->saldo_pendiente, 2) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Garantía -->
+                            @if($selectedAlquiler->garantia)
+                                <div class="mb-2" style="border-bottom: 1px dashed #000; padding-bottom: 6px;">
+                                    <div class="text-center" style="font-weight: bold; margin-bottom: 4px; font-size: 11px;">GARANTÍA</div>
+                                    <div style="margin-bottom: 2px;">
+                                        <span style="font-weight: bold; font-size: 10px;">TIPO:</span>
+                                        <span style="font-size: 10px;">{{ $selectedAlquiler->garantia->tipoGarantia->nombre ?? 'N/A' }}</span>
+                                    </div>
+                                    <div style="margin-bottom: 2px;">
+                                        <span style="font-weight: bold; font-size: 10px;">TICKET:</span>
+                                        <span style="font-size: 10px;">{{ $selectedAlquiler->garantia->numero_ticket }}</span>
+                                    </div>
+                                    @if($selectedAlquiler->garantia->monto > 0)
+                                        <div style="margin-bottom: 2px;">
+                                            <span style="font-weight: bold; font-size: 10px;">MONTO:</span>
+                                            <span style="font-size: 10px;">Bs. {{ number_format($selectedAlquiler->garantia->monto, 2) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            <!-- Observaciones -->
+                            @if($selectedAlquiler->observaciones || $selectedAlquiler->condiciones_especiales)
+                                <div class="mb-2" style="border-bottom: 1px dashed #000; padding-bottom: 6px;">
+                                    <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">OBSERVACIONES:</div>
+                                    @if($selectedAlquiler->observaciones)
+                                        <div style="font-size: 9px; margin-bottom: 2px;">{{ $selectedAlquiler->observaciones }}</div>
+                                    @endif
+                                    @if($selectedAlquiler->condiciones_especiales)
+                                        <div style="font-size: 9px; font-weight: bold;">CONDICIONES: {{ $selectedAlquiler->condiciones_especiales }}</div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            <!-- Footer -->
+                            <div class="text-center" style="padding-top: 6px;">
+                                <div style="font-weight: bold; margin-bottom: 3px; font-size: 10px;">
+                                    VENDEDOR: {{ $selectedAlquiler->usuarioCreacion->name ?? 'N/A' }}
+                                </div>
+                                <div style="font-size: 9px; margin-bottom: 3px;">
+                                    {{ $selectedAlquiler->sucursal->direccion ?? 'Dirección de la sucursal' }}<br>
+                                    Tel: {{ $selectedAlquiler->sucursal->telefono ?? 'N/A' }}
+                                </div>
+                                <div style="font-size: 8px; margin-bottom: 3px;">
+                                    Impresión: {{ now()->format('d/m/Y H:i:s') }}
+                                </div>
+                                <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">
+                                    ¡Cuide los trajes!
+                                </div>
+                                <div style="font-size: 8px; margin-bottom: 3px;">
+                                    Conserve este comprobante
+                                </div>
+                                <div style="font-size: 8px;">
+                                    Tel: 2-2345678 | Cel: 70123456<br>
+                                    www.folkloreBolivia.com
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closePrintModal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" onclick="imprimirComprobanteAlquiler()">
+                            <i class="fas fa-print me-1"></i>Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
+
     <!-- Otros modales (Ver, Devolución, Pago) aquí -->
 
-    <!-- SweetAlert -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         // Escuchar eventos de SweetAlert desde Livewire
         window.addEventListener('swal', event => {
@@ -772,6 +1037,256 @@
                 confirmButtonText: 'OK'
             });
         });
+
+        // Función para imprimir comprobante de alquiler
+        function imprimirComprobanteAlquiler() {
+            const comprobante = document.getElementById('comprobante-alquiler').innerHTML;
+            const ventana = window.open('', '_blank', 'width=320,height=600');
+            ventana.document.write(`
+                <html>
+                    <head>
+                        <title>Comprobante de Alquiler - Térmica</title>
+                        <style>
+                            @media print {
+                                @page {
+                                    size: 80mm auto;
+                                    margin: 0;
+                                }
+                                body {
+                                    margin: 0;
+                                    padding: 0;
+                                    width: 80mm;
+                                    font-family: 'Courier New', monospace;
+                                    font-size: 12px;
+                                    line-height: 1.2;
+                                    color: #000;
+                                }
+                                .no-print { display: none !important; }
+                                * {
+                                    box-sizing: border-box;
+                                }
+                            }
+                            body {
+                                margin: 0;
+                                padding: 8px;
+                                width: 80mm;
+                                max-width: 300px;
+                                font-family: 'Courier New', monospace;
+                                font-size: 12px;
+                                line-height: 1.2;
+                                color: #000;
+                                background: white;
+                            }
+
+                            /* Estilos para impresora térmica */
+                            .text-center { text-align: center; }
+                            .mb-2 { margin-bottom: 8px; }
+
+                            /* Bordes punteados para separadores */
+                            [style*="border-bottom: 1px dashed"] {
+                                border-bottom: 1px dashed #000 !important;
+                            }
+
+                            /* Líneas sólidas para totales */
+                            [style*="border-top: 2px solid"] {
+                                border-top: 2px solid #000 !important;
+                            }
+
+                            /* Display flex para alineación */
+                            [style*="display: flex"] {
+                                display: flex !important;
+                            }
+
+                            [style*="justify-content: space-between"] {
+                                justify-content: space-between !important;
+                            }
+
+                            /* Peso de fuente */
+                            [style*="font-weight: bold"] {
+                                font-weight: bold !important;
+                            }
+
+                            /* Colores - todo en negro para impresión térmica */
+                            [style*="color: #198754"] {
+                                color: #000 !important;
+                                font-weight: bold !important;
+                            }
+
+                            [style*="color: #dc3545"] {
+                                color: #000 !important;
+                                font-weight: bold !important;
+                            }
+
+                            [style*="color: #0066cc"] {
+                                color: #000 !important;
+                                font-weight: bold !important;
+                            }
+
+                            [style*="color: #666"] {
+                                color: #000 !important;
+                            }
+
+                            /* Tamaños de fuente específicos */
+                            [style*="font-size: 14px"] { font-size: 14px !important; }
+                            [style*="font-size: 12px"] { font-size: 12px !important; }
+                            [style*="font-size: 11px"] { font-size: 11px !important; }
+                            [style*="font-size: 10px"] { font-size: 10px !important; }
+                            [style*="font-size: 9px"] { font-size: 9px !important; }
+                            [style*="font-size: 8px"] { font-size: 8px !important; }
+
+                            /* Márgenes y padding */
+                            [style*="margin-bottom: 2px"] { margin-bottom: 2px !important; }
+                            [style*="margin-bottom: 3px"] { margin-bottom: 3px !important; }
+                            [style*="margin-bottom: 4px"] { margin-bottom: 4px !important; }
+                            [style*="padding-bottom: 6px"] { padding-bottom: 6px !important; }
+                            [style*="padding-bottom: 8px"] { padding-bottom: 8px !important; }
+                            [style*="padding-top: 4px"] { padding-top: 4px !important; }
+                            [style*="padding-top: 6px"] { padding-top: 6px !important; }
+                            [style*="margin-top: 4px"] { margin-top: 4px !important; }
+
+                            /* Anchos */
+                            [style*="width: 48%"] { width: 48% !important; }
+
+                            /* Eliminar bordes y fondos para impresión térmica */
+                            * {
+                                border-radius: 0 !important;
+                                background: transparent !important;
+                                box-shadow: none !important;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${comprobante}
+                    </body>
+                </html>
+            `);
+            ventana.document.close();
+            ventana.focus();
+
+            // Configurar impresión automática para impresoras térmicas
+            setTimeout(() => {
+                ventana.print();
+                ventana.close();
+            }, 250);
+        }
     </script>
+
+    <!-- Modal de Pago -->
+    @if($showPaymentModal && $selectedAlquiler)
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Registrar Pago - {{ $selectedAlquiler->numero_alquiler }}</h5>
+                        <button type="button" class="btn-close" wire:click="closePaymentModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-primary">
+                            <i class="fas fa-user me-2"></i>
+                            <strong>Cliente:</strong> {{ $selectedAlquiler->cliente->nombres }} {{ $selectedAlquiler->cliente->apellidos }}<br>
+                            <strong>Contrato:</strong> {{ $selectedAlquiler->numero_alquiler }}<br>
+                            <strong>Saldo Pendiente:</strong> <span class="badge bg-danger fs-6">Bs. {{ number_format($selectedAlquiler->saldo_pendiente, 2) }}</span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Monto a Pagar *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Bs.</span>
+                                        <input type="number" step="0.01" wire:model.live="monto_pago"
+                                               class="form-control @error('monto_pago') is-invalid @enderror"
+                                               max="{{ $selectedAlquiler->saldo_pendiente }}"
+                                               placeholder="0.00">
+                                    </div>
+                                    @error('monto_pago') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <small class="text-muted">Máximo: Bs. {{ number_format($selectedAlquiler->saldo_pendiente, 2) }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Método de Pago *</label>
+                                    <select wire:model="metodo_pago" class="form-select">
+                                        <option value="EFECTIVO">💵 Efectivo</option>
+                                        <option value="QR">📱 QR</option>
+                                        <option value="TARJETA">💳 Tarjeta</option>
+                                        <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($monto_pago > 0)
+                            <div class="card border-success mb-3">
+                                <div class="card-header bg-success text-white">
+                                    <i class="fas fa-cash-register me-2"></i>Destino del Pago
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Caja de Destino *</label>
+                                        <select wire:model="caja_id" class="form-select @error('caja_id') is-invalid @enderror">
+                                            <option value="">Seleccione caja</option>
+                                            @foreach($cajas as $caja)
+                                                <option value="{{ $caja->id }}">
+                                                    🏪 {{ $caja->nombre }} - {{ $caja->sucursal->nombre }}
+                                                    💰 Saldo: Bs. {{ number_format($caja->saldo_actual, 2) }}
+                                                    @if($caja->es_caja_principal) ⭐ @endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('caja_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        @if(count($cajas) == 0)
+                                            <div class="text-danger small mt-1">
+                                                <i class="fas fa-exclamation-triangle"></i> No hay cajas abiertas disponibles
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    @if($caja_id)
+                                        @php
+                                            $cajaSeleccionadaPago = $cajas->find($caja_id);
+                                        @endphp
+                                        @if($cajaSeleccionadaPago)
+                                            <div class="alert alert-info mb-3">
+                                                <i class="fas fa-calculator me-2"></i>
+                                                <strong>Resumen del Pago:</strong><br>
+                                                <small>
+                                                    💰 Saldo Actual: Bs. {{ number_format($cajaSeleccionadaPago->saldo_actual, 2) }}<br>
+                                                    ➕ Pago a Registrar: Bs. {{ number_format($monto_pago, 2) }}<br>
+                                                    🔄 <strong>Nuevo Saldo: Bs. {{ number_format($cajaSeleccionadaPago->saldo_actual + $monto_pago, 2) }}</strong><br>
+                                                    📉 Saldo Pendiente Cliente: Bs. {{ number_format($selectedAlquiler->saldo_pendiente - $monto_pago, 2) }}
+                                                </small>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Referencia</label>
+                                    <input type="text" wire:model="referencia_pago" class="form-control" placeholder="Número de transacción, etc.">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Observaciones</label>
+                                    <textarea wire:model="observaciones_pago" class="form-control" rows="2" placeholder="Observaciones del pago"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closePaymentModal">Cancelar</button>
+                        <button type="button" class="btn btn-success" wire:click="procesarPago">
+                            <i class="fas fa-dollar-sign me-1"></i>Registrar Pago
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
 </div>

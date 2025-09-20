@@ -14,7 +14,7 @@
 
         <!-- Inventario Section -->
         <div class="nav-section mt-4">
-            <small class="text-muted px-3 text-uppercase fw-bold">Inventario</small>
+            <small class="text-white px-3 text-uppercase fw-bold">Inventario</small>
         </div>
 
         <a href="{{ route('producto') }}" class="nav-link {{ request()->routeIs('producto*') ? 'active' : '' }}">
@@ -34,7 +34,7 @@
 
         <!-- Operaciones Section -->
         <div class="nav-section mt-4">
-            <small class="text-muted px-3 text-uppercase fw-bold">Operaciones</small>
+            <small class="text-white px-3 text-uppercase fw-bold">Operaciones</small>
         </div>
 
         <a href="{{ route('venta') }}" class="nav-link {{ request()->routeIs('venta*') ? 'active' : '' }}">
@@ -54,7 +54,7 @@
 
         <!-- Finanzas Section -->
         <div class="nav-section mt-4">
-            <small class="text-muted px-3 text-uppercase fw-bold">Finanzas</small>
+            <small class="text-white px-3 text-uppercase fw-bold">Finanzas</small>
         </div>
 
         <a href="{{ route('caja') }}" class="nav-link {{ request()->routeIs('caja*') ? 'active' : '' }}">
@@ -69,7 +69,7 @@
 
         <!-- Gestión Section -->
         <div class="nav-section mt-4">
-            <small class="text-muted px-3 text-uppercase fw-bold">Gestión</small>
+            <small class="text-white px-3 text-uppercase fw-bold">Gestión</small>
         </div>
 
         <a href="{{ route('cliente') }}" class="nav-link {{ request()->routeIs('cliente*') ? 'active' : '' }}">
@@ -84,7 +84,7 @@
 
         <!-- Sistema Section -->
         <div class="nav-section mt-4">
-            <small class="text-muted px-3 text-uppercase fw-bold">Sistema</small>
+            <small class="text-white px-3 text-uppercase fw-bold">Sistema</small>
         </div>
 
         <a href="#" class="nav-link">
@@ -100,6 +100,19 @@
 </div>
 
 <style>
+.sidebar {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-nav {
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+}
+
 .nav-section {
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
@@ -109,6 +122,28 @@
     font-size: 0.7rem;
     letter-spacing: 0.5px;
     opacity: 0.7;
+}
+
+/* Personalizar scrollbar */
+.sidebar::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 </style>
 

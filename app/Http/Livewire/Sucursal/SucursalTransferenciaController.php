@@ -422,7 +422,7 @@ class SucursalTransferenciaController extends Component
             'estadisticas' => $this->estadisticas,
             'transferencias' => $this->transferencias,
         ])
-            ->extends('layouts.theme.app')
+            ->extends('layouts.theme.modern-app')
             ->section('content');
     }
 }

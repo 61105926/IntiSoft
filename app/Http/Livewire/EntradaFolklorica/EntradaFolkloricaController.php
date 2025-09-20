@@ -8,6 +8,6 @@ class EntradaFolkloricaController extends Component
 {
     public function render()
     {
-        return view('livewire.entrada-folklorica.entrada-folklorica')->extends('layouts.theme.app')->section('content');
+        return view('livewire.entrada-folklorica.entrada-folklorica')->extends('layouts.theme.modern-app')->section('content');
     }
 }

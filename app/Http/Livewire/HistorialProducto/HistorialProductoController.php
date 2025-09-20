@@ -55,7 +55,7 @@ class HistorialProductoController extends Component
             'sucursales' => $sucursales,
             'usuarios' => $usuarios,
             'estadisticas' => $estadisticas,
-        ])->extends('layouts.theme.app')->section('content');
+        ])->extends('layouts.theme.modern-app')->section('content');
     }
 
     private function getFilteredMovimientos()

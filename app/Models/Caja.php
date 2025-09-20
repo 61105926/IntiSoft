@@ -190,7 +190,7 @@ class Caja extends Model
             $saldoInicial,
             'Apertura de caja',
             'APERTURA',
-            null,
+            $usuarioId ?? auth()->id(),
             $observaciones
         );
 
@@ -231,9 +231,9 @@ class Caja extends Model
         return $this;
     }
 
-    public function registrarMovimiento($tipo, $monto, $concepto, $categoria = 'VARIOS', $referencia = null, $observaciones = null)
+    public function registrarMovimiento($tipo, $monto, $concepto, $categoria = 'VARIOS', $usuarioId = null, $observaciones = null)
     {
-        if (!$this->esta_abierta) {
+        if (!$this->esta_abierta && $categoria !== 'APERTURA') {
             throw new \Exception('No se pueden registrar movimientos en una caja cerrada.');
         }
 
@@ -242,10 +242,10 @@ class Caja extends Model
             'monto' => $monto,
             'concepto' => $concepto,
             'categoria' => $categoria,
-            'referencia' => $referencia,
+            'referencia' => null,
             'observaciones' => $observaciones,
             'fecha_movimiento' => now(),
-            'usuario_registro' => auth()->id(),
+            'usuario_registro' => $usuarioId ?? auth()->id(),
             'saldo_anterior' => $this->saldo_actual,
             'saldo_posterior' => $this->calcularNuevoSaldo($tipo, $monto),
         ]);

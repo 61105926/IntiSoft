@@ -238,6 +238,6 @@ class ParticipanteController extends Component
     
     public function render()
     {
-        return view('livewire.entrada-folclorica.participante')->extends('layouts.theme.app')->section('content');
+        return view('livewire.entrada-folclorica.participante')->extends('layouts.theme.modern-app')->section('content');
     }
 }

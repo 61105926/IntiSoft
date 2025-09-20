@@ -59,6 +59,8 @@ class VentaController extends Component
     public $montoPago = 0;
     public $cajaParaPago = '';
     public $metodoPagoVenta = 'EFECTIVO';
+    public $pago_inicial = 0;
+    public $caja_id = '';
 
     // Colecciones
     public $clientes;
@@ -145,6 +147,8 @@ class VentaController extends Component
         $this->cantidadProducto = 1;
         $this->precioProducto = 0;
         $this->descuentoProducto = 0;
+        $this->pago_inicial = 0;
+        $this->caja_id = '';
     }
 
     public function cargarDatosVenta()
@@ -262,13 +266,21 @@ class VentaController extends Component
     // Guardar venta
     public function guardarVenta()
     {
-        $this->validate([
+        $rules = [
             'cliente_id' => 'required|exists:clientes,id',
             'sucursal_id' => 'required|exists:sucursals,id',
             'fecha_venta' => 'required|date',
             'metodo_pago' => 'required|string',
-            'productosEnVenta' => 'required|array|min:1'
-        ]);
+            'productosEnVenta' => 'required|array|min:1',
+            'pago_inicial' => 'nullable|numeric|min:0'
+        ];
+
+        // Si hay pago inicial, la caja es obligatoria
+        if ($this->pago_inicial > 0) {
+            $rules['caja_id'] = 'required|exists:cajas,id';
+        }
+
+        $this->validate($rules);
 
         DB::beginTransaction();
         try {
@@ -334,6 +346,11 @@ class VentaController extends Component
             // Recalcular totales
             $venta->calcularTotales();
             $venta->save();
+
+            // Procesar pago inicial si hay uno
+            if ($this->pago_inicial > 0 && $this->caja_id) {
+                $venta->procesarPago($this->pago_inicial, $this->caja_id);
+            }
 
             DB::commit();
             

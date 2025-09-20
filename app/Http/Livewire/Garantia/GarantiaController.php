@@ -82,7 +82,7 @@ class GarantiaController extends Component
             'tiposGarantia' => $tiposGarantia,
             'sucursales' => $sucursales,
             'estadisticas' => $estadisticas,
-        ])->extends('layouts.theme.app')->section('content');
+        ])->extends('layouts.theme.modern-app')->section('content');
     }
 
     private function getFilteredGarantias()

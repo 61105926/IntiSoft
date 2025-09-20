@@ -10,9 +10,12 @@ use App\Models\Producto;
 use App\Models\Sucursal;
 use App\Models\Usuario;
 use App\Models\ReservaDetalle;
+use App\Models\Caja;
+use App\Models\MovimientoCaja;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ReservasController extends Component
 {
@@ -43,6 +46,8 @@ class ReservasController extends Component
     public $anticipo = 0;
     public $observaciones = '';
     public $sucursal_id = '';
+    public $caja_id = '';
+    public $metodo_pago = 'EFECTIVO';
 
     // Productos seleccionados
     public $selectedProducts = [];
@@ -55,6 +60,8 @@ class ReservasController extends Component
     // Confirmación
     public $montoAdicional = 0;
     public $observacionesConfirmacion = '';
+    public $caja_confirmacion = '';
+    public $metodo_pago_confirmacion = 'EFECTIVO';
     
     // Conversión a alquiler
     public $fechaAlquiler;
@@ -73,6 +80,8 @@ class ReservasController extends Component
         'fecha_vencimiento' => 'required|date|after:fecha_reserva',
         'anticipo' => 'required|numeric|min:0',
         'sucursal_id' => 'required|exists:sucursals,id',
+        'caja_id' => 'required_if:anticipo,>,0|exists:cajas,id',
+        'metodo_pago' => 'required|string',
         'selectedProducts' => 'required|array|min:1',
     ];
 
@@ -104,6 +113,8 @@ class ReservasController extends Component
                 ->get();
         }
 
+        $cajas = Caja::where('estado', 'ABIERTA')->orderBy('nombre')->get();
+
         return view('livewire.reservas.reservas', [
             'reservas' => $reservas,
             'clientes' => $clientes,
@@ -111,7 +122,8 @@ class ReservasController extends Component
             'sucursales' => $sucursales,
             'estadisticas' => $estadisticas,
             'garantiasDisponibles' => $garantiasDisponibles,
-        ])->extends('layouts.theme.app')->section('content');
+            'cajas' => $cajas,
+        ])->extends('layouts.theme.modern-app')->section('content');
     }
 
     private function getFilteredReservas()
@@ -364,9 +376,24 @@ class ReservasController extends Component
                     ->decrement('stock_actual', $producto['cantidad']);
             }
 
+            // Registrar movimiento en caja si hay anticipo
+            if ($this->anticipo > 0 && $this->caja_id) {
+                $caja = Caja::find($this->caja_id);
+                if ($caja && $caja->estado === 'ABIERTA') {
+                    $caja->registrarMovimiento(
+                        MovimientoCaja::TIPO_INGRESO,
+                        $this->anticipo,
+                        "Anticipo reserva {$numeroReserva}",
+                        MovimientoCaja::CATEGORIA_VARIOS,
+                        Auth::id(),
+                        "Cliente: {$reserva->cliente->nombres} - Tipo: {$this->tipo_reserva}"
+                    );
+                }
+            }
+
             DB::commit();
 
-            session()->flash('success', 'Reserva creada exitosamente.');
+            session()->flash('success', 'Reserva creada exitosamente y registrada en caja.');
             $this->closeNewReservaModal();
         } catch (\Exception $e) {
             DB::rollback();
@@ -402,13 +429,22 @@ class ReservasController extends Component
         $this->selectedReserva = null;
         $this->montoAdicional = 0;
         $this->observacionesConfirmacion = '';
+        $this->caja_confirmacion = '';
+        $this->metodo_pago_confirmacion = 'EFECTIVO';
     }
 
     public function saveConfirmReserva()
     {
-        $this->validate([
+        $rules = [
             'montoAdicional' => 'required|numeric|min:0',
-        ]);
+        ];
+
+        // Si hay monto adicional, validar caja
+        if ($this->montoAdicional > 0) {
+            $rules['caja_confirmacion'] = 'required|exists:cajas,id';
+        }
+
+        $this->validate($rules);
 
         try {
             DB::beginTransaction();
@@ -418,6 +454,33 @@ class ReservasController extends Component
                 'anticipo' => $this->selectedReserva->anticipo + $this->montoAdicional,
                 'observaciones' => $this->selectedReserva->observaciones . "\n" . $this->observacionesConfirmacion,
             ]);
+
+            // Registrar pago adicional en caja seleccionada
+            if ($this->montoAdicional > 0 && $this->caja_confirmacion) {
+                \Log::info('Intentando registrar pago adicional de reserva', [
+                    'monto' => $this->montoAdicional,
+                    'caja_id' => $this->caja_confirmacion,
+                    'reserva' => $this->selectedReserva->numero_reserva
+                ]);
+
+                $caja = Caja::find($this->caja_confirmacion);
+                if ($caja && $caja->estado === 'ABIERTA') {
+                    $caja->registrarMovimiento(
+                        MovimientoCaja::TIPO_INGRESO,
+                        $this->montoAdicional,
+                        "Pago adicional reserva {$this->selectedReserva->numero_reserva}",
+                        MovimientoCaja::CATEGORIA_VARIOS,
+                        Auth::id(),
+                        "Confirmación - Cliente: {$this->selectedReserva->cliente->nombres} - {$this->metodo_pago_confirmacion}"
+                    );
+                    \Log::info('Pago registrado exitosamente en caja');
+                } else {
+                    \Log::warning('Caja no encontrada o no está abierta', [
+                        'caja_id' => $this->caja_confirmacion,
+                        'caja_estado' => $caja ? $caja->estado : 'no_encontrada'
+                    ]);
+                }
+            }
 
             // Si es alquiler, crear el alquiler automáticamente
             if ($this->selectedReserva->tipo_reserva === 'ALQUILER') {
@@ -490,6 +553,8 @@ class ReservasController extends Component
         $this->fecha_vencimiento = Carbon::now()->addDays(7)->format('Y-m-d');
         $this->anticipo = 0;
         $this->observaciones = '';
+        $this->caja_id = '';
+        $this->metodo_pago = 'EFECTIVO';
         $this->selectedProducts = [];
         $this->currentProductId = '';
         $this->currentQuantity = 1;

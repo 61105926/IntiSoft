@@ -437,6 +437,79 @@
                                         @enderror
                                     </div>
 
+                                    @if($anticipo > 0)
+                                        <div class="alert alert-info mb-3">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Registro de Anticipo:</strong> El anticipo de Bs. {{ number_format($anticipo, 2) }} se registrará automáticamente en la caja seleccionada.
+                                        </div>
+
+                                        <div class="card border-primary mb-3">
+                                            <div class="card-header bg-primary text-white">
+                                                <i class="fas fa-cash-register me-2"></i>Información de Caja
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Caja de Destino *</label>
+                                                            <select class="form-select @error('caja_id') is-invalid @enderror"
+                                                                    wire:model="caja_id">
+                                                                <option value="">Seleccione una caja</option>
+                                                                @foreach ($cajas as $caja)
+                                                                    <option value="{{ $caja->id }}">
+                                                                        🏪 {{ $caja->nombre }} - {{ $caja->sucursal->nombre }}
+                                                                        💰 Saldo: Bs. {{ number_format($caja->saldo_actual, 2) }}
+                                                                        @if($caja->es_caja_principal) ⭐ @endif
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('caja_id')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                            @if(count($cajas) == 0)
+                                                                <div class="text-danger small mt-1">
+                                                                    <i class="fas fa-exclamation-triangle"></i> No hay cajas abiertas disponibles
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Método de Pago *</label>
+                                                            <select class="form-select @error('metodo_pago') is-invalid @enderror"
+                                                                    wire:model="metodo_pago">
+                                                                <option value="EFECTIVO">💵 Efectivo</option>
+                                                                <option value="QR">📱 QR</option>
+                                                                <option value="TARJETA">💳 Tarjeta</option>
+                                                                <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                                            </select>
+                                                            @error('metodo_pago')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                @if($caja_id)
+                                                    @php
+                                                        $cajaSeleccionada = $cajas->find($caja_id);
+                                                    @endphp
+                                                    @if($cajaSeleccionada)
+                                                        <div class="alert alert-success mb-0">
+                                                            <i class="fas fa-check-circle me-2"></i>
+                                                            <strong>Caja Seleccionada:</strong> {{ $cajaSeleccionada->nombre }}<br>
+                                                            <small>
+                                                                📍 Sucursal: {{ $cajaSeleccionada->sucursal->nombre }} |
+                                                                💰 Saldo Actual: Bs. {{ number_format($cajaSeleccionada->saldo_actual, 2) }}
+                                                                @if($cajaSeleccionada->es_caja_principal) | ⭐ Caja Principal @endif
+                                                            </small>
+                                                        </div>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     <div class="mb-3">
                                         <label class="form-label">Observaciones</label>
                                         <textarea class="form-control"
@@ -688,12 +761,81 @@
                                 <input type="number"
                                        step="0.01"
                                        class="form-control @error('montoAdicional') is-invalid @enderror"
-                                       wire:model="montoAdicional"
+                                       wire:model.live="montoAdicional"
                                        max="{{ $this->getSaldoPendienteProperty() }}">
                                 @error('montoAdicional')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">Si ingresa un monto, se registrará automáticamente en la caja seleccionada</small>
                             </div>
+
+                            @if($montoAdicional > 0)
+                                <div class="card border-success mb-3">
+                                    <div class="card-header bg-success text-white">
+                                        <i class="fas fa-cash-register me-2"></i>Registro de Pago Adicional
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-warning mb-3">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            <strong>Pago Adicional:</strong> Bs. {{ number_format($montoAdicional, 2) }} se registrará en la caja seleccionada.
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="caja_confirmacion" class="form-label">Caja de Destino *</label>
+                                                    <select wire:model="caja_confirmacion"
+                                                            class="form-select @error('caja_confirmacion') is-invalid @enderror"
+                                                            id="caja_confirmacion">
+                                                        <option value="">Seleccione caja</option>
+                                                        @foreach($cajas as $caja)
+                                                            <option value="{{ $caja->id }}">
+                                                                🏪 {{ $caja->nombre }} - {{ $caja->sucursal->nombre }}
+                                                                💰 Saldo: Bs. {{ number_format($caja->saldo_actual, 2) }}
+                                                                @if($caja->es_caja_principal) ⭐ @endif
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('caja_confirmacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                    @if(count($cajas) == 0)
+                                                        <div class="text-danger small mt-1">
+                                                            <i class="fas fa-exclamation-triangle"></i> No hay cajas abiertas disponibles
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="metodo_pago_confirmacion" class="form-label">Método de Pago *</label>
+                                                    <select wire:model="metodo_pago_confirmacion" class="form-select" id="metodo_pago_confirmacion">
+                                                        <option value="EFECTIVO">💵 Efectivo</option>
+                                                        <option value="QR">📱 QR</option>
+                                                        <option value="TARJETA">💳 Tarjeta</option>
+                                                        <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if($caja_confirmacion)
+                                            @php
+                                                $cajaConfirmacionSeleccionada = $cajas->find($caja_confirmacion);
+                                            @endphp
+                                            @if($cajaConfirmacionSeleccionada)
+                                                <div class="alert alert-success mb-0">
+                                                    <i class="fas fa-check-circle me-2"></i>
+                                                    <strong>Destino Confirmado:</strong> {{ $cajaConfirmacionSeleccionada->nombre }}<br>
+                                                    <small>
+                                                        📍 Sucursal: {{ $cajaConfirmacionSeleccionada->sucursal->nombre }} |
+                                                        💰 Saldo Actual: Bs. {{ number_format($cajaConfirmacionSeleccionada->saldo_actual, 2) }} |
+                                                        🔄 Nuevo Saldo: Bs. {{ number_format($cajaConfirmacionSeleccionada->saldo_actual + $montoAdicional, 2) }}
+                                                    </small>
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
 
                             <div class="bg-info mb-3 rounded bg-opacity-10 p-3">
                                 <div class="d-flex justify-content-between">

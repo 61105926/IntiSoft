@@ -1,4 +1,4 @@
-@extends('layouts.theme.app')
+@extends('layouts.theme.modern-app')
 
 @section('page-title', 'Gestión de Alquileres')
 

@@ -179,6 +179,6 @@ class DevolucionController extends Component
     
     public function render()
     {
-        return view('livewire.entrada-folclorica.devolucion')->extends('layouts.theme.app')->section('content');
+        return view('livewire.entrada-folclorica.devolucion')->extends('layouts.theme.modern-app')->section('content');
     }
 }

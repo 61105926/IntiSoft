@@ -99,6 +99,6 @@ class SucursalController extends Component
 
     public function render()
     {
-        return view('livewire.sucursal.sucursal')->extends('layouts.theme.app')->section('content');
+        return view('livewire.sucursal.sucursal')->extends('layouts.theme.modern-app')->section('content');
     }
 }

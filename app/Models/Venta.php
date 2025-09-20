@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\Caja;
+use App\Models\MovimientoCaja;
+use App\Models\StockPorSucursal;
+use App\Models\User;
 
 class Venta extends Model
 {
@@ -208,8 +212,8 @@ class Venta extends Model
                         $monto,
                         "Pago venta {$this->numero_venta}",
                         MovimientoCaja::CATEGORIA_VENTA,
-                        $this->numero_venta,
-                        "Pago de venta"
+                        auth()->id(),
+                        "Cliente: {$this->cliente->nombres} - {$this->metodo_pago}"
                     );
                 }
             }

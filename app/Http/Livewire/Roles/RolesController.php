@@ -34,7 +34,7 @@ class RolesController extends Component
         return view('livewire.roles.roles', [
             'roles' => $roles,
             'permissions' => $permissions
-        ])->extends('layouts.theme.app')->section('content');
+        ])->extends('layouts.theme.modern-app')->section('content');
     }
 
     public function store()

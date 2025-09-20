@@ -78,7 +78,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/usuario', UsuarioController::class)->middleware('can:user.view')->name('usuario');
 
 
-    Route::get('/rool', RolesController::class)->middleware('can:user.view')->name('roles');
+    Route::get('/rool', RolesController::class)->middleware('can:user.view')->name('rool');
 
   
 

@@ -160,7 +160,7 @@ class UsuarioController extends Component
         $users = $this->searchData();
         return view('livewire.usuario.usuario', ['users' => $users, 'roles'
         => $roles])
-            ->extends('layouts.theme.app')
+            ->extends('layouts.theme.modern-app')
             ->section('content');
     }
 }
