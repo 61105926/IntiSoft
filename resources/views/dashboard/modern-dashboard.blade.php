@@ -14,9 +14,10 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <p class="text-muted mb-1 fw-medium">Ventas del Día</p>
-                                <h3 class="mb-1 fw-bold text-dark">Bs. 2,450</h3>
-                                <p class="mb-0 text-success fw-medium">
-                                    <i class="fas fa-arrow-up me-1"></i>+12% vs ayer
+                                <h3 class="mb-1 fw-bold text-dark">Bs. {{ number_format($ventasHoy, 2) }}</h3>
+                                <p class="mb-0 {{ $porcentajeVentas >= 0 ? 'text-success' : 'text-danger' }} fw-medium">
+                                    <i class="fas fa-arrow-{{ $porcentajeVentas >= 0 ? 'up' : 'down' }} me-1"></i>
+                                    {{ $porcentajeVentas >= 0 ? '+' : '' }}{{ number_format($porcentajeVentas, 1) }}% vs ayer
                                 </p>
                             </div>
                             <div class="bg-light rounded-circle p-3">
@@ -34,9 +35,9 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <p class="text-muted mb-1 fw-medium">Alquileres Activos</p>
-                                <h3 class="mb-1 fw-bold text-dark">23</h3>
+                                <h3 class="mb-1 fw-bold text-dark">{{ $alquileresActivos }}</h3>
                                 <p class="mb-0 text-info fw-medium">
-                                    <i class="fas fa-clock me-1"></i>5 por vencer
+                                    <i class="fas fa-clock me-1"></i>{{ $alquileresPorVencer }} por vencer
                                 </p>
                             </div>
                             <div class="bg-light rounded-circle p-3">
@@ -54,9 +55,10 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <p class="text-muted mb-1 fw-medium">Productos en Stock</p>
-                                <h3 class="mb-1 fw-bold text-dark">156</h3>
-                                <p class="mb-0 text-warning fw-medium">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>8 stock bajo
+                                <h3 class="mb-1 fw-bold text-dark">{{ $productosEnStock }}</h3>
+                                <p class="mb-0 {{ $stockBajo > 0 ? 'text-warning' : 'text-success' }} fw-medium">
+                                    <i class="fas fa-{{ $stockBajo > 0 ? 'exclamation-triangle' : 'check-circle' }} me-1"></i>
+                                    {{ $stockBajo }} stock bajo
                                 </p>
                             </div>
                             <div class="bg-light rounded-circle p-3">
@@ -74,9 +76,10 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <p class="text-muted mb-1 fw-medium">Ingresos del Mes</p>
-                                <h3 class="mb-1 fw-bold text-dark">Bs. 48,320</h3>
-                                <p class="mb-0 text-success fw-medium">
-                                    <i class="fas fa-arrow-up me-1"></i>+18% vs mes anterior
+                                <h3 class="mb-1 fw-bold text-dark">Bs. {{ number_format($ingresosMes, 2) }}</h3>
+                                <p class="mb-0 {{ $porcentajeIngresos >= 0 ? 'text-success' : 'text-danger' }} fw-medium">
+                                    <i class="fas fa-arrow-{{ $porcentajeIngresos >= 0 ? 'up' : 'down' }} me-1"></i>
+                                    {{ $porcentajeIngresos >= 0 ? '+' : '' }}{{ number_format($porcentajeIngresos, 1) }}% vs mes anterior
                                 </p>
                             </div>
                             <div class="bg-light rounded-circle p-3">
@@ -173,50 +176,30 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-success-subtle text-success">
-                                                <i class="fas fa-shopping-cart me-1"></i>Venta
-                                            </span>
-                                        </td>
-                                        <td>María González</td>
-                                        <td class="fw-semibold">Bs. 450</td>
-                                        <td><span class="badge bg-success">Completado</span></td>
-                                        <td class="text-muted">Hace 2 min</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-info-subtle text-info">
-                                                <i class="fas fa-handshake me-1"></i>Alquiler
-                                            </span>
-                                        </td>
-                                        <td>Juan Pérez</td>
-                                        <td class="fw-semibold">Bs. 200</td>
-                                        <td><span class="badge bg-warning">Pendiente</span></td>
-                                        <td class="text-muted">Hace 15 min</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-primary-subtle text-primary">
-                                                <i class="fas fa-calendar me-1"></i>Reserva
-                                            </span>
-                                        </td>
-                                        <td>Ana López</td>
-                                        <td class="fw-semibold">Bs. 120</td>
-                                        <td><span class="badge bg-info">Confirmado</span></td>
-                                        <td class="text-muted">Hace 1 hora</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-success-subtle text-success">
-                                                <i class="fas fa-shopping-cart me-1"></i>Venta
-                                            </span>
-                                        </td>
-                                        <td>Carlos Mamani</td>
-                                        <td class="fw-semibold">Bs. 380</td>
-                                        <td><span class="badge bg-success">Completado</span></td>
-                                        <td class="text-muted">Hace 2 horas</td>
-                                    </tr>
+                                    @forelse($transaccionesRecientes as $transaccion)
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-{{ $transaccion['tipo_class'] }}-subtle text-{{ $transaccion['tipo_class'] }}">
+                                                    <i class="{{ $transaccion['tipo_icon'] }} me-1"></i>{{ $transaccion['tipo'] }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $transaccion['cliente'] }}</td>
+                                            <td class="fw-semibold">Bs. {{ number_format($transaccion['monto'], 2) }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $transaccion['estado'] === 'COMPLETADA' || $transaccion['estado'] === 'ACTIVO' ? 'success' : ($transaccion['estado'] === 'PENDIENTE' ? 'warning' : 'info') }}">
+                                                    {{ ucfirst(strtolower($transaccion['estado'])) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-muted">{{ $transaccion['fecha']->diffForHumans() }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                                No hay transacciones recientes
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -235,33 +218,27 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
-                            <div class="col-12">
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                                    <div>
-                                        <h6 class="mb-1">Pollera Tradicional</h6>
-                                        <small class="text-muted">Código: PLT-001</small>
+                            @forelse($productosStockBajo as $stock)
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                        <div>
+                                            <h6 class="mb-1">{{ $stock->producto->nombre ?? 'Producto N/A' }}</h6>
+                                            <small class="text-muted">Código: {{ $stock->producto->codigo ?? 'N/A' }}</small>
+                                        </div>
+                                        <span class="badge bg-{{ $stock->stock_actual == 0 ? 'danger' : 'warning' }}">
+                                            {{ $stock->stock_actual }} {{ $stock->stock_actual == 1 ? 'unidad' : 'unidades' }}
+                                        </span>
                                     </div>
-                                    <span class="badge bg-warning">2 unidades</span>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                                    <div>
-                                        <h6 class="mb-1">Sombrero de Cholita</h6>
-                                        <small class="text-muted">Código: SOM-003</small>
+                            @empty
+                                <div class="col-12">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i><br>
+                                        <strong>¡Perfecto!</strong><br>
+                                        No hay productos con stock bajo
                                     </div>
-                                    <span class="badge bg-warning">1 unidad</span>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                                    <div>
-                                        <h6 class="mb-1">Mantilla Bordada</h6>
-                                        <small class="text-muted">Código: MAN-007</small>
-                                    </div>
-                                    <span class="badge bg-danger">0 unidades</span>
-                                </div>
-                            </div>
+                            @endforelse
                         </div>
                         <div class="mt-3">
                             <a href="{{ route('producto') }}" class="btn btn-outline-primary w-100">

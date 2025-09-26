@@ -60,6 +60,21 @@ class AlquilerController extends Component
     public $sucursal_id = '';
     public $anticipo = 0;
 
+    // Campos de flete y transporte
+    public $requiere_flete_entrega = false;
+    public $direccion_entrega = '';
+    public $fecha_entrega = '';
+    public $costo_flete_entrega = 0;
+    public $tipo_transporte_entrega = 'INTERNO';
+    public $observaciones_flete_entrega = '';
+
+    public $requiere_flete_devolucion = false;
+    public $direccion_devolucion = '';
+    public $fecha_recogida = '';
+    public $costo_flete_devolucion = 0;
+    public $tipo_transporte_devolucion = 'INTERNO';
+    public $observaciones_flete_devolucion = '';
+
     // Productos seleccionados
     public $selectedProducts = [];
     public $currentProductId = '';
@@ -95,7 +110,16 @@ class AlquilerController extends Component
         'fecha_devolucion_programada' => 'required|date|after:fecha_alquiler',
         'dias_alquiler' => 'required|integer|min:1',
         'sucursal_id' => 'required|exists:sucursals,id',
+        'garantia_id' => 'required|exists:garantias,id',
         'anticipo' => 'required|numeric|min:0',
+        'direccion_entrega' => 'required_if:requiere_flete_entrega,true|string|max:255',
+        'fecha_entrega' => 'required_if:requiere_flete_entrega,true|date|after_or_equal:fecha_alquiler',
+        'costo_flete_entrega' => 'required_if:requiere_flete_entrega,true|numeric|min:0',
+        'tipo_transporte_entrega' => 'required_if:requiere_flete_entrega,true|in:INTERNO,EXTERNO,COURIER',
+        'direccion_devolucion' => 'required_if:requiere_flete_devolucion,true|string|max:255',
+        'fecha_recogida' => 'required_if:requiere_flete_devolucion,true|date|after_or_equal:fecha_devolucion_programada',
+        'costo_flete_devolucion' => 'required_if:requiere_flete_devolucion,true|numeric|min:0',
+        'tipo_transporte_devolucion' => 'required_if:requiere_flete_devolucion,true|in:INTERNO,EXTERNO,COURIER',
     ];
 
     public function mount()
@@ -263,8 +287,11 @@ class AlquilerController extends Component
 
             $numeroContrato = 'ALQ-' . date('Y') . '-' . str_pad(Alquiler::count() + 1, 4, '0', STR_PAD_LEFT);
 
+            // Calcular total incluyendo fletes
             $subtotal = $this->calculateSubtotal();
-            $total = $subtotal;
+            $costoFleteTotal = ($this->requiere_flete_entrega ? $this->costo_flete_entrega : 0) +
+                              ($this->requiere_flete_devolucion ? $this->costo_flete_devolucion : 0);
+            $total = $subtotal + $costoFleteTotal;
             $saldoPendiente = $total - $this->anticipo;
 
             // Validar garantía si se seleccionó
@@ -299,6 +326,22 @@ class AlquilerController extends Component
                 'observaciones' => $this->observaciones,
                 'condiciones_especiales' => $this->condiciones_especiales,
                 'usuario_creacion' => Auth::id(),
+
+                // Campos de flete de entrega
+                'requiere_flete_entrega' => $this->requiere_flete_entrega,
+                'direccion_entrega' => $this->requiere_flete_entrega ? $this->direccion_entrega : null,
+                'fecha_entrega' => $this->requiere_flete_entrega ? $this->fecha_entrega : null,
+                'costo_flete_entrega' => $this->requiere_flete_entrega ? $this->costo_flete_entrega : 0,
+                'tipo_transporte_entrega' => $this->requiere_flete_entrega ? $this->tipo_transporte_entrega : null,
+                'observaciones_flete_entrega' => $this->requiere_flete_entrega ? $this->observaciones_flete_entrega : null,
+
+                // Campos de flete de devolución
+                'requiere_flete_devolucion' => $this->requiere_flete_devolucion,
+                'direccion_devolucion' => $this->requiere_flete_devolucion ? $this->direccion_devolucion : null,
+                'fecha_recogida' => $this->requiere_flete_devolucion ? $this->fecha_recogida : null,
+                'costo_flete_devolucion' => $this->requiere_flete_devolucion ? $this->costo_flete_devolucion : 0,
+                'tipo_transporte_devolucion' => $this->requiere_flete_devolucion ? $this->tipo_transporte_devolucion : null,
+                'observaciones_flete_devolucion' => $this->requiere_flete_devolucion ? $this->observaciones_flete_devolucion : null,
             ]);
 
             // Si viene de una reserva, actualizar el estado a CONFIRMADA y transferir anticipo
@@ -373,6 +416,42 @@ class AlquilerController extends Component
                         MovimientoCaja::CATEGORIA_ALQUILER,
                         Auth::id(),
                         "Cliente: {$alquiler->cliente->nombres} {$alquiler->cliente->apellidos}"
+                    );
+                }
+            }
+
+            // Registrar flete de entrega en caja si aplica
+            if ($this->requiere_flete_entrega && $this->costo_flete_entrega > 0) {
+                $cajaAbierta = Caja::where('estado', 'ABIERTA')
+                    ->where('sucursal_id', $this->sucursal_id)
+                    ->first();
+
+                if ($cajaAbierta) {
+                    $cajaAbierta->registrarMovimiento(
+                        MovimientoCaja::TIPO_INGRESO,
+                        $this->costo_flete_entrega,
+                        "Flete entrega alquiler {$numeroContrato}",
+                        MovimientoCaja::CATEGORIA_VARIOS,
+                        Auth::id(),
+                        "Transporte {$this->tipo_transporte_entrega} - {$this->direccion_entrega}"
+                    );
+                }
+            }
+
+            // Registrar flete de devolución en caja si aplica
+            if ($this->requiere_flete_devolucion && $this->costo_flete_devolucion > 0) {
+                $cajaAbierta = Caja::where('estado', 'ABIERTA')
+                    ->where('sucursal_id', $this->sucursal_id)
+                    ->first();
+
+                if ($cajaAbierta) {
+                    $cajaAbierta->registrarMovimiento(
+                        MovimientoCaja::TIPO_INGRESO,
+                        $this->costo_flete_devolucion,
+                        "Flete devolución alquiler {$numeroContrato}",
+                        MovimientoCaja::CATEGORIA_VARIOS,
+                        Auth::id(),
+                        "Transporte {$this->tipo_transporte_devolucion} - {$this->direccion_devolucion}"
                     );
                 }
             }
@@ -917,6 +996,50 @@ class AlquilerController extends Component
         }
     }
 
+    public function updatedReservaId()
+    {
+        if ($this->reserva_id) {
+            $reserva = Reserva::with(['cliente', 'detalles.producto'])->find($this->reserva_id);
+
+            if ($reserva) {
+                // Cargar información del cliente
+                $this->cliente_id = $reserva->cliente_id;
+
+                // Cargar productos de la reserva
+                $this->selectedProducts = [];
+                foreach ($reserva->detalles as $detalle) {
+                    $this->selectedProducts[] = [
+                        'id' => $detalle->producto_id,
+                        'nombre' => $detalle->producto->nombre,
+                        'precio' => $detalle->precio_unitario,
+                        'cantidad' => $detalle->cantidad,
+                        'subtotal' => $detalle->subtotal
+                    ];
+                }
+
+                // Establecer fechas sugeridas
+                if ($reserva->fecha_evento) {
+                    $this->fecha_alquiler = $reserva->fecha_evento;
+                    $this->fecha_devolucion_programada = Carbon::parse($reserva->fecha_evento)->addDays(1)->format('Y-m-d');
+                }
+
+                // Prellenar anticipo si la reserva tiene uno
+                if ($reserva->anticipo > 0) {
+                    $this->anticipo = $reserva->anticipo;
+                }
+
+                $this->dispatchBrowserEvent('swal', [
+                    'title' => 'Reserva Cargada',
+                    'text' => "Se ha cargado la información de la reserva {$reserva->numero_reserva}. Los productos del cliente han sido añadidos automáticamente.",
+                    'icon' => 'info'
+                ]);
+            }
+        } else {
+            // Si no hay reserva seleccionada, limpiar productos
+            $this->selectedProducts = [];
+        }
+    }
+
     private function resetForm()
     {
         $this->cliente_id = '';
@@ -936,5 +1059,20 @@ class AlquilerController extends Component
         $this->selectedProducts = [];
         $this->currentProductId = '';
         $this->currentQuantity = 1;
+
+        // Reset campos de flete
+        $this->requiere_flete_entrega = false;
+        $this->direccion_entrega = '';
+        $this->fecha_entrega = '';
+        $this->costo_flete_entrega = 0;
+        $this->tipo_transporte_entrega = 'INTERNO';
+        $this->observaciones_flete_entrega = '';
+
+        $this->requiere_flete_devolucion = false;
+        $this->direccion_devolucion = '';
+        $this->fecha_recogida = '';
+        $this->costo_flete_devolucion = 0;
+        $this->tipo_transporte_devolucion = 'INTERNO';
+        $this->observaciones_flete_devolucion = '';
     }
 }

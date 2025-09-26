@@ -16,6 +16,10 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
     <style>
         :root {
             /* Colores principales del sistema */
@@ -348,11 +352,118 @@
         </main>
     </div>
 
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <!-- Livewire Scripts -->
     @livewireScripts
+
+    <!-- Select2 Simple Configuration -->
+    <script>
+        function initSelect2(selector, placeholder) {
+            $(selector).each(function() {
+                if (!$(this).hasClass('select2-hidden-accessible')) {
+                    const $this = $(this);
+                    $this.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: placeholder,
+                        allowClear: true,
+                        width: '100%',
+                        language: {
+                            noResults: function() { return "No se encontraron resultados"; },
+                            searching: function() { return "Buscando..."; }
+                        }
+                    });
+
+                    // Handle Select2 events
+                    $this.on('select2:select', function(e) {
+                        const value = e.params.data.id;
+                        const wireModel = $(this).attr('wire:model') || $(this).attr('wire:model.live');
+
+                        if (wireModel) {
+                            // Update Livewire property directly
+                            if (typeof Livewire !== 'undefined' && Livewire.find) {
+                                const component = Livewire.find($(this).closest('[wire\\:id]').attr('wire:id'));
+                                if (component) {
+                                    component.set(wireModel, value);
+                                }
+                            }
+                        }
+
+                        $(this).trigger('change');
+                    });
+
+                    $this.on('select2:clear', function(e) {
+                        const wireModel = $(this).attr('wire:model') || $(this).attr('wire:model.live');
+
+                        if (wireModel) {
+                            // Clear Livewire property directly
+                            if (typeof Livewire !== 'undefined' && Livewire.find) {
+                                const component = Livewire.find($(this).closest('[wire\\:id]').attr('wire:id'));
+                                if (component) {
+                                    component.set(wireModel, '');
+                                }
+                            }
+                        }
+
+                        $(this).trigger('change');
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            function initializeAllSelect2() {
+                initSelect2('.select2-cliente:not(.select2-hidden-accessible)', 'Buscar cliente...');
+                initSelect2('.select2-producto:not(.select2-hidden-accessible)', 'Buscar producto...');
+                initSelect2('.select2-caja:not(.select2-hidden-accessible)', 'Seleccionar caja...');
+            }
+
+            // Initialize on load
+            setTimeout(initializeAllSelect2, 300);
+
+            // Reinitialize after modals
+            $(document).on('shown.bs.modal', function() {
+                setTimeout(initializeAllSelect2, 150);
+            });
+
+            // Reinitialize when new elements are added to DOM
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(function(mutations) {
+                    let shouldInit = false;
+                    mutations.forEach(function(mutation) {
+                        if (mutation.addedNodes.length) {
+                            mutation.addedNodes.forEach(function(node) {
+                                if (node.nodeType === 1) {
+                                    if ($(node).find('.select2-cliente, .select2-producto, .select2-caja').length ||
+                                        $(node).hasClass('select2-cliente') ||
+                                        $(node).hasClass('select2-producto') ||
+                                        $(node).hasClass('select2-caja')) {
+                                        shouldInit = true;
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    if (shouldInit) {
+                        setTimeout(initializeAllSelect2, 100);
+                    }
+                });
+
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        });
+    </script>
 
     @stack('scripts')
 </body>

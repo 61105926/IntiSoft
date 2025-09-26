@@ -131,6 +131,21 @@ class Alquiler extends Model
         return $this->hasMany(AlquilerDetalle::class);
     }
 
+    public function garantiasIndividuales()
+    {
+        return $this->hasMany(GarantiaIndividual::class);
+    }
+
+    public function fletes()
+    {
+        return $this->hasMany(FleteProgramado::class);
+    }
+
+    public function eventoFolklorico()
+    {
+        return $this->belongsTo(EventoFolklorico::class, 'evento_folklorico_id');
+    }
+
     // Scopes
     public function scopeActivos($query)
     {

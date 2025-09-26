@@ -332,7 +332,7 @@
                                             <div class="row g-3">
                                                 <div class="col-md-8">
                                                     <label class="form-label fw-bold">Cliente *</label>
-                                                    <select class="form-select form-select-sm @error('cliente_id') is-invalid @enderror" wire:model="cliente_id">
+                                                    <select class="form-select form-select-sm select2-cliente @error('cliente_id') is-invalid @enderror" wire:model="cliente_id">
                                                         <option value="">🔍 Seleccione un cliente</option>
                                                         @foreach ($clientes as $cliente)
                                                             <option value="{{ $cliente->id }}">
@@ -397,14 +397,56 @@
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label fw-bold">🔗 Reserva</label>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-bold">🔗 Conversión desde Reserva</label>
                                                     <select class="form-select form-select-sm" wire:model="reserva_id">
-                                                        <option value="">Opcional</option>
+                                                        <option value="">Nuevo alquiler (sin reserva previa)</option>
                                                         @foreach ($reservas as $reserva)
-                                                            <option value="{{ $reserva->id }}">{{ $reserva->numero_reserva }}</option>
+                                                            <option value="{{ $reserva->id }}">
+                                                                {{ $reserva->numero_reserva }} - {{ $reserva->cliente->nombres }} {{ $reserva->cliente->apellidos }}
+                                                                @if($reserva->anticipo > 0)
+                                                                    (Anticipo: Bs. {{ number_format($reserva->anticipo, 2) }})
+                                                                @endif
+                                                            </option>
                                                         @endforeach
                                                     </select>
+                                                    <div class="form-text">
+                                                        <small class="text-info">
+                                                            <i class="fas fa-info-circle me-1"></i>
+                                                            Al seleccionar una reserva se precargará la información del cliente y productos
+                                                        </small>
+                                                    </div>
+
+                                                    @if($reserva_id)
+                                                        @php
+                                                            $selectedReserva = $reservas->find($reserva_id);
+                                                        @endphp
+                                                        @if($selectedReserva)
+                                                            <div class="alert alert-success mt-2 mb-0">
+                                                                <h6 class="alert-heading mb-2">
+                                                                    <i class="fas fa-arrow-right me-2"></i>Convirtiendo Reserva a Alquiler
+                                                                </h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <small>
+                                                                            <strong>Reserva:</strong> {{ $selectedReserva->numero_reserva }}<br>
+                                                                            <strong>Cliente:</strong> {{ $selectedReserva->cliente->nombres }} {{ $selectedReserva->cliente->apellidos }}<br>
+                                                                            <strong>Fecha Evento:</strong> {{ $selectedReserva->fecha_evento ? \Carbon\Carbon::parse($selectedReserva->fecha_evento)->format('d/m/Y') : 'No definida' }}
+                                                                        </small>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <small>
+                                                                            @if($selectedReserva->anticipo > 0)
+                                                                                <strong>Anticipo Reserva:</strong> Bs. {{ number_format($selectedReserva->anticipo, 2) }}<br>
+                                                                            @endif
+                                                                            <strong>Total Reserva:</strong> Bs. {{ number_format($selectedReserva->total, 2) }}<br>
+                                                                            <strong>Estado:</strong> <span class="badge bg-{{ $selectedReserva->estado === 'CONFIRMADA' ? 'success' : 'warning' }}">{{ $selectedReserva->estado }}</span>
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -412,15 +454,15 @@
 
                                     <!-- Sección Garantía -->
                                     <div class="card border-0 bg-light mb-4">
-                                        <div class="card-header bg-warning text-dark py-2">
-                                            <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Garantía (Opcional)</h6>
+                                        <div class="card-header bg-danger text-white py-2">
+                                            <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Garantía (Obligatoria)</h6>
                                         </div>
                                         <div class="card-body">
                                             <div class="row g-3">
                                                 <div class="col-md-12">
-                                                    <label class="form-label fw-bold">🛡️ Seleccionar Garantía</label>
-                                                    <select class="form-select form-select-sm" wire:model="garantia_id">
-                                                        <option value="">Opcional - Sin garantía</option>
+                                                    <label class="form-label fw-bold">🛡️ Seleccionar Garantía *</label>
+                                                    <select class="form-select form-select-sm @error('garantia_id') is-invalid @enderror" wire:model="garantia_id">
+                                                        <option value="">Seleccione una garantía obligatoria</option>
                                                         @if($cliente_id)
                                                             @foreach ($garantiasDisponibles->where('cliente_id', $cliente_id) as $garantia)
                                                                 <option value="{{ $garantia->id }}">
@@ -435,11 +477,19 @@
                                                             <option value="" disabled>Primero seleccione un cliente</option>
                                                         @endif
                                                     </select>
+                                                    @error('garantia_id')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
                                                     <div class="form-text">
-                                                        <small class="text-info">
-                                                            <i class="fas fa-info-circle me-1"></i>
-                                                            Solo se muestran garantías activas del cliente seleccionado
+                                                        <small class="text-danger fw-bold">
+                                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                                            OBLIGATORIO: Todo alquiler debe contar con una garantía activa
                                                         </small>
+                                                        @if(!$cliente_id)
+                                                            <br><small class="text-muted">Primero seleccione un cliente para ver sus garantías</small>
+                                                        @elseif($garantiasDisponibles->where('cliente_id', $cliente_id)->isEmpty())
+                                                            <br><small class="text-warning">⚠️ Este cliente no tiene garantías activas. Debe crear una antes de continuar.</small>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </div>
@@ -500,10 +550,10 @@
                                         <div class="card-header bg-secondary text-white py-2">
                                             <h6 class="mb-0"><i class="fas fa-box me-2"></i>Agregar Productos</h6>
                                         </div>
-                                        <div class="card-body p-3">
+                                        <div class="card-body p-3" wire:ignore.self>
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold small">Producto</label>
-                                                <select class="form-select form-select-sm" wire:model="currentProductId">
+                                                <select class="form-select form-select-sm select2-producto" wire:model="currentProductId">
                                                     <option value="">🛍️ Seleccionar producto</option>
                                                     @foreach ($productos as $producto)
                                                         <option value="{{ $producto->id }}">
@@ -587,7 +637,7 @@
                                                         <div class="row g-3">
                                                             <div class="col-md-6">
                                                                 <label class="form-label">Caja de Destino *</label>
-                                                                <select class="form-select @error('caja_id') is-invalid @enderror" wire:model="caja_id">
+                                                                <select class="form-select select2-caja @error('caja_id') is-invalid @enderror" wire:model="caja_id">
                                                                     <option value="">Seleccione una caja</option>
                                                                     @foreach ($cajas as $caja)
                                                                         <option value="{{ $caja->id }}">
@@ -664,11 +714,24 @@
 
                     <!-- Footer -->
                     <div class="modal-footer bg-light">
+                        @if(empty($selectedProducts) || !$cliente_id || !$sucursal_id || !$garantia_id)
+                            <div class="alert alert-warning mb-3 w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Completar información requerida:</strong>
+                                <ul class="mb-0 mt-1">
+                                    @if(!$cliente_id)<li>✗ Seleccionar cliente</li>@endif
+                                    @if(!$sucursal_id)<li>✗ Seleccionar sucursal</li>@endif
+                                    @if(!$garantia_id)<li>✗ Seleccionar garantía (OBLIGATORIO)</li>@endif
+                                    @if(empty($selectedProducts))<li>✗ Agregar al menos un producto</li>@endif
+                                </ul>
+                            </div>
+                        @endif
+
                         <button type="button" class="btn btn-secondary" wire:click="closeNewAlquilerModal">
                             <i class="fas fa-times me-2"></i>Cancelar
                         </button>
-                        <button type="button" class="btn btn-primary btn-lg" wire:click="saveNewAlquiler" 
-                                {{ empty($selectedProducts) || !$cliente_id || !$sucursal_id ? 'disabled' : '' }}>
+                        <button type="button" class="btn btn-primary btn-lg" wire:click="saveNewAlquiler"
+                                {{ empty($selectedProducts) || !$cliente_id || !$sucursal_id || !$garantia_id ? 'disabled' : '' }}>
                             <i class="fas fa-handshake me-2"></i>Crear Contrato de Alquiler
                         </button>
                     </div>
@@ -1224,7 +1287,7 @@
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label class="form-label">Caja de Destino *</label>
-                                        <select wire:model="caja_id" class="form-select @error('caja_id') is-invalid @enderror">
+                                        <select wire:model="caja_id" class="form-select select2-caja @error('caja_id') is-invalid @enderror">
                                             <option value="">Seleccione caja</option>
                                             @foreach($cajas as $caja)
                                                 <option value="{{ $caja->id }}">
@@ -1278,12 +1341,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" wire:click="closePaymentModal">Cancelar</button>
-                        <button type="button" class="btn btn-success" wire:click="procesarPago">
-                            <i class="fas fa-dollar-sign me-1"></i>Registrar Pago
-                        </button>
-                    </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="closePaymentModal">Cancelar</button>
+                            <button type="button" class="btn btn-success" wire:click="procesarPago"
+                                    @if($monto_pago <= 0 || !$caja_id) disabled @endif>
+                                <i class="fas fa-dollar-sign me-1"></i>Registrar Pago
+                            </button>
+                        </div>
                 </div>
             </div>
         </div>

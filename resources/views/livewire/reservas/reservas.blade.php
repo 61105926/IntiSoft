@@ -5,7 +5,7 @@
         <button type="button"
                 class="btn btn-warning"
                 wire:click="openNewReservaModal">
-            <i class="fas fa-plus me-2"></i>Nueva Reserva
+            <i class="fas fa-tshirt me-2"></i>Nueva Reserva de Vestimentas
         </button>
     </div>
 
@@ -206,15 +206,29 @@
                                 </td>
                                 <td>
                                     @if ($reserva->tipo_reserva === 'ALQUILER')
-                                        <span class="badge bg-purple">Alquiler</span>
+                                        <span class="badge bg-purple">
+                                            <i class="fas fa-tshirt me-1"></i>Alquiler Vestimenta
+                                        </span>
+                                        @if($reserva->alquiler)
+                                            <br><small class="text-success fw-bold">✅ Ya convertido</small>
+                                        @else
+                                            <br><small class="text-warning fw-bold">⏳ Pendiente conversión</small>
+                                        @endif
                                     @else
-                                        <span class="badge bg-success">Venta</span>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-shopping-bag me-1"></i>Venta
+                                        </span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="small">
-                                        <div>Reserva: {{ $reserva->fecha_reserva->format('d/m/Y') }}</div>
-                                        <div>Vence: {{ $reserva->fecha_vencimiento->format('d/m/Y') }}</div>
+                                        <div><strong>Reserva:</strong> {{ $reserva->fecha_reserva->format('d/m/Y') }}</div>
+                                        @if($reserva->fecha_evento)
+                                            <div class="text-primary fw-bold">
+                                                <i class="fas fa-calendar-star me-1"></i>Evento: {{ \Carbon\Carbon::parse($reserva->fecha_evento)->format('d/m/Y') }}
+                                            </div>
+                                        @endif
+                                        <div><strong>Vence:</strong> {{ $reserva->fecha_vencimiento->format('d/m/Y') }}</div>
                                         @if (!in_array($reserva->estado, ['CONFIRMADA', 'CANCELADA']))
                                             @php
                                                 $diasRestantes = $reserva->fecha_vencimiento->diffInDays(now(), false);
@@ -286,6 +300,13 @@
                                             <i class="fas fa-print"></i>
                                         </button>
                                         @if ($reserva->estado === 'ACTIVA')
+                                            @if($reserva->anticipo < $reserva->total)
+                                                <button type="button" class="btn btn-sm btn-info"
+                                                        wire:click="openPaymentModal({{ $reserva->id }})"
+                                                        title="Registrar Pago">
+                                                    <i class="fas fa-dollar-sign"></i>
+                                                </button>
+                                            @endif
                                             <button type="button"
                                                     class="btn btn-sm btn-success"
                                                     wire:click="confirmReserva({{ $reserva->id }})">
@@ -293,10 +314,10 @@
                                             </button>
                                             @if ($reserva->tipo_reserva === 'ALQUILER' && !$reserva->alquiler)
                                                 <button type="button"
-                                                        class="btn btn-sm btn-info"
+                                                        class="btn btn-sm btn-warning fw-bold"
                                                         wire:click="convertToAlquiler({{ $reserva->id }})"
-                                                        title="Convertir a Alquiler">
-                                                    <i class="fas fa-exchange-alt"></i>
+                                                        title="Crear Contrato de Alquiler de Vestimentas">
+                                                    <i class="fas fa-tshirt me-1"></i>Alquilar
                                                 </button>
                                             @endif
                                             <button type="button"
@@ -347,7 +368,9 @@
                                             data-bs-dismiss="alert"></button>
                                 </div>
                             @endif
-                            <h5 class="modal-title">Nueva Reserva</h5>
+                            <h5 class="modal-title">
+                                <i class="fas fa-tshirt me-2 text-warning"></i>Nueva Reserva de Vestimentas Folklóricas
+                            </h5>
                             <button type="button"
                                     class="btn-close"
                                     wire:click="closeNewReservaModal"></button>
@@ -359,7 +382,7 @@
 
                                     <div class="mb-3">
                                         <label class="form-label">Cliente *</label>
-                                        <select class="form-select @error('cliente_id') is-invalid @enderror"
+                                        <select class="form-select select2-cliente @error('cliente_id') is-invalid @enderror"
                                                 wire:model="cliente_id">
                                             <option value="">Seleccione un cliente</option>
                                             @foreach ($clientes as $cliente)
@@ -378,12 +401,23 @@
                                         <label class="form-label">Tipo de Reserva *</label>
                                         <select class="form-select @error('tipo_reserva') is-invalid @enderror"
                                                 wire:model="tipo_reserva">
-                                            <option value="ALQUILER">Alquiler</option>
-                                            <option value="VENTA">Venta</option>
+                                            <option value="ALQUILER">
+                                                🎭 Alquiler de Vestimentas (Temporal con devolución)
+                                            </option>
+                                            <option value="VENTA">
+                                                🛍️ Venta de Vestimentas (Compra definitiva)
+                                            </option>
                                         </select>
                                         @error('tipo_reserva')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                        <div class="form-text">
+                                            <small class="text-info">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                <strong>Alquiler:</strong> El cliente devuelve las vestimentas después del evento.
+                                                <strong>Venta:</strong> El cliente se queda con las vestimentas permanentemente.
+                                            </small>
+                                        </div>
                                     </div>
 
                                     <div class="mb-3">
@@ -421,7 +455,51 @@
                                                 @error('fecha_vencimiento')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
+                                                <div class="form-text">
+                                                    <small class="text-muted">Fecha límite para confirmar la reserva</small>
+                                                </div>
                                             </div>
+
+                                            @if($tipo_reserva === 'ALQUILER')
+                                                <div class="mb-3">
+                                                    <label class="form-label">
+                                                        <i class="fas fa-calendar-star text-primary me-1"></i>Fecha del Evento Folklórico
+                                                    </label>
+                                                    <input type="date"
+                                                           class="form-control @error('fecha_evento') is-invalid @enderror"
+                                                           wire:model="fecha_evento"
+                                                           placeholder="¿Cuándo es el evento o presentación?">
+                                                    @error('fecha_evento')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                    <div class="form-text">
+                                                        <small class="text-info">
+                                                            <i class="fas fa-info-circle me-1"></i>
+                                                            Fecha de la presentación, festival o evento donde usarán las vestimentas
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label">
+                                                        <i class="fas fa-music text-success me-1"></i>Tipo de Evento (Opcional)
+                                                    </label>
+                                                    <select class="form-select" wire:model="tipo_evento">
+                                                        <option value="">Seleccione el tipo de evento</option>
+                                                        <option value="FESTIVAL">🎭 Festival Folklórico</option>
+                                                        <option value="DANZA">💃 Presentación de Danza</option>
+                                                        <option value="DESFILE">🚶‍♀️ Desfile</option>
+                                                        <option value="CONCURSO">🏆 Concurso</option>
+                                                        <option value="ESCOLAR">🎓 Evento Escolar</option>
+                                                        <option value="UNIVERSITARIO">🎓 Evento Universitario</option>
+                                                        <option value="BODA">💒 Boda Folklórica</option>
+                                                        <option value="OTRO">🎪 Otro Evento</option>
+                                                    </select>
+                                                    <div class="form-text">
+                                                        <small class="text-muted">Ayuda a planificar mejor la entrega y devolución</small>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
 
@@ -511,19 +589,118 @@
                                     @endif
 
                                     <div class="mb-3">
-                                        <label class="form-label">Observaciones</label>
+                                        <label class="form-label">
+                                            <i class="fas fa-sticky-note text-warning me-1"></i>Observaciones y Detalles Especiales
+                                        </label>
                                         <textarea class="form-control"
                                                   rows="3"
-                                                  wire:model="observaciones"></textarea>
+                                                  wire:model="observaciones"
+                                                  placeholder="Ej: Tallas específicas, colores preferidos, modificaciones necesarias, instrucciones especiales para el evento..."></textarea>
+                                        <div class="form-text">
+                                            <small class="text-muted">
+                                                Incluya detalles importantes como tallas, colores, modificaciones o instrucciones especiales para las vestimentas
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sección de Flete y Transporte -->
+                                    <div class="card border-warning mb-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="checkbox"
+                                                       wire:model="requiere_flete" id="requiere_flete">
+                                                <label class="form-check-label fw-bold" for="requiere_flete">
+                                                    <i class="fas fa-truck me-2"></i>¿Requiere Flete/Transporte?
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        @if($requiere_flete)
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Dirección de Entrega *</label>
+                                                            <textarea class="form-control @error('direccion_entrega') is-invalid @enderror"
+                                                                      rows="2"
+                                                                      wire:model="direccion_entrega"
+                                                                      placeholder="Dirección completa donde se entregarán las vestimentas"></textarea>
+                                                            @error('direccion_entrega')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Fecha de Entrega *</label>
+                                                            <input type="date"
+                                                                   class="form-control @error('fecha_entrega') is-invalid @enderror"
+                                                                   wire:model="fecha_entrega">
+                                                            @error('fecha_entrega')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Tipo de Transporte *</label>
+                                                            <select class="form-select @error('tipo_transporte') is-invalid @enderror"
+                                                                    wire:model="tipo_transporte">
+                                                                <option value="INTERNO">🚐 Transporte Interno</option>
+                                                                <option value="EXTERNO">🚛 Transporte Externo</option>
+                                                                <option value="COURIER">📦 Courier/Delivery</option>
+                                                            </select>
+                                                            @error('tipo_transporte')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Costo de Flete (Bs.) *</label>
+                                                            <input type="number"
+                                                                   step="0.01"
+                                                                   class="form-control @error('costo_flete') is-invalid @enderror"
+                                                                   wire:model="costo_flete"
+                                                                   placeholder="0.00">
+                                                            @error('costo_flete')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Total con Flete</label>
+                                                            <div class="form-control-plaintext bg-light border rounded text-center fw-bold">
+                                                                Bs. {{ number_format($this->calculateTotal() + $costo_flete, 2) }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-0">
+                                                    <label class="form-label">Observaciones del Flete</label>
+                                                    <textarea class="form-control"
+                                                              rows="2"
+                                                              wire:model="observaciones_flete"
+                                                              placeholder="Instrucciones especiales para la entrega, horarios, contacto..."></textarea>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <h6 class="fw-bold mb-3">Productos a Reservar</h6>
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="fas fa-tshirt text-primary me-2"></i>Vestimentas a Reservar
+                                    </h6>
 
-                                    <div class="row mb-3">
+                                    <div class="row mb-3" wire:ignore.self>
                                         <div class="col-md-6">
-                                            <select class="form-select"
+                                            <select class="form-select select2-producto"
                                                     wire:model="currentProductId">
                                                 <option value="">Seleccione un producto</option>
                                                 @foreach ($productos as $producto)
@@ -1447,6 +1624,126 @@
                 });
             });
         </script>
+
+        <!-- Modal de Pago para Reservas -->
+        @if($showPaymentModal && $selectedReserva)
+            <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Registrar Pago - {{ $selectedReserva->numero_reserva }}</h5>
+                            <button type="button" class="btn-close" wire:click="closePaymentModal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-primary">
+                                <i class="fas fa-user me-2"></i>
+                                <strong>Cliente:</strong> {{ $selectedReserva->cliente->nombres }}<br>
+                                <strong>Reserva:</strong> {{ $selectedReserva->numero_reserva }}<br>
+                                <strong>Total:</strong> Bs. {{ number_format($selectedReserva->total, 2) }}<br>
+                                <strong>Anticipo Actual:</strong> Bs. {{ number_format($selectedReserva->anticipo, 2) }}<br>
+                                <strong>Saldo Pendiente:</strong> <span class="badge bg-danger fs-6">Bs. {{ number_format($selectedReserva->total - $selectedReserva->anticipo, 2) }}</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Monto a Pagar *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Bs.</span>
+                                            <input type="number" step="0.01" wire:model.live="monto_pago_reserva"
+                                                   class="form-control @error('monto_pago_reserva') is-invalid @enderror"
+                                                   max="{{ $selectedReserva->total - $selectedReserva->anticipo }}"
+                                                   placeholder="0.00">
+                                        </div>
+                                        @error('monto_pago_reserva') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        <small class="text-muted">Máximo: Bs. {{ number_format($selectedReserva->total - $selectedReserva->anticipo, 2) }}</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Método de Pago *</label>
+                                        <select wire:model="metodo_pago_reserva" class="form-select">
+                                            <option value="EFECTIVO">💵 Efectivo</option>
+                                            <option value="QR">📱 QR</option>
+                                            <option value="TARJETA">💳 Tarjeta</option>
+                                            <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if($monto_pago_reserva > 0)
+                                <div class="card border-success mb-3">
+                                    <div class="card-header bg-success text-white">
+                                        <i class="fas fa-cash-register me-2"></i>Destino del Pago
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Caja de Destino *</label>
+                                            <select wire:model="caja_pago_reserva" class="form-select select2-caja @error('caja_pago_reserva') is-invalid @enderror">
+                                                <option value="">Seleccione caja</option>
+                                                @foreach($cajas as $caja)
+                                                    <option value="{{ $caja->id }}">
+                                                        🏪 {{ $caja->nombre }} - {{ $caja->sucursal->nombre }}
+                                                        💰 Saldo: Bs. {{ number_format($caja->saldo_actual, 2) }}
+                                                        @if($caja->es_caja_principal) ⭐ @endif
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('caja_pago_reserva') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            @if(count($cajas) == 0)
+                                                <div class="text-danger small mt-1">
+                                                    <i class="fas fa-exclamation-triangle"></i> No hay cajas abiertas disponibles
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        @if($caja_pago_reserva)
+                                            @php
+                                                $cajaSeleccionadaPagoReserva = $cajas->find($caja_pago_reserva);
+                                            @endphp
+                                            @if($cajaSeleccionadaPagoReserva)
+                                                <div class="alert alert-info mb-3">
+                                                    <i class="fas fa-calculator me-2"></i>
+                                                    <strong>Resumen del Pago:</strong><br>
+                                                    <small>
+                                                        💰 Saldo Actual Caja: Bs. {{ number_format($cajaSeleccionadaPagoReserva->saldo_actual, 2) }}<br>
+                                                        ➕ Pago a Registrar: Bs. {{ number_format($monto_pago_reserva, 2) }}<br>
+                                                        🔄 <strong>Nuevo Saldo Caja: Bs. {{ number_format($cajaSeleccionadaPagoReserva->saldo_actual + $monto_pago_reserva, 2) }}</strong><br>
+                                                        📉 Saldo Pendiente Reserva: Bs. {{ number_format(($selectedReserva->total - $selectedReserva->anticipo) - $monto_pago_reserva, 2) }}
+                                                    </small>
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Referencia</label>
+                                        <input type="text" wire:model="referencia_pago_reserva" class="form-control" placeholder="Número de transacción, etc.">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Observaciones</label>
+                                        <textarea wire:model="observaciones_pago_reserva" class="form-control" rows="2" placeholder="Observaciones del pago"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="closePaymentModal">Cancelar</button>
+                            <button type="button" class="btn btn-success" wire:click="procesarPagoReserva">
+                                <i class="fas fa-dollar-sign me-1"></i>Registrar Pago
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
     </div>
 

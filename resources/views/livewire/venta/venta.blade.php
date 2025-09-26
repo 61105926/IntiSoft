@@ -88,7 +88,7 @@
                     <div class="col-md-4">
                         <div class="position-relative">
                             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                            <input type="text" wire:model.live="busqueda" class="form-control ps-5" 
+                            <input  type="text" wire:model.live="busqueda" class="form-control ps-5" 
                                    placeholder="Buscar por número o cliente..." />
                         </div>
                     </div>
@@ -258,7 +258,7 @@
                                 <div class="mb-3 row">
                                     <label for="cliente_id" class="col-sm-4 col-form-label text-end">Cliente</label>
                                     <div class="col-sm-8">
-                                        <select wire:model="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" id="cliente_id">
+                                        <select wire:model="cliente_id" class="form-select select2-cliente @error('cliente_id') is-invalid @enderror" id="cliente_id">
                                             <option value="">Seleccione cliente</option>
                                             @foreach($clientes as $cliente)
                                                 <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
@@ -333,7 +333,7 @@
 
                                             <div class="mb-3">
                                                 <label for="caja_id" class="form-label">Caja de Destino *</label>
-                                                <select wire:model="caja_id" class="form-select @error('caja_id') is-invalid @enderror" id="caja_id">
+                                                <select wire:model="caja_id" class="form-select select2-caja @error('caja_id') is-invalid @enderror" id="caja_id">
                                                     <option value="">Seleccione caja</option>
                                                     @foreach($cajas as $caja)
                                                         <option value="{{ $caja->id }}">
@@ -377,8 +377,8 @@
                             <div class="col-md-6">
                                 <h6 class="fw-bold mb-3">Productos a Vender</h6>
 
-                                <div class="d-flex gap-2 mb-3">
-                                    <select wire:model.live="productoSeleccionado" class="form-select flex-grow-1">
+                                <div class="d-flex gap-2 mb-3" wire:ignore.self>
+                                    <select wire:model.live="productoSeleccionado" class="form-select select2-producto flex-grow-1">
                                         <option value="">Seleccione un producto</option>
                                         @foreach($productos as $producto)
                                             <option value="{{ $producto->id }}">{{ $producto->nombre }} - Bs. {{ $producto->precio_venta }}</option>
@@ -537,7 +537,7 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Caja de Destino *</label>
-                                            <select wire:model="cajaParaPago" class="form-select @error('cajaParaPago') is-invalid @enderror">
+                                            <select wire:model="cajaParaPago" class="form-select select2-caja @error('cajaParaPago') is-invalid @enderror">
                                                 <option value="">Seleccione caja</option>
                                                 @foreach($cajas as $caja)
                                                     <option value="{{ $caja->id }}">

@@ -28,6 +28,11 @@
 
             <a href="{{ route('sucursal') }}" class="nav-link-modern {{ request()->routeIs('sucursal*') ? 'active' : '' }}">
                 <i class="fas fa-store"></i>
+                <span>Sucursales</span>
+            </a>
+
+            <a href="{{ route('stock-sucursal') }}" class="nav-link-modern {{ request()->routeIs('stock-sucursal*') ? 'active' : '' }}">
+                <i class="fas fa-warehouse"></i>
                 <span>Stock por Sucursal</span>
             </a>
 
@@ -86,6 +91,11 @@
                 <span>Clientes</span>
             </a>
 
+            <a href="{{ route('eventos-folkloricos') }}" class="nav-link-modern {{ request()->routeIs('eventos-folkloricos*') ? 'active' : '' }}">
+                <i class="fas fa-mask"></i>
+                <span>Eventos Folklóricos</span>
+            </a>
+
             <a href="{{ route('entrada-folklorica') }}" class="nav-link-modern {{ request()->routeIs('entrada-folklorica*') ? 'active' : '' }}">
                 <i class="fas fa-calendar"></i>
                 <span>Entradas Folklóricas</span>
@@ -139,13 +149,13 @@
         sidebar.classList.remove('inventario-theme', 'operaciones-theme', 'finanzas-theme', 'gestion-theme', 'sistema-theme');
 
         // Apply theme based on current route
-        if (currentRoute.includes('producto') || currentRoute.includes('sucursal') || currentRoute.includes('historial-producto')) {
+        if (currentRoute.includes('producto') || currentRoute.includes('sucursal') || currentRoute.includes('historial-producto') || currentRoute.includes('stock-sucursal')) {
             sidebar.classList.add('inventario-theme');
         } else if (currentRoute.includes('venta') || currentRoute.includes('reserva') || currentRoute.includes('alquiler')) {
             sidebar.classList.add('operaciones-theme');
         } else if (currentRoute.includes('caja') || currentRoute.includes('garantia')) {
             sidebar.classList.add('finanzas-theme');
-        } else if (currentRoute.includes('cliente') || currentRoute.includes('entrada-folklorica') || currentRoute.includes('usuario') || currentRoute.includes('roles')) {
+        } else if (currentRoute.includes('cliente') || currentRoute.includes('eventos-folkloricos') || currentRoute.includes('entrada-folklorica') || currentRoute.includes('usuario') || currentRoute.includes('roles')) {
             sidebar.classList.add('gestion-theme');
         } else if (currentRoute.includes('configuracion')) {
             sidebar.classList.add('sistema-theme');

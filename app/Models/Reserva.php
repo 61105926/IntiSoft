@@ -69,6 +69,16 @@ class Reserva extends Model
         return $this->hasOne(Alquiler::class);
     }
 
+    public function stocksTemporales()
+    {
+        return $this->hasMany(ReservaStockTemporal::class);
+    }
+
+    public function fletes()
+    {
+        return $this->hasMany(FleteProgramado::class);
+    }
+
     // Scopes
     public function scopeActivas($query)
     {

@@ -49,6 +49,14 @@ class ReservasController extends Component
     public $caja_id = '';
     public $metodo_pago = 'EFECTIVO';
 
+    // Campos de flete y transporte
+    public $requiere_flete = false;
+    public $direccion_entrega = '';
+    public $fecha_entrega = '';
+    public $costo_flete = 0;
+    public $tipo_transporte = 'INTERNO';
+    public $observaciones_flete = '';
+
     // Productos seleccionados
     public $selectedProducts = [];
     public $currentProductId = '';
@@ -62,6 +70,14 @@ class ReservasController extends Component
     public $observacionesConfirmacion = '';
     public $caja_confirmacion = '';
     public $metodo_pago_confirmacion = 'EFECTIVO';
+
+    // Modal de pago adicional
+    public $showPaymentModal = false;
+    public $monto_pago_reserva = 0;
+    public $caja_pago_reserva = '';
+    public $metodo_pago_reserva = 'EFECTIVO';
+    public $referencia_pago_reserva = '';
+    public $observaciones_pago_reserva = '';
     
     // Conversión a alquiler
     public $fechaAlquiler;
@@ -83,6 +99,10 @@ class ReservasController extends Component
         'caja_id' => 'required_if:anticipo,>,0|exists:cajas,id',
         'metodo_pago' => 'required|string',
         'selectedProducts' => 'required|array|min:1',
+        'direccion_entrega' => 'required_if:requiere_flete,true|string|max:255',
+        'fecha_entrega' => 'required_if:requiere_flete,true|date|after_or_equal:fecha_reserva',
+        'costo_flete' => 'required_if:requiere_flete,true|numeric|min:0',
+        'tipo_transporte' => 'required_if:requiere_flete,true|in:INTERNO,EXTERNO,COURIER',
     ];
 
     public function mount()
@@ -337,6 +357,10 @@ class ReservasController extends Component
             // Generar número de reserva
             $numeroReserva = 'RES-' . date('Y') . '-' . str_pad(Reserva::count() + 1, 3, '0', STR_PAD_LEFT);
 
+            // Calcular total incluyendo flete
+            $subtotal = $this->calculateTotal();
+            $totalConFlete = $subtotal + ($this->requiere_flete ? $this->costo_flete : 0);
+
             // Crear reserva
             $reserva = Reserva::create([
                 'numero_reserva' => $numeroReserva,
@@ -345,12 +369,18 @@ class ReservasController extends Component
                 'fecha_reserva' => $this->fecha_reserva,
                 'fecha_vencimiento' => $this->fecha_vencimiento,
                 'anticipo' => $this->anticipo,
-                'subtotal' => $this->calculateTotal(),
-                'total' => $this->calculateTotal(),
+                'subtotal' => $subtotal,
+                'total' => $totalConFlete,
                 'observaciones' => $this->observaciones,
                 'sucursal_id' => $this->sucursal_id,
                 'usuario_creacion_id' => Auth::id(),
                 'estado' => 'ACTIVA',
+                'requiere_flete' => $this->requiere_flete,
+                'direccion_entrega' => $this->requiere_flete ? $this->direccion_entrega : null,
+                'fecha_entrega' => $this->requiere_flete ? $this->fecha_entrega : null,
+                'costo_flete' => $this->requiere_flete ? $this->costo_flete : 0,
+                'tipo_transporte' => $this->requiere_flete ? $this->tipo_transporte : null,
+                'observaciones_flete' => $this->requiere_flete ? $this->observaciones_flete : null,
             ]);
 
             // Crear detalles de reserva y actualizar stock en stock_por_sucursals
@@ -384,9 +414,24 @@ class ReservasController extends Component
                         MovimientoCaja::TIPO_INGRESO,
                         $this->anticipo,
                         "Anticipo reserva {$numeroReserva}",
-                        MovimientoCaja::CATEGORIA_VARIOS,
+                        MovimientoCaja::CATEGORIA_RESERVA,
                         Auth::id(),
                         "Cliente: {$reserva->cliente->nombres} - Tipo: {$this->tipo_reserva}"
+                    );
+                }
+            }
+
+            // Registrar flete por separado si se requiere y se paga al momento
+            if ($this->requiere_flete && $this->costo_flete > 0 && $this->caja_id) {
+                $caja = Caja::find($this->caja_id);
+                if ($caja && $caja->estado === 'ABIERTA') {
+                    $caja->registrarMovimiento(
+                        MovimientoCaja::TIPO_INGRESO,
+                        $this->costo_flete,
+                        "Flete reserva {$numeroReserva}",
+                        MovimientoCaja::CATEGORIA_VARIOS,
+                        Auth::id(),
+                        "Transporte {$this->tipo_transporte} - {$this->direccion_entrega}"
                     );
                 }
             }
@@ -433,6 +478,83 @@ class ReservasController extends Component
         $this->metodo_pago_confirmacion = 'EFECTIVO';
     }
 
+    // Métodos para modal de pago adicional
+    public function openPaymentModal($reservaId)
+    {
+        $this->selectedReserva = Reserva::with(['cliente', 'sucursal'])->find($reservaId);
+        $this->monto_pago_reserva = $this->selectedReserva->total - $this->selectedReserva->anticipo;
+        $this->caja_pago_reserva = '';
+        $this->metodo_pago_reserva = 'EFECTIVO';
+        $this->referencia_pago_reserva = '';
+        $this->observaciones_pago_reserva = '';
+        $this->showPaymentModal = true;
+    }
+
+    public function closePaymentModal()
+    {
+        $this->showPaymentModal = false;
+        $this->selectedReserva = null;
+        $this->monto_pago_reserva = 0;
+        $this->caja_pago_reserva = '';
+        $this->metodo_pago_reserva = 'EFECTIVO';
+        $this->referencia_pago_reserva = '';
+        $this->observaciones_pago_reserva = '';
+    }
+
+    public function procesarPagoReserva()
+    {
+        $this->validate([
+            'monto_pago_reserva' => 'required|numeric|min:0.01',
+            'caja_pago_reserva' => 'required|exists:cajas,id',
+            'metodo_pago_reserva' => 'required|string'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Actualizar anticipo de reserva
+            $this->selectedReserva->update([
+                'anticipo' => $this->selectedReserva->anticipo + $this->monto_pago_reserva,
+                'observaciones' => $this->selectedReserva->observaciones . "\nPago: Bs. " . $this->monto_pago_reserva . " - " . $this->observaciones_pago_reserva,
+            ]);
+
+            // Registrar movimiento en caja
+            \Log::info('Registrando pago adicional de reserva', [
+                'monto' => $this->monto_pago_reserva,
+                'caja_id' => $this->caja_pago_reserva,
+                'reserva' => $this->selectedReserva->numero_reserva
+            ]);
+
+            $caja = Caja::find($this->caja_pago_reserva);
+            if ($caja && $caja->estado === 'ABIERTA') {
+                $caja->registrarMovimiento(
+                    MovimientoCaja::TIPO_INGRESO,
+                    $this->monto_pago_reserva,
+                    "Pago reserva {$this->selectedReserva->numero_reserva}",
+                    MovimientoCaja::CATEGORIA_VARIOS,
+                    Auth::id(),
+                    "Cliente: {$this->selectedReserva->cliente->nombres} - {$this->metodo_pago_reserva} - {$this->referencia_pago_reserva}"
+                );
+                \Log::info('Pago de reserva registrado exitosamente en caja');
+            } else {
+                \Log::warning('Caja no encontrada o no está abierta para reserva', [
+                    'caja_id' => $this->caja_pago_reserva,
+                    'caja_estado' => $caja ? $caja->estado : 'no_encontrada'
+                ]);
+            }
+
+            DB::commit();
+
+            session()->flash('message', 'Pago registrado correctamente en caja');
+            $this->closePaymentModal();
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Error al procesar pago de reserva: ' . $e->getMessage());
+            session()->flash('error', 'Error al procesar el pago: ' . $e->getMessage());
+        }
+    }
+
     public function saveConfirmReserva()
     {
         $rules = [
@@ -469,7 +591,7 @@ class ReservasController extends Component
                         MovimientoCaja::TIPO_INGRESO,
                         $this->montoAdicional,
                         "Pago adicional reserva {$this->selectedReserva->numero_reserva}",
-                        MovimientoCaja::CATEGORIA_VARIOS,
+                        MovimientoCaja::CATEGORIA_RESERVA,
                         Auth::id(),
                         "Confirmación - Cliente: {$this->selectedReserva->cliente->nombres} - {$this->metodo_pago_confirmacion}"
                     );
@@ -558,6 +680,14 @@ class ReservasController extends Component
         $this->selectedProducts = [];
         $this->currentProductId = '';
         $this->currentQuantity = 1;
+
+        // Reset campos de flete
+        $this->requiere_flete = false;
+        $this->direccion_entrega = '';
+        $this->fecha_entrega = '';
+        $this->costo_flete = 0;
+        $this->tipo_transporte = 'INTERNO';
+        $this->observaciones_flete = '';
     }
 
     public function getSaldoPendienteProperty()

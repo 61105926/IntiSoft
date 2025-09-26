@@ -70,6 +70,8 @@ class UserSeeder extends Seeder
             [
                 'sucursal_id' => 1,
                 'username' => 'gabriel',
+                'name' => 'gabriel',
+
                 'email' => 'gabo@gmail.com',
                 'password' => Hash::make('61105926'), // Este campo debe llamarse 'password'
                 'nombres' => 'Gabriel',
