@@ -1,75 +1,58 @@
-# Multi-stage build for Laravel application
-FROM node:18-alpine AS frontend
+# Use official PHP image with Apache
+FROM php:8.2-apache
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+# Set working directory
+WORKDIR /var/www/html
 
-COPY . .
-RUN npm run build
-
-FROM php:8.2-fpm-alpine
-
-# Install system dependencies
-RUN apk add --no-cache \
+# Install system dependencies and PHP extensions
+RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
-    oniguruma-dev \
+    libonig-dev \
     libxml2-dev \
+    libzip-dev \
     zip \
     unzip \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libzip-dev \
-    nginx \
-    supervisor \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    nodejs \
+    npm \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
+# Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /var/www
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
-# Copy application code
+# Configure Apache to listen on port 80
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# Copy application files
 COPY . .
 
-# Create necessary directories and set permissions
-RUN mkdir -p bootstrap/cache storage/logs storage/framework/{cache,sessions,views} \
-    && chmod -R 775 storage bootstrap/cache
-
-# Create minimal .env for composer install
-RUN echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env \
-    && echo "APP_ENV=production" >> .env \
-    && echo "APP_DEBUG=false" >> .env
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Run Laravel post-install commands manually
-RUN php artisan package:discover --ansi || true
+# Install Node.js dependencies and build assets
+RUN npm install && npm run build
 
-# Copy built frontend assets from the frontend stage
-COPY --from=frontend /app/public/build ./public/build
-
-# Set permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage \
-    && chmod -R 755 /var/www/bootstrap/cache
-
-# Copy nginx config
-COPY docker/nginx.conf /etc/nginx/nginx.conf
-
-# Copy supervisor config
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Create nginx directories
-RUN mkdir -p /var/log/nginx /run/nginx
-
-# Expose port
+# Expose port 80
 EXPOSE 80
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start Apache
+CMD ["apache2-foreground"]
