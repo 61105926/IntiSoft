@@ -46,7 +46,10 @@ RUN echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env \
     && echo "APP_DEBUG=false" >> .env
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Run Laravel post-install commands manually
+RUN php artisan package:discover --ansi || true
 
 # Copy built frontend assets from the frontend stage
 COPY --from=frontend /app/public/build ./public/build
