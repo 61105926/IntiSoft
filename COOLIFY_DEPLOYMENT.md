@@ -30,7 +30,7 @@ The MySQL database will be automatically created with the docker-compose configu
 After successful deployment, the application will:
 - Run database migrations automatically
 - Cache configurations for optimal performance
-- Be available on port 80
+- Be available on port 3003
 
 ## Volumes
 
