@@ -40,8 +40,9 @@ RUN echo '<VirtualHost *:80>\n\
 # Copy application files
 COPY . .
 
-# Set proper permissions
-RUN chown -R www-data:www-data /var/www/html \
+# Create necessary directories and set proper permissions
+RUN mkdir -p bootstrap/cache storage/logs storage/framework/{cache,sessions,views} \
+    && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
