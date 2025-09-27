@@ -36,6 +36,10 @@ WORKDIR /var/www
 # Copy application code
 COPY . .
 
+# Create necessary directories and set permissions
+RUN mkdir -p bootstrap/cache storage/logs storage/framework/{cache,sessions,views} \
+    && chmod -R 775 storage bootstrap/cache
+
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
