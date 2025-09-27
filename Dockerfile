@@ -49,8 +49,11 @@ RUN mkdir -p bootstrap/cache storage/logs storage/framework/{cache,sessions,view
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
+# Copy Docker environment file before composer install
+RUN cp .env.example .env
+
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Install Node.js dependencies and build assets
 RUN npm install --legacy-peer-deps && npm run build
@@ -58,9 +61,6 @@ RUN npm install --legacy-peer-deps && npm run build
 # Copy startup script and make executable
 COPY start-services.sh /usr/local/bin/start-services.sh
 RUN chmod +x /usr/local/bin/start-services.sh
-
-# Copy Docker environment file
-RUN cp .env.example .env
 
 # Configure Apache to listen on port 80
 RUN echo "Listen 80" >> /etc/apache2/ports.conf
