@@ -40,6 +40,11 @@ COPY . .
 RUN mkdir -p bootstrap/cache storage/logs storage/framework/{cache,sessions,views} \
     && chmod -R 775 storage bootstrap/cache
 
+# Create minimal .env for composer install
+RUN echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env \
+    && echo "APP_ENV=production" >> .env \
+    && echo "APP_DEBUG=false" >> .env
+
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
