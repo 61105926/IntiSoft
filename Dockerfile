@@ -33,14 +33,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy composer files
-COPY composer.json composer.lock ./
+# Copy application code
+COPY . .
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copy application code
-COPY . .
 
 # Copy built frontend assets from the frontend stage
 COPY --from=frontend /app/public/build ./public/build
