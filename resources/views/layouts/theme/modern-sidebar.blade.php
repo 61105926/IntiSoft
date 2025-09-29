@@ -17,33 +17,28 @@
             </a>
         </div>
 
-        <!-- Inventario Section -->
+        <!-- Sistema Folklórico -->
         <div class="nav-section inventario-theme">
-            <div class="nav-section-title">Inventario</div>
-
-            <a href="{{ route('producto') }}" class="nav-link-modern {{ request()->routeIs('producto*') ? 'active' : '' }}">
-                <i class="fas fa-boxes"></i>
-                <span>Productos</span>
-            </a>
+            <div class="nav-section-title">Sistema Folklórico</div>
 
             <a href="{{ route('conjuntos') }}" class="nav-link-modern {{ request()->routeIs('conjuntos*') ? 'active' : '' }}">
                 <i class="fas fa-user-tie"></i>
-                <span>Conjuntos</span>
+                <span>Conjuntos Folklóricos</span>
+            </a>
+
+            <a href="{{ route('componentes') }}" class="nav-link-modern {{ request()->routeIs('componentes*') ? 'active' : '' }}">
+                <i class="fas fa-puzzle-piece"></i>
+                <span>Componentes</span>
+            </a>
+
+            <a href="{{ route('instancias') }}" class="nav-link-modern {{ request()->routeIs('instancias*') ? 'active' : '' }}">
+                <i class="fas fa-warehouse"></i>
+                <span>Inventario Físico</span>
             </a>
 
             <a href="{{ route('sucursal') }}" class="nav-link-modern {{ request()->routeIs('sucursal*') ? 'active' : '' }}">
                 <i class="fas fa-store"></i>
                 <span>Sucursales</span>
-            </a>
-
-            <a href="{{ route('stock-sucursal') }}" class="nav-link-modern {{ request()->routeIs('stock-sucursal*') ? 'active' : '' }}">
-                <i class="fas fa-warehouse"></i>
-                <span>Stock por Sucursal</span>
-            </a>
-
-            <a href="{{ route('historial-producto') }}" class="nav-link-modern {{ request()->routeIs('historial-producto*') ? 'active' : '' }}">
-                <i class="fas fa-history"></i>
-                <span>Historial de Productos</span>
             </a>
         </div>
 

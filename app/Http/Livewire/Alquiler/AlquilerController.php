@@ -63,6 +63,10 @@ class AlquilerController extends Component
     public $currentProductId = '';
     public $currentQuantity = 1;
 
+    // Conjuntos seleccionados
+    public $selectedConjuntos = [];
+    public $currentConjuntoId = '';
+
     // Alquiler seleccionado
     public $selectedAlquiler = null;
 
@@ -111,6 +115,14 @@ class AlquilerController extends Component
         $sucursales = Sucursal::orderBy('nombre')->get();
         $unidadesEducativas = UnidadEducativa::orderBy('nombre')->get();
         $productos = Producto::all();
+
+        // Agregar instancias de conjuntos disponibles para alquilar
+        $conjuntos = \App\Models\InstanciaConjunto::with(['variacionConjunto.conjunto.categoriaConjunto'])
+            ->where('estado_disponibilidad', 'DISPONIBLE')
+            ->where('activa', true)
+            ->orderBy('id')
+            ->get();
+
         $cajas = Caja::where('estado', 'ABIERTA')->orderBy('nombre')->get();
         $estadisticas = $this->getEstadisticas();
 
@@ -131,6 +143,7 @@ class AlquilerController extends Component
             'sucursales' => $sucursales,
             'unidadesEducativas' => $unidadesEducativas,
             'productos' => $productos,
+            'conjuntos' => $conjuntos,
             'cajas' => $cajas,
             'estadisticas' => $estadisticas,
             'garantiasDisponibles' => $garantiasDisponibles,
@@ -738,9 +751,61 @@ class AlquilerController extends Component
         $this->selectedProducts = array_values($this->selectedProducts);
     }
 
+    // Métodos para conjuntos folklóricos
+    public function addConjuntoToAlquiler()
+    {
+        if (!$this->currentConjuntoId) {
+            return;
+        }
+
+        $instancia = \App\Models\InstanciaConjunto::with(['variacionConjunto.conjunto'])
+            ->where('id', $this->currentConjuntoId)
+            ->where('estado_disponibilidad', 'DISPONIBLE')
+            ->where('sucursal_id', $this->sucursal_id)
+            ->first();
+
+        if (!$instancia) {
+            session()->flash('errorModal', 'Conjunto no disponible en esta sucursal.');
+            return;
+        }
+
+        // Verificar si ya está agregado
+        $existingIndex = collect($this->selectedConjuntos)->search(function ($item) use ($instancia) {
+            return $item['instancia_id'] == $instancia->id;
+        });
+
+        if ($existingIndex !== false) {
+            session()->flash('errorModal', 'Este conjunto ya fue agregado.');
+            return;
+        }
+
+        $conjunto = $instancia->variacionConjunto->conjunto;
+        $precio = $conjunto->precio_alquiler_dia ?? 0;
+
+        $this->selectedConjuntos[] = [
+            'instancia_id' => $instancia->id,
+            'conjunto_id' => $conjunto->id,
+            'nombre' => $conjunto->nombre,
+            'variacion' => $instancia->variacionConjunto->nombre_variacion ?? '',
+            'numero_serie' => $instancia->numero_serie,
+            'precio_unitario' => $precio,
+            'subtotal' => $precio * $this->dias_alquiler,
+        ];
+
+        $this->currentConjuntoId = '';
+    }
+
+    public function removeConjuntoFromAlquiler($index)
+    {
+        unset($this->selectedConjuntos[$index]);
+        $this->selectedConjuntos = array_values($this->selectedConjuntos);
+    }
+
     private function calculateSubtotal()
     {
-        return collect($this->selectedProducts)->sum('subtotal');
+        $productosTotal = collect($this->selectedProducts)->sum('subtotal');
+        $conjuntosTotal = collect($this->selectedConjuntos)->sum('subtotal');
+        return $productosTotal + $conjuntosTotal;
     }
 
     // Métodos para gestión de garantías

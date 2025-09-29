@@ -11,6 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Comentado temporalmente - tabla reservas no existe
+        /*
         // Agregar campos de control temporal a reservas
         Schema::table('reservas', function (Blueprint $table) {
             $table->date('fecha_inicio_uso')->nullable()->after('fecha_vencimiento');
@@ -19,10 +21,11 @@ return new class extends Migration
             $table->json('configuracion_flete')->nullable()->after('bloquea_stock');
             $table->decimal('total_garantias', 10, 2)->default(0)->after('total');
         });
+        */
 
         // Agregar campos de garantías individuales a alquileres
         Schema::table('alquileres', function (Blueprint $table) {
-            $table->decimal('total_garantias_individuales', 10, 2)->default(0)->after('deposito_devuelto');
+            $table->decimal('total_garantias_individuales', 10, 2)->default(0)->after('penalizacion');
             $table->decimal('garantias_devueltas', 10, 2)->default(0)->after('total_garantias_individuales');
             $table->decimal('garantias_retenidas', 10, 2)->default(0)->after('garantias_devueltas');
             $table->boolean('garantias_completadas')->default(false)->after('garantias_retenidas');
@@ -31,7 +34,7 @@ return new class extends Migration
 
         // Agregar campos de integración folklórica a alquileres
         Schema::table('alquileres', function (Blueprint $table) {
-            $table->unsignedBigInteger('evento_folklorico_id')->nullable()->after('reserva_id');
+            $table->unsignedBigInteger('evento_folklorico_id')->nullable()->after('cliente_id');
             $table->foreign('evento_folklorico_id')->references('id')->on('eventos_folkloricos')->onDelete('set null');
         });
 
@@ -63,6 +66,8 @@ return new class extends Migration
             ]);
         });
 
+        // Comentado temporalmente - tabla reservas no existe
+        /*
         Schema::table('reservas', function (Blueprint $table) {
             $table->dropColumn([
                 'fecha_inicio_uso',
@@ -72,5 +77,6 @@ return new class extends Migration
                 'total_garantias'
             ]);
         });
+        */
     }
 };

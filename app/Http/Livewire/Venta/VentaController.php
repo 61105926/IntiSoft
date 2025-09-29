@@ -32,6 +32,7 @@ class VentaController extends Component
     public $mostrarModalDetalle = false;
     public $mostrarModalPago = false;
     public $mostrarModalComprobante = false;
+    public $mostrarModalNuevoCliente = false;
 
     // Propiedades para venta
     public $ventaSeleccionada = null;
@@ -55,6 +56,11 @@ class VentaController extends Component
     public $precioProducto = 0;
     public $descuentoProducto = 0;
 
+    // Propiedades para conjuntos en la venta
+    public $selectedConjuntos = [];
+    public $currentConjuntoId = '';
+    public $currentQuantity = 1;
+
     // Propiedades para pago
     public $montoPago = 0;
     public $cajaParaPago = '';
@@ -67,6 +73,14 @@ class VentaController extends Component
     public $productos;
     public $sucursales;
     public $cajas;
+
+    // Nuevo cliente rápido
+    public $nuevoCliente = [
+        'nombre' => '',
+        'ci_nit' => '',
+        'telefono' => '',
+        'email' => ''
+    ];
 
     public function paginationView()
     {
@@ -257,21 +271,70 @@ class VentaController extends Component
         $this->productosEnVenta = array_values($this->productosEnVenta);
     }
 
+    // Métodos para conjuntos
+    public function addConjuntoToVenta()
+    {
+        if (!$this->currentConjuntoId) {
+            return;
+        }
+
+        $instancia = \App\Models\InstanciaConjunto::with(['variacionConjunto.conjunto'])
+            ->where('id', $this->currentConjuntoId)
+            ->where('estado_disponibilidad', 'DISPONIBLE')
+            ->first();
+
+        if (!$instancia) {
+            session()->flash('error', 'Conjunto no disponible');
+            return;
+        }
+
+        $conjunto = $instancia->variacionConjunto->conjunto;
+        $precioUnitario = $conjunto->precio_venta_base ?? 0;
+        $cantidad = max(1, intval($this->currentQuantity));
+        $subtotal = $precioUnitario * $cantidad;
+
+        $this->selectedConjuntos[] = [
+            'instancia_id' => $instancia->id,
+            'conjunto_id' => $conjunto->id,
+            'nombre' => $conjunto->nombre,
+            'variacion' => $instancia->variacionConjunto->nombre ?? null,
+            'numero_serie' => $instancia->numero_serie,
+            'precio_unitario' => $precioUnitario,
+            'cantidad' => $cantidad,
+            'subtotal' => $subtotal
+        ];
+
+        $this->currentConjuntoId = '';
+        $this->currentQuantity = 1;
+    }
+
+    public function removeConjuntoFromVenta($index)
+    {
+        unset($this->selectedConjuntos[$index]);
+        $this->selectedConjuntos = array_values($this->selectedConjuntos);
+    }
+
     public function calcularTotalVenta()
     {
-        $subtotal = collect($this->productosEnVenta)->sum('subtotal');
-        return $subtotal - $this->descuento + $this->impuestos;
+        $productosTotal = collect($this->productosEnVenta)->sum('subtotal');
+        $conjuntosTotal = collect($this->selectedConjuntos)->sum('subtotal');
+        return $productosTotal + $conjuntosTotal - $this->descuento + $this->impuestos;
     }
 
     // Guardar venta
     public function guardarVenta()
     {
+        // Validar que al menos haya productos o conjuntos
+        if (empty($this->productosEnVenta) && empty($this->selectedConjuntos)) {
+            session()->flash('error', 'Debe agregar al menos un conjunto para la venta');
+            return;
+        }
+
         $rules = [
             'cliente_id' => 'required|exists:clientes,id',
             'sucursal_id' => 'required|exists:sucursals,id',
             'fecha_venta' => 'required|date',
             'metodo_pago' => 'required|string',
-            'productosEnVenta' => 'required|array|min:1',
             'pago_inicial' => 'nullable|numeric|min:0'
         ];
 
@@ -504,7 +567,14 @@ class VentaController extends Component
     {
         $ventas = $this->getVentasFiltradas();
         $resumenHoy = Venta::resumenVentasHoy($this->sucursal_id);
-        
-        return view('livewire.venta.venta', compact('ventas', 'resumenHoy'));
+
+        // Agregar instancias de conjuntos disponibles para venta
+        $conjuntos = \App\Models\InstanciaConjunto::with(['variacionConjunto.conjunto.categoriaConjunto'])
+            ->where('estado_disponibilidad', 'DISPONIBLE')
+            ->where('activa', true)
+            ->orderBy('id')
+            ->get();
+
+        return view('livewire.venta.venta', compact('ventas', 'resumenHoy', 'conjuntos'));
     }
 }

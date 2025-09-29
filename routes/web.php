@@ -10,14 +10,13 @@ use App\Http\Controllers\EntradaFolcloricaViewController;
 use App\Http\Livewire\EventoFolklorico\EventoFolkloricoController;
 use App\Http\Livewire\Stock\StockController;
 use App\Http\Controllers\GarantiaController;
-use App\Http\Controllers\HistorialProductoController;
-use App\Http\Livewire\HistorialProducto\HistorialProductoController as LivewireHistorialProductoController;
-use App\Http\Controllers\ProductoController;
+// Controladores de productos eliminados - ahora usamos sistema folklórico
 use App\Http\Controllers\StockSucursal;
 use App\Http\Controllers\VentaController as ControllersVentaController;
 use App\Http\Livewire\Roles\RolesController;
 use App\Http\Livewire\Usuario\UsuarioController;
 use App\Http\Livewire\Conjunto\ConjuntoManagement;
+use App\Http\Livewire\Componente\ComponenteManagement;
 
 use App\Http\Livewire\Venta\VentaController;
 
@@ -100,12 +99,18 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion');
     Route::get('/cliente', [ClienteController::class, 'index'])->name('cliente');
-    Route::get('/producto', [ProductoController::class, 'index'])->name('producto');
+    // Route::get('/producto', [ProductoController::class, 'index'])->name('producto'); // Desactivado - usar sistema folklórico
+
+    // Sistema Folklórico
+    Route::get('/conjuntos', ConjuntoManagement::class)->name('conjuntos');
+    Route::get('/componentes', ComponenteManagement::class)->name('componentes');
+    Route::get('/instancias', function() { return view('folklore.instancias'); })->name('instancias');
+
     Route::get('/sucursal', [StockSucursal::class, 'index'])->name('sucursal');
 
     Route::get('/alquiler', [AlquileresController::class, 'index'])->name('alquiler');
     Route::get('/garantias', [GarantiaController::class, 'index'])->name('garantia');
-    Route::get('/historial-producto', LivewireHistorialProductoController::class)->name('historial-producto');
+    // Route::get('/historial-producto', LivewireHistorialProductoController::class)->name('historial-producto'); // Eliminado
     Route::get('/venta', [ControllersVentaController::class, 'index'])->name('venta');
     Route::get('/caja', [CajaController::class, 'index'])->name('caja');
     Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');

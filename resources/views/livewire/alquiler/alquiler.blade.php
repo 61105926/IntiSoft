@@ -479,72 +479,73 @@
                                 </div>
                             </div>
 
-                            <!-- Panel Derecho - Productos y Totales -->
+                            <!-- Panel Derecho - Conjuntos y Totales -->
                             <div class="col-lg-4">
                                 <div class="p-4 bg-light h-100">
-                                    <!-- Agregar Productos -->
-                                    <div class="card border-secondary mb-4">
-                                        <div class="card-header bg-secondary text-white py-2">
-                                            <h6 class="mb-0"><i class="fas fa-box me-2"></i>Agregar Productos</h6>
+                                    <!-- Agregar Conjuntos Folklóricos -->
+                                    <div class="card border-success mb-4">
+                                        <div class="card-header bg-success text-white py-2">
+                                            <h6 class="mb-0"><i class="fas fa-layer-group me-2"></i>Agregar Conjuntos</h6>
                                         </div>
-                                        <div class="card-body p-3" wire:ignore.self>
+                                        <div class="card-body p-3">
                                             <div class="mb-3">
-                                                <label class="form-label fw-bold small">Producto</label>
-                                                <select class="form-select form-select-sm select2-producto" wire:model="currentProductId">
-                                                    <option value="">🛍️ Seleccionar producto</option>
-                                                    @foreach ($productos as $producto)
-                                                        <option value="{{ $producto->id }}">
-                                                            {{ $producto->nombre }} 
-                                                            <span class="text-muted">(Stock: {{ $producto->stock_disponible ?? 0 }})</span>
+                                                <label class="form-label fw-bold small">Seleccionar Conjunto</label>
+                                                <select class="form-select form-select-sm" wire:model="currentConjuntoId">
+                                                    <option value="">🎭 Seleccionar conjunto folklórico</option>
+                                                    @foreach ($conjuntos as $instancia)
+                                                        <option value="{{ $instancia->id }}">
+                                                            {{ $instancia->variacionConjunto->conjunto->nombre }}
+                                                            @if($instancia->variacionConjunto->nombre_variacion)
+                                                                - {{ $instancia->variacionConjunto->nombre_variacion }}
+                                                            @endif
+                                                            ({{ $instancia->numero_serie }})
+                                                            - Bs {{ number_format($instancia->variacionConjunto->conjunto->precio_alquiler_dia, 2) }}/día
                                                         </option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                             <div class="d-flex gap-2">
-                                                <input type="number" class="form-control form-control-sm" wire:model="currentQuantity" min="1" placeholder="Cant.">
-                                                <button type="button" class="btn btn-primary btn-sm px-3" wire:click="addProductToAlquiler" 
-                                                        {{ !$currentProductId || $currentQuantity <= 0 ? 'disabled' : '' }}>
-                                                    <i class="fas fa-plus"></i> Añadir
+                                                <input type="number" class="form-control form-control-sm" wire:model="currentQuantity" min="1" value="1" placeholder="Cant.">
+                                                <button type="button" class="btn btn-success btn-sm px-3" wire:click="addConjuntoToAlquiler"
+                                                        {{ !$currentConjuntoId || $currentQuantity <= 0 ? 'disabled' : '' }}>
+                                                    <i class="fas fa-plus"></i> Agregar
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Lista de Productos -->
-                                    <div class="card border-secondary mb-4">
-                                        <div class="card-header bg-secondary text-white py-2">
-                                            <h6 class="mb-0"><i class="fas fa-list me-2"></i>Productos Seleccionados</h6>
+                                    <!-- Lista de Conjuntos Seleccionados -->
+                                    @if (!empty($selectedConjuntos))
+                                    <div class="card border-success mb-4">
+                                        <div class="card-header bg-success text-white py-2">
+                                            <h6 class="mb-0"><i class="fas fa-list me-2"></i>Conjuntos Seleccionados</h6>
                                         </div>
                                         <div class="card-body p-2" style="max-height: 250px; overflow-y:auto;">
-                                            @if (empty($selectedProducts))
-                                                <div class="text-center text-muted py-4">
-                                                    <i class="fas fa-inbox fa-2x mb-2"></i>
-                                                    <p class="small mb-0">Sin productos</p>
-                                                </div>
-                                            @else
-                                                @foreach ($selectedProducts as $index => $producto)
-                                                    <div class="card card-sm mb-2 border-light">
-                                                        <div class="card-body p-2">
-                                                            <div class="d-flex justify-content-between align-items-start">
-                                                                <div class="flex-grow-1">
-                                                                    <h6 class="card-title mb-1 small">{{ $producto['nombre'] }}</h6>
-                                                                    <p class="card-text small text-muted mb-0">
-                                                                        {{ $producto['cantidad'] }}x × Bs. {{ number_format($producto['precio_unitario'], 2) }}
-                                                                    </p>
-                                                                </div>
-                                                                <div class="text-end">
-                                                                    <div class="fw-bold text-success">Bs. {{ number_format($producto['subtotal'], 2) }}</div>
-                                                                    <button type="button" class="btn btn-outline-danger btn-sm mt-1" wire:click="removeProductFromAlquiler({{ $index }})">
-                                                                        <i class="fas fa-trash-alt"></i>
-                                                                    </button>
+                                            @foreach ($selectedConjuntos as $index => $conjunto)
+                                                <div class="card card-sm mb-2 border-light">
+                                                    <div class="card-body p-2">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="flex-grow-1">
+                                                                <strong class="d-block">{{ $conjunto['nombre'] }}</strong>
+                                                                @if($conjunto['variacion'])
+                                                                    <small class="text-muted">{{ $conjunto['variacion'] }}</small><br>
+                                                                @endif
+                                                                <small class="text-muted">Serie: {{ $conjunto['numero_serie'] }}</small>
+                                                                <div class="mt-1">
+                                                                    <span class="badge bg-success">Bs {{ number_format($conjunto['precio_unitario'], 2) }}/día</span>
+                                                                    <span class="badge bg-primary">Subtotal: Bs {{ number_format($conjunto['subtotal'], 2) }}</span>
                                                                 </div>
                                                             </div>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeConjuntoFromAlquiler({{ $index }})">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                @endforeach
-                                            @endif
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
+                                    @endif
 
                                     <!-- Resumen Financiero -->
                                     <div class="card border-secondary">

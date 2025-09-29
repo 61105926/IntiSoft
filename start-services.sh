@@ -62,6 +62,14 @@ php artisan tinker --execute="DB::connection()->getPdo(); echo 'Database connect
 
 # Run migrations and seeders
 php artisan migrate --force
+
+# Ejecutar seeders específicos para el sistema folklórico
+php artisan db:seed --class=TiposGarantiaSeeder --force
+php artisan db:seed --class=BasicDataSeeder --force
+php artisan db:seed --class=UserSeeder --force
+php artisan db:seed --class=FolkloreConjuntosSeeder --force
+
+# Ejecutar seeder principal
 php artisan db:seed --force
 
 # Set proper permissions

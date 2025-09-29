@@ -258,13 +258,18 @@
                                 <div class="mb-3 row">
                                     <label for="cliente_id" class="col-sm-4 col-form-label text-end">Cliente</label>
                                     <div class="col-sm-8">
-                                        <select wire:model="cliente_id" class="form-select select2-cliente @error('cliente_id') is-invalid @enderror" id="cliente_id">
-                                            <option value="">Seleccione cliente</option>
-                                            @foreach($clientes as $cliente)
-                                                <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('cliente_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        <div class="input-group">
+                                            <select wire:model="cliente_id" class="form-select select2-cliente @error('cliente_id') is-invalid @enderror" id="cliente_id">
+                                                <option value="">Seleccione cliente</option>
+                                                @foreach($clientes as $cliente)
+                                                    <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button" class="btn btn-outline-success" wire:click="abrirModalNuevoCliente" title="Nuevo Cliente">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        </div>
+                                        @error('cliente_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
 
@@ -375,37 +380,45 @@
 
                             <!-- Columna derecha -->
                             <div class="col-md-6">
-                                <h6 class="fw-bold mb-3">Productos a Vender</h6>
+                                <h6 class="fw-bold mb-3">Conjuntos a Vender</h6>
 
-                                <div class="d-flex gap-2 mb-3" wire:ignore.self>
-                                    <select wire:model.live="productoSeleccionado" class="form-select select2-producto flex-grow-1">
-                                        <option value="">Seleccione un producto</option>
-                                        @foreach($productos as $producto)
-                                            <option value="{{ $producto->id }}">{{ $producto->nombre }} - Bs. {{ $producto->precio_venta }}</option>
+                                <div class="d-flex gap-2 mb-3">
+                                    <select wire:model="currentConjuntoId" class="form-select flex-grow-1">
+                                        <option value="">🎭 Seleccionar conjunto folklórico</option>
+                                        @foreach($conjuntos as $instancia)
+                                            <option value="{{ $instancia->id }}">
+                                                {{ $instancia->variacionConjunto->conjunto->nombre }}
+                                                - Bs {{ number_format($instancia->variacionConjunto->conjunto->precio_venta_base ?? 0, 2) }}
+                                            </option>
                                         @endforeach
                                     </select>
-                                    <input type="number" wire:model="cantidadProducto" class="form-control w-25" min="1" placeholder="Cant.">
-                                    <button type="button" wire:click="agregarProducto" class="btn btn-primary" @if(!$productoSeleccionado) disabled @endif>Añadir</button>
+                                    <input type="number" wire:model="currentQuantity" class="form-control w-25" min="1" placeholder="Cant.">
+                                    <button type="button" wire:click="addConjuntoToVenta" class="btn btn-success" @if(!$currentConjuntoId) disabled @endif>
+                                        <i class="bi bi-plus"></i> Añadir
+                                    </button>
                                 </div>
 
                                 <div class="border rounded p-2 mb-3" style="max-height: 180px; overflow-y: auto;">
-                                    @if(count($productosEnVenta) > 0)
-                                        @foreach($productosEnVenta as $index => $producto)
+                                    @if(count($selectedConjuntos) > 0)
+                                        @foreach($selectedConjuntos as $index => $conjunto)
                                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                                                 <div class="flex-grow-1">
-                                                    <div class="fw-medium">{{ $producto['nombre'] }}</div>
-                                                    <small class="text-muted">{{ $producto['cantidad'] }} x Bs. {{ number_format($producto['precio_unitario'], 2) }}</small>
+                                                    <div class="fw-medium">{{ $conjunto['nombre'] }}</div>
+                                                    @if($conjunto['variacion'])
+                                                        <small class="text-muted d-block">{{ $conjunto['variacion'] }}</small>
+                                                    @endif
+                                                    <small class="text-muted">{{ $conjunto['cantidad'] }} x Bs. {{ number_format($conjunto['precio_unitario'], 2) }}</small>
                                                 </div>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <span class="fw-bold">Bs. {{ number_format($producto['subtotal'], 2) }}</span>
-                                                    <button type="button" wire:click="eliminarProducto({{ $index }})" class="btn btn-outline-danger btn-sm">
+                                                    <span class="fw-bold">Bs. {{ number_format($conjunto['subtotal'], 2) }}</span>
+                                                    <button type="button" wire:click="removeConjuntoFromVenta({{ $index }})" class="btn btn-outline-danger btn-sm">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                         @endforeach
                                     @else
-                                        <p class="text-muted mb-0">No hay productos añadidos.</p>
+                                        <p class="text-muted mb-0">No hay conjuntos añadidos.</p>
                                     @endif
                                 </div>
 
@@ -892,4 +905,47 @@
             }, 250);
         }
     </script>
+
+    <!-- Modal Nuevo Cliente Rápido -->
+    @if($mostrarModalNuevoCliente ?? false)
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-person-plus me-2"></i>Nuevo Cliente Rápido
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="cerrarModalNuevoCliente"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre Completo *</label>
+                            <input type="text" wire:model="nuevoCliente.nombre" class="form-control @error('nuevoCliente.nombre') is-invalid @enderror">
+                            @error('nuevoCliente.nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">CI/NIT *</label>
+                            <input type="text" wire:model="nuevoCliente.ci_nit" class="form-control @error('nuevoCliente.ci_nit') is-invalid @enderror">
+                            @error('nuevoCliente.ci_nit') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono *</label>
+                            <input type="text" wire:model="nuevoCliente.telefono" class="form-control @error('nuevoCliente.telefono') is-invalid @enderror">
+                            @error('nuevoCliente.telefono') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" wire:model="nuevoCliente.email" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cerrarModalNuevoCliente">Cancelar</button>
+                        <button type="button" class="btn btn-success" wire:click="guardarNuevoCliente">
+                            <i class="bi bi-save me-1"></i>Guardar Cliente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

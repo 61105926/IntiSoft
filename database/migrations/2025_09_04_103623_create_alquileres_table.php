@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('sucursal_id');
             $table->string('numero_contrato', 50)->unique();
-            $table->unsignedBigInteger('reserva_id')->nullable();
             $table->unsignedBigInteger('cliente_id');
             $table->unsignedBigInteger('unidad_educativa_id')->nullable();
             $table->unsignedBigInteger('garantia_id')->nullable();
@@ -48,7 +47,6 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('sucursal_id')->references('id')->on('sucursals')->onDelete('restrict');
-            $table->foreign('reserva_id')->references('id')->on('reservas')->onDelete('set null');
             $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('restrict');
             // $table->foreign('unidad_educativa_id')->references('id')->on('unidades_educativas')->onDelete('set null');
             $table->foreign('usuario_creacion')->references('id')->on('users')->onDelete('restrict');
