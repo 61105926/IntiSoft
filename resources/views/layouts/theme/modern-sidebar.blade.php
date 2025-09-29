@@ -26,6 +26,11 @@
                 <span>Productos</span>
             </a>
 
+            <a href="{{ route('conjuntos') }}" class="nav-link-modern {{ request()->routeIs('conjuntos*') ? 'active' : '' }}">
+                <i class="fas fa-user-tie"></i>
+                <span>Conjuntos</span>
+            </a>
+
             <a href="{{ route('sucursal') }}" class="nav-link-modern {{ request()->routeIs('sucursal*') ? 'active' : '' }}">
                 <i class="fas fa-store"></i>
                 <span>Sucursales</span>

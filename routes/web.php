@@ -17,6 +17,7 @@ use App\Http\Controllers\StockSucursal;
 use App\Http\Controllers\VentaController as ControllersVentaController;
 use App\Http\Livewire\Roles\RolesController;
 use App\Http\Livewire\Usuario\UsuarioController;
+use App\Http\Livewire\Conjunto\ConjuntoManagement;
 
 use App\Http\Livewire\Venta\VentaController;
 
@@ -115,6 +116,7 @@ Route::middleware(['auth'])->group(function () {
     // Nuevos módulos ERP
     Route::get('/eventos-folkloricos', EventoFolkloricoController::class)->name('eventos-folkloricos');
     Route::get('/stock-sucursal', StockController::class)->name('stock-sucursal');
+    Route::get('/conjuntos', ConjuntoManagement::class)->name('conjuntos');
 
 
 });
