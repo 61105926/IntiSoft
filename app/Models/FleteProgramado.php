@@ -13,7 +13,6 @@ class FleteProgramado extends Model
 
     protected $fillable = [
         'alquiler_id',
-        'reserva_id',
         'evento_id',
         'numero_flete',
         'tipo_flete',
@@ -60,10 +59,6 @@ class FleteProgramado extends Model
         return $this->belongsTo(Alquiler::class);
     }
 
-    public function reserva()
-    {
-        return $this->belongsTo(Reserva::class);
-    }
 
     public function evento()
     {
@@ -124,8 +119,6 @@ class FleteProgramado extends Model
     {
         if ($this->alquiler_id) {
             return "ALQ-{$this->alquiler_id}";
-        } elseif ($this->reserva_id) {
-            return "RES-{$this->reserva_id}";
         } elseif ($this->evento_id) {
             return "EVT-{$this->evento_id}";
         }
@@ -136,8 +129,6 @@ class FleteProgramado extends Model
     {
         if ($this->alquiler) {
             return $this->alquiler->cliente;
-        } elseif ($this->reserva) {
-            return $this->reserva->cliente;
         } elseif ($this->evento) {
             return $this->evento; // Los eventos no tienen un cliente único
         }
@@ -306,7 +297,7 @@ class FleteProgramado extends Model
                       $q->whereDate('fecha_entrega_programada', '<=', now()->addDays(1))
                         ->orWhereDate('fecha_recogida_programada', '<=', now()->addDays(1));
                   })
-                  ->with(['alquiler.cliente', 'reserva.cliente', 'evento'])
+                  ->with(['alquiler.cliente', 'evento'])
                   ->orderBy('fecha_entrega_programada')
                   ->get();
     }

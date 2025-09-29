@@ -15,7 +15,6 @@ class Alquiler extends Model
     protected $fillable = [
         'sucursal_id',
         'numero_contrato',
-        'reserva_id',
         'cliente_id',
         'unidad_educativa_id',
         'garantia_id',
@@ -36,7 +35,6 @@ class Alquiler extends Model
         'requiere_deposito',
         'total',
         'anticipo',
-        'anticipo_reserva',
         'ajuste_conversion',
         'motivo_ajuste',
         'penalizacion',
@@ -73,7 +71,6 @@ class Alquiler extends Model
         'deposito_devuelto' => 'decimal:2',
         'total' => 'decimal:2',
         'anticipo' => 'decimal:2',
-        'anticipo_reserva' => 'decimal:2',
         'ajuste_conversion' => 'decimal:2',
         'saldo_pendiente' => 'decimal:2',
         'penalizacion' => 'decimal:2',
@@ -91,10 +88,6 @@ class Alquiler extends Model
         return $this->belongsTo(Sucursal::class);
     }
 
-    public function reserva()
-    {
-        return $this->belongsTo(Reserva::class);
-    }
 
     public function cliente()
     {
@@ -215,7 +208,7 @@ class Alquiler extends Model
     {
         if ($this->estaCompletamentePagado()) {
             $this->estado_pago = 'PAGADO';
-        } elseif ($this->anticipo + $this->anticipo_reserva > 0) {
+        } elseif ($this->anticipo > 0) {
             $this->estado_pago = 'PARCIAL';
         } else {
             $this->estado_pago = 'PENDIENTE';

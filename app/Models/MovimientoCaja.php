@@ -19,7 +19,6 @@ class MovimientoCaja extends Model
     // Categorías de movimiento
     const CATEGORIA_VENTA = 'VENTA';
     const CATEGORIA_ALQUILER = 'ALQUILER';
-    const CATEGORIA_RESERVA = 'RESERVA';
     const CATEGORIA_PAGO_ALQUILER = 'PAGO_ALQUILER';
     const CATEGORIA_GARANTIA = 'GARANTIA';
     const CATEGORIA_DEVOLUCION_GARANTIA = 'DEVOLUCION_GARANTIA';
@@ -119,7 +118,6 @@ class MovimientoCaja extends Model
         return match($this->categoria) {
             self::CATEGORIA_VENTA => 'Venta',
             self::CATEGORIA_ALQUILER => 'Alquiler',
-            self::CATEGORIA_RESERVA => 'Reserva',
             self::CATEGORIA_PAGO_ALQUILER => 'Pago de Alquiler',
             self::CATEGORIA_GARANTIA => 'Garantía',
             self::CATEGORIA_DEVOLUCION_GARANTIA => 'Devolución de Garantía',
@@ -152,7 +150,6 @@ class MovimientoCaja extends Model
         return [
             self::CATEGORIA_VENTA => 'Venta',
             self::CATEGORIA_ALQUILER => 'Alquiler',
-            self::CATEGORIA_RESERVA => 'Reserva',
             self::CATEGORIA_PAGO_ALQUILER => 'Pago de Alquiler',
             self::CATEGORIA_GARANTIA => 'Garantía',
             self::CATEGORIA_DEVOLUCION_GARANTIA => 'Devolución de Garantía',

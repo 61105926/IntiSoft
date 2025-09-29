@@ -51,10 +51,6 @@
                 <span>Ventas</span>
             </a>
 
-            <a href="{{ route('reserva') }}" class="nav-link-modern {{ request()->routeIs('reserva*') ? 'active' : '' }}">
-                <i class="fas fa-calendar-check"></i>
-                <span>Reservas</span>
-            </a>
 
             <a href="{{ route('alquiler') }}" class="nav-link-modern {{ request()->routeIs('alquiler*') ? 'active' : '' }}">
                 <i class="fas fa-handshake"></i>
@@ -151,7 +147,7 @@
         // Apply theme based on current route
         if (currentRoute.includes('producto') || currentRoute.includes('sucursal') || currentRoute.includes('historial-producto') || currentRoute.includes('stock-sucursal')) {
             sidebar.classList.add('inventario-theme');
-        } else if (currentRoute.includes('venta') || currentRoute.includes('reserva') || currentRoute.includes('alquiler')) {
+        } else if (currentRoute.includes('venta') || currentRoute.includes('alquiler')) {
             sidebar.classList.add('operaciones-theme');
         } else if (currentRoute.includes('caja') || currentRoute.includes('garantia')) {
             sidebar.classList.add('finanzas-theme');
