@@ -6,7 +6,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Alquiler;
 use App\Models\Cliente;
-use App\Models\Reserva;
 use App\Models\Sucursal;
 use App\Models\UnidadEducativa;
 use App\Models\Producto;
@@ -15,7 +14,6 @@ use App\Models\MovimientoCaja;
 use App\Models\StockPorSucursal;
 use App\Models\MovimientoStockSucursal;
 use App\Models\AlquilerDetalle;
-use App\Models\ReservaDetalle;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -45,7 +43,6 @@ class AlquilerController extends Component
 
     // Form data para nuevo alquiler
     public $cliente_id = '';
-    public $reserva_id = '';
     public $unidad_educativa_id = '';
     public $garantia_id = '';
     public $fecha_alquiler;
@@ -60,20 +57,6 @@ class AlquilerController extends Component
     public $sucursal_id = '';
     public $anticipo = 0;
 
-    // Campos de flete y transporte
-    public $requiere_flete_entrega = false;
-    public $direccion_entrega = '';
-    public $fecha_entrega = '';
-    public $costo_flete_entrega = 0;
-    public $tipo_transporte_entrega = 'INTERNO';
-    public $observaciones_flete_entrega = '';
-
-    public $requiere_flete_devolucion = false;
-    public $direccion_devolucion = '';
-    public $fecha_recogida = '';
-    public $costo_flete_devolucion = 0;
-    public $tipo_transporte_devolucion = 'INTERNO';
-    public $observaciones_flete_devolucion = '';
 
     // Productos seleccionados
     public $selectedProducts = [];
@@ -112,14 +95,6 @@ class AlquilerController extends Component
         'sucursal_id' => 'required|exists:sucursals,id',
         'garantia_id' => 'required|exists:garantias,id',
         'anticipo' => 'required|numeric|min:0',
-        'direccion_entrega' => 'required_if:requiere_flete_entrega,true|string|max:255',
-        'fecha_entrega' => 'required_if:requiere_flete_entrega,true|date|after_or_equal:fecha_alquiler',
-        'costo_flete_entrega' => 'required_if:requiere_flete_entrega,true|numeric|min:0',
-        'tipo_transporte_entrega' => 'required_if:requiere_flete_entrega,true|in:INTERNO,EXTERNO,COURIER',
-        'direccion_devolucion' => 'required_if:requiere_flete_devolucion,true|string|max:255',
-        'fecha_recogida' => 'required_if:requiere_flete_devolucion,true|date|after_or_equal:fecha_devolucion_programada',
-        'costo_flete_devolucion' => 'required_if:requiere_flete_devolucion,true|numeric|min:0',
-        'tipo_transporte_devolucion' => 'required_if:requiere_flete_devolucion,true|in:INTERNO,EXTERNO,COURIER',
     ];
 
     public function mount()
@@ -133,13 +108,12 @@ class AlquilerController extends Component
     {
         $alquileres = $this->getFilteredAlquileres();
         $clientes = Cliente::orderBy('nombres')->get();
-        $reservas = Reserva::where('estado', 'CONFIRMADA')->orderBy('numero_reserva', 'desc')->get();
         $sucursales = Sucursal::orderBy('nombre')->get();
         $unidadesEducativas = UnidadEducativa::orderBy('nombre')->get();
         $productos = Producto::all();
         $cajas = Caja::where('estado', 'ABIERTA')->orderBy('nombre')->get();
         $estadisticas = $this->getEstadisticas();
-        
+
         // Garantías disponibles para asignar
         $garantiasDisponibles = \App\Models\Garantia::with('tipoGarantia', 'cliente')
             ->leftJoin('alquileres', 'garantias.id', '=', 'alquileres.garantia_id')
@@ -148,13 +122,12 @@ class AlquilerController extends Component
             ->select('garantias.*')
             ->orderBy('garantias.fecha_recepcion', 'desc')
             ->get();
-        
+
         $tiposGarantia = \App\Models\TipoGarantia::activos()->orderBy('nombre')->get();
 
         return view('livewire.alquiler.alquiler', [
             'alquileres' => $alquileres,
             'clientes' => $clientes,
-            'reservas' => $reservas,
             'sucursales' => $sucursales,
             'unidadesEducativas' => $unidadesEducativas,
             'productos' => $productos,
@@ -167,7 +140,7 @@ class AlquilerController extends Component
 
     private function getFilteredAlquileres()
     {
-        $query = Alquiler::with(['cliente', 'sucursal', 'reserva', 'usuarioCreacion', 'unidadEducativa', 'garantia.tipoGarantia']);
+        $query = Alquiler::with(['cliente', 'sucursal', 'usuarioCreacion', 'unidadEducativa', 'garantia.tipoGarantia']);
 
         if ($this->searchTerm) {
             $query->where(function ($q) {
@@ -175,20 +148,16 @@ class AlquilerController extends Component
                     ->orWhereHas('cliente', function ($clienteQuery) {
                         $clienteQuery->where('nombres', 'like', '%' . $this->searchTerm . '%')
                             ->orWhere('apellidos', 'like', '%' . $this->searchTerm . '%');
-                    })
-                    ->orWhereHas('reserva', function ($reservaQuery) {
-                        $reservaQuery->where('numero_reserva', 'like', '%' . $this->searchTerm . '%');
                     });
             });
         }
-
         if ($this->filterEstado !== 'TODOS') {
             if ($this->filterEstado === 'VENCIDO') {
                 $query->where(function ($q) {
                     $q->where('estado', 'VENCIDO')
                         ->orWhere(function ($subQuery) {
                             $subQuery->where('estado', 'ACTIVO')
-                                    ->where('fecha_devolucion_programada', '<', now());
+                                ->where('fecha_devolucion_programada', '<', now());
                         });
                 });
             } else {
@@ -207,7 +176,7 @@ class AlquilerController extends Component
         return $query->orderBy('created_at', 'desc')->paginate(10);
     }
 
-    private function getEstadisticas()
+    public function getEstadisticas()
     {
         $hoy = Carbon::today();
 
@@ -217,7 +186,7 @@ class AlquilerController extends Component
             'vencidos' => Alquiler::where('estado', 'VENCIDO')
                 ->orWhere(function ($q) use ($hoy) {
                     $q->where('estado', 'ACTIVO')
-                      ->where('fecha_devolucion_programada', '<', $hoy);
+                        ->where('fecha_devolucion_programada', '<', $hoy);
                 })->count(),
             'venceHoy' => Alquiler::where('estado', 'ACTIVO')
                 ->whereDate('fecha_devolucion_programada', $hoy)
@@ -287,11 +256,9 @@ class AlquilerController extends Component
 
             $numeroContrato = 'ALQ-' . date('Y') . '-' . str_pad(Alquiler::count() + 1, 4, '0', STR_PAD_LEFT);
 
-            // Calcular total incluyendo fletes
+            // Calcular total
             $subtotal = $this->calculateSubtotal();
-            $costoFleteTotal = ($this->requiere_flete_entrega ? $this->costo_flete_entrega : 0) +
-                              ($this->requiere_flete_devolucion ? $this->costo_flete_devolucion : 0);
-            $total = $subtotal + $costoFleteTotal;
+            $total = $subtotal;
             $saldoPendiente = $total - $this->anticipo;
 
             // Validar garantía si se seleccionó
@@ -305,7 +272,6 @@ class AlquilerController extends Component
             $alquiler = Alquiler::create([
                 'sucursal_id' => $this->sucursal_id,
                 'numero_contrato' => $numeroContrato,
-                'reserva_id' => $this->reserva_id ?: null,
                 'cliente_id' => $this->cliente_id,
                 'unidad_educativa_id' => $this->unidad_educativa_id ?: null,
                 'garantia_id' => $this->garantia_id ?: null,
@@ -327,40 +293,7 @@ class AlquilerController extends Component
                 'condiciones_especiales' => $this->condiciones_especiales,
                 'usuario_creacion' => Auth::id(),
 
-                // Campos de flete de entrega
-                'requiere_flete_entrega' => $this->requiere_flete_entrega,
-                'direccion_entrega' => $this->requiere_flete_entrega ? $this->direccion_entrega : null,
-                'fecha_entrega' => $this->requiere_flete_entrega ? $this->fecha_entrega : null,
-                'costo_flete_entrega' => $this->requiere_flete_entrega ? $this->costo_flete_entrega : 0,
-                'tipo_transporte_entrega' => $this->requiere_flete_entrega ? $this->tipo_transporte_entrega : null,
-                'observaciones_flete_entrega' => $this->requiere_flete_entrega ? $this->observaciones_flete_entrega : null,
-
-                // Campos de flete de devolución
-                'requiere_flete_devolucion' => $this->requiere_flete_devolucion,
-                'direccion_devolucion' => $this->requiere_flete_devolucion ? $this->direccion_devolucion : null,
-                'fecha_recogida' => $this->requiere_flete_devolucion ? $this->fecha_recogida : null,
-                'costo_flete_devolucion' => $this->requiere_flete_devolucion ? $this->costo_flete_devolucion : 0,
-                'tipo_transporte_devolucion' => $this->requiere_flete_devolucion ? $this->tipo_transporte_devolucion : null,
-                'observaciones_flete_devolucion' => $this->requiere_flete_devolucion ? $this->observaciones_flete_devolucion : null,
             ]);
-
-            // Si viene de una reserva, actualizar el estado a CONFIRMADA y transferir anticipo
-            if ($this->reserva_id) {
-                $reserva = Reserva::find($this->reserva_id);
-                $reserva->update(['estado' => 'CONFIRMADA']);
-                
-                // Transferir anticipo de reserva al alquiler
-                if ($reserva->anticipo > 0) {
-                    $alquiler->update([
-                        'anticipo_reserva' => $reserva->anticipo,
-                        'anticipo' => $this->anticipo + $reserva->anticipo, // Sumar anticipo de reserva + adicional
-                        'saldo_pendiente' => $alquiler->total - ($this->anticipo + $reserva->anticipo),
-                    ]);
-                    
-                    // Actualizar estado de pago
-                    $alquiler->actualizarEstadoPago();
-                }
-            }
 
             // Crear detalles del alquiler y ajustar stock
             foreach ($this->selectedProducts as $producto) {
@@ -402,7 +335,7 @@ class AlquilerController extends Component
                 }
             }
 
-            // Registrar anticipo en caja si hay anticipo directo (no de reserva)
+            // Registrar anticipo en caja si hay anticipo
             if ($this->anticipo > 0) {
                 $cajaAbierta = Caja::where('estado', 'ABIERTA')
                     ->where('sucursal_id', $this->sucursal_id)
@@ -420,41 +353,7 @@ class AlquilerController extends Component
                 }
             }
 
-            // Registrar flete de entrega en caja si aplica
-            if ($this->requiere_flete_entrega && $this->costo_flete_entrega > 0) {
-                $cajaAbierta = Caja::where('estado', 'ABIERTA')
-                    ->where('sucursal_id', $this->sucursal_id)
-                    ->first();
 
-                if ($cajaAbierta) {
-                    $cajaAbierta->registrarMovimiento(
-                        MovimientoCaja::TIPO_INGRESO,
-                        $this->costo_flete_entrega,
-                        "Flete entrega alquiler {$numeroContrato}",
-                        MovimientoCaja::CATEGORIA_VARIOS,
-                        Auth::id(),
-                        "Transporte {$this->tipo_transporte_entrega} - {$this->direccion_entrega}"
-                    );
-                }
-            }
-
-            // Registrar flete de devolución en caja si aplica
-            if ($this->requiere_flete_devolucion && $this->costo_flete_devolucion > 0) {
-                $cajaAbierta = Caja::where('estado', 'ABIERTA')
-                    ->where('sucursal_id', $this->sucursal_id)
-                    ->first();
-
-                if ($cajaAbierta) {
-                    $cajaAbierta->registrarMovimiento(
-                        MovimientoCaja::TIPO_INGRESO,
-                        $this->costo_flete_devolucion,
-                        "Flete devolución alquiler {$numeroContrato}",
-                        MovimientoCaja::CATEGORIA_VARIOS,
-                        Auth::id(),
-                        "Transporte {$this->tipo_transporte_devolucion} - {$this->direccion_devolucion}"
-                    );
-                }
-            }
 
             DB::commit();
 
@@ -473,7 +372,7 @@ class AlquilerController extends Component
 
     public function viewAlquiler($alquilerId)
     {
-        $this->selectedAlquiler = Alquiler::with(['cliente', 'sucursal', 'reserva', 'usuarioCreacion', 'unidadEducativa'])
+        $this->selectedAlquiler = Alquiler::with(['cliente', 'sucursal', 'usuarioCreacion', 'unidadEducativa'])
             ->find($alquilerId);
         $this->showViewAlquilerModal = true;
     }
@@ -489,7 +388,6 @@ class AlquilerController extends Component
         $this->selectedAlquiler = Alquiler::with([
             'cliente',
             'sucursal',
-            'reserva',
             'usuarioCreacion',
             'unidadEducativa',
             'detalles.producto',
@@ -510,10 +408,10 @@ class AlquilerController extends Component
         $this->fecha_devolucion_real = now()->format('Y-m-d\TH:i');
         $this->penalizacion = 0;
         $this->observaciones_devolucion = '';
-        // Si no hay detalles, reconstruir desde reserva asociada (contratos antiguos)
-        if ($this->selectedAlquiler && $this->selectedAlquiler->detalles()->count() === 0 && $this->selectedAlquiler->reserva_id) {
-            $detallesReserva = ReservaDetalle::where('reserva_id', $this->selectedAlquiler->reserva_id)->get();
-            foreach ($detallesReserva as $dr) {
+        // Verificar si hay detalles
+        if ($this->selectedAlquiler && $this->selectedAlquiler->detalles()->count() === 0) {
+            // No hay detalles asociados
+            foreach ([] as $dr) {
                 AlquilerDetalle::create([
                     'alquiler_id' => $this->selectedAlquiler->id,
                     'producto_id' => $dr->producto_id,
@@ -576,7 +474,7 @@ class AlquilerController extends Component
             // Procesar penalización en garantía si existe y hay monto a aplicar
             if ($this->selectedAlquiler->tieneGarantia() && $this->penalizacion > 0) {
                 $this->selectedAlquiler->aplicarGarantia(
-                    $this->penalizacion, 
+                    $this->penalizacion,
                     "Penalización por devolución tardía o daños - " . $this->observaciones_devolucion
                 );
             }
@@ -650,17 +548,17 @@ class AlquilerController extends Component
             // Devolver garantía automáticamente si no hubo penalizaciones que agoten el monto
             if ($this->selectedAlquiler->tieneGarantia()) {
                 $garantia = $this->selectedAlquiler->garantia;
-                
+
                 // Si aún hay monto disponible, devolver la garantía
                 if ($garantia->estado === \App\Models\Garantia::ESTADO_RECIBIDA && $garantia->monto_disponible > 0) {
                     $motivo = "Devolución automática por finalización de alquiler {$this->selectedAlquiler->numero_contrato}";
                     if ($this->penalizacion > 0) {
                         $motivo .= " (después de aplicar penalización de Bs. {$this->penalizacion})";
                     }
-                    
+
                     $garantia->marcarComoDevuelta($garantia->monto_disponible, $motivo);
                 }
-                
+
                 // Liberar la garantía del alquiler
                 $this->selectedAlquiler->liberarGarantia('Alquiler finalizado');
             }
@@ -896,7 +794,7 @@ class AlquilerController extends Component
     public function openGarantiaModal($alquilerId)
     {
         $this->selectedAlquiler = Alquiler::with('garantia')->find($alquilerId);
-        
+
         if (!$this->selectedAlquiler->tieneGarantia()) {
             $this->dispatchBrowserEvent('swal', [
                 'title' => 'Sin Garantía',
@@ -957,13 +855,13 @@ class AlquilerController extends Component
     {
         try {
             $alquiler = Alquiler::with('garantia')->find($alquilerId);
-            
+
             if (!$alquiler->tieneGarantia()) {
                 throw new \Exception('Este alquiler no tiene garantía asignada.');
             }
 
             $garantia = $alquiler->garantia;
-            
+
             if ($garantia->estado !== \App\Models\Garantia::ESTADO_RECIBIDA) {
                 throw new \Exception('Esta garantía no puede ser devuelta en su estado actual.');
             }
@@ -972,7 +870,7 @@ class AlquilerController extends Component
 
             // Devolver el monto disponible completo
             $garantia->marcarComoDevuelta(
-                $garantia->monto_disponible, 
+                $garantia->monto_disponible,
                 "Devolución manual completa desde alquiler {$alquiler->numero_contrato}"
             );
 
@@ -996,54 +894,10 @@ class AlquilerController extends Component
         }
     }
 
-    public function updatedReservaId()
-    {
-        if ($this->reserva_id) {
-            $reserva = Reserva::with(['cliente', 'detalles.producto'])->find($this->reserva_id);
-
-            if ($reserva) {
-                // Cargar información del cliente
-                $this->cliente_id = $reserva->cliente_id;
-
-                // Cargar productos de la reserva
-                $this->selectedProducts = [];
-                foreach ($reserva->detalles as $detalle) {
-                    $this->selectedProducts[] = [
-                        'id' => $detalle->producto_id,
-                        'nombre' => $detalle->producto->nombre,
-                        'precio' => $detalle->precio_unitario,
-                        'cantidad' => $detalle->cantidad,
-                        'subtotal' => $detalle->subtotal
-                    ];
-                }
-
-                // Establecer fechas sugeridas
-                if ($reserva->fecha_evento) {
-                    $this->fecha_alquiler = $reserva->fecha_evento;
-                    $this->fecha_devolucion_programada = Carbon::parse($reserva->fecha_evento)->addDays(1)->format('Y-m-d');
-                }
-
-                // Prellenar anticipo si la reserva tiene uno
-                if ($reserva->anticipo > 0) {
-                    $this->anticipo = $reserva->anticipo;
-                }
-
-                $this->dispatchBrowserEvent('swal', [
-                    'title' => 'Reserva Cargada',
-                    'text' => "Se ha cargado la información de la reserva {$reserva->numero_reserva}. Los productos del cliente han sido añadidos automáticamente.",
-                    'icon' => 'info'
-                ]);
-            }
-        } else {
-            // Si no hay reserva seleccionada, limpiar productos
-            $this->selectedProducts = [];
-        }
-    }
 
     private function resetForm()
     {
         $this->cliente_id = '';
-        $this->reserva_id = '';
         $this->unidad_educativa_id = '';
         $this->garantia_id = '';
         $this->fecha_alquiler = Carbon::now()->format('Y-m-d');
@@ -1059,20 +913,5 @@ class AlquilerController extends Component
         $this->selectedProducts = [];
         $this->currentProductId = '';
         $this->currentQuantity = 1;
-
-        // Reset campos de flete
-        $this->requiere_flete_entrega = false;
-        $this->direccion_entrega = '';
-        $this->fecha_entrega = '';
-        $this->costo_flete_entrega = 0;
-        $this->tipo_transporte_entrega = 'INTERNO';
-        $this->observaciones_flete_entrega = '';
-
-        $this->requiere_flete_devolucion = false;
-        $this->direccion_devolucion = '';
-        $this->fecha_recogida = '';
-        $this->costo_flete_devolucion = 0;
-        $this->tipo_transporte_devolucion = 'INTERNO';
-        $this->observaciones_flete_devolucion = '';
     }
 }

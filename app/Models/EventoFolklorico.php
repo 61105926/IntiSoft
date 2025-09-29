@@ -88,10 +88,6 @@ class EventoFolklorico extends Model
         return $this->hasMany(GarantiaIndividual::class, 'evento_id');
     }
 
-    public function fletes()
-    {
-        return $this->hasMany(FleteProgramado::class, 'evento_id');
-    }
 
     // Scopes
     public function scopeActivos($query)

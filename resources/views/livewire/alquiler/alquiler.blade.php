@@ -144,12 +144,7 @@
                             <tr>
                                 <td>{{ $alquiler->numero_contrato }}</td>
                                 <td>
-                                    @if($alquiler->reserva_id)
-                                        <span class="badge bg-info">Reserva</span>
-                                        <br><small>{{ $alquiler->reserva->numero_reserva ?? '' }}</small>
-                                    @else
-                                        <span class="badge bg-secondary">Directo</span>
-                                    @endif
+                                 
                                 </td>
                                 <td>{{ $alquiler->unidadEducativa->nombre ?? 'N/A' }}</td>
                                 <td>
@@ -203,15 +198,7 @@
                                 <td>
                                     <div class="small">
                                         <div><strong>Bs. {{ number_format($alquiler->total, 2) }}</strong></div>
-                                        @if($alquiler->anticipo_reserva && $alquiler->anticipo_reserva > 0)
-                                            <div class="text-info">Reserva: Bs. {{ number_format($alquiler->anticipo_reserva, 2) }}</div>
-                                            @if($alquiler->anticipo > $alquiler->anticipo_reserva)
-                                                <div class="text-success">Adicional: Bs. {{ number_format($alquiler->anticipo - $alquiler->anticipo_reserva, 2) }}</div>
-                                            @endif
-                                            <div class="text-success border-top">Total Pagado: Bs. {{ number_format($alquiler->anticipo, 2) }}</div>
-                                        @else
-                                            <div class="text-success">Anticipo: Bs. {{ number_format($alquiler->anticipo, 2) }}</div>
-                                        @endif
+                                       
                                         <div class="text-warning">Saldo: Bs. {{ number_format($alquiler->saldo_pendiente, 2) }}</div>
                                     </div>
                                 </td>
@@ -397,57 +384,7 @@
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label fw-bold">🔗 Conversión desde Reserva</label>
-                                                    <select class="form-select form-select-sm" wire:model="reserva_id">
-                                                        <option value="">Nuevo alquiler (sin reserva previa)</option>
-                                                        @foreach ($reservas as $reserva)
-                                                            <option value="{{ $reserva->id }}">
-                                                                {{ $reserva->numero_reserva }} - {{ $reserva->cliente->nombres }} {{ $reserva->cliente->apellidos }}
-                                                                @if($reserva->anticipo > 0)
-                                                                    (Anticipo: Bs. {{ number_format($reserva->anticipo, 2) }})
-                                                                @endif
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <div class="form-text">
-                                                        <small class="text-info">
-                                                            <i class="fas fa-info-circle me-1"></i>
-                                                            Al seleccionar una reserva se precargará la información del cliente y productos
-                                                        </small>
-                                                    </div>
-
-                                                    @if($reserva_id)
-                                                        @php
-                                                            $selectedReserva = $reservas->find($reserva_id);
-                                                        @endphp
-                                                        @if($selectedReserva)
-                                                            <div class="alert alert-success mt-2 mb-0">
-                                                                <h6 class="alert-heading mb-2">
-                                                                    <i class="fas fa-arrow-right me-2"></i>Convirtiendo Reserva a Alquiler
-                                                                </h6>
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
-                                                                        <small>
-                                                                            <strong>Reserva:</strong> {{ $selectedReserva->numero_reserva }}<br>
-                                                                            <strong>Cliente:</strong> {{ $selectedReserva->cliente->nombres }} {{ $selectedReserva->cliente->apellidos }}<br>
-                                                                            <strong>Fecha Evento:</strong> {{ $selectedReserva->fecha_evento ? \Carbon\Carbon::parse($selectedReserva->fecha_evento)->format('d/m/Y') : 'No definida' }}
-                                                                        </small>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <small>
-                                                                            @if($selectedReserva->anticipo > 0)
-                                                                                <strong>Anticipo Reserva:</strong> Bs. {{ number_format($selectedReserva->anticipo, 2) }}<br>
-                                                                            @endif
-                                                                            <strong>Total Reserva:</strong> Bs. {{ number_format($selectedReserva->total, 2) }}<br>
-                                                                            <strong>Estado:</strong> <span class="badge bg-{{ $selectedReserva->estado === 'CONFIRMADA' ? 'success' : 'warning' }}">{{ $selectedReserva->estado }}</span>
-                                                                        </small>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        @endif
-                                                    @endif
-                                                </div>
+                                             
                                             </div>
                                         </div>
                                     </div>

@@ -129,10 +129,6 @@ class Alquiler extends Model
         return $this->hasMany(GarantiaIndividual::class);
     }
 
-    public function fletes()
-    {
-        return $this->hasMany(FleteProgramado::class);
-    }
 
     public function eventoFolklorico()
     {

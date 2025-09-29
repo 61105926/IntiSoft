@@ -118,29 +118,10 @@ class Dashboard extends Controller
             });
 
         // Agregar reservas recientes
-        $reservasRecientes = Reserva::with('cliente')
-            ->when($userSucursalId, function($query) use ($userSucursalId) {
-                return $query->where('sucursal_id', $userSucursalId);
-            })
-            ->orderBy('created_at', 'desc')
-            ->limit(2)
-            ->get()
-            ->map(function($reserva) {
-                return [
-                    'tipo' => 'Reserva',
-                    'tipo_class' => 'primary',
-                    'tipo_icon' => 'fas fa-calendar',
-                    'cliente' => $reserva->cliente->nombres ?? 'Cliente N/A',
-                    'monto' => $reserva->total,
-                    'estado' => $reserva->estado,
-                    'fecha' => $reserva->created_at
-                ];
-            });
-
+    
         $transaccionesRecientes = $transaccionesRecientes
             ->merge($ventasRecientes)
             ->merge($alquileresRecientes)
-            ->merge($reservasRecientes)
             ->sortByDesc('fecha')
             ->take(5);
 
