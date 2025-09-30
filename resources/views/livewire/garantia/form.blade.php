@@ -40,9 +40,7 @@
               <label for="tipo_garantia_id" class="form-label fw-bold">Tipo de Garantía *</label>
               <select wire:model="tipo_garantia_id" id="tipo_garantia_id" class="form-select @error('tipo_garantia_id') is-invalid @enderror">
                 <option value="">🛡️ Seleccione tipo</option>
-                @foreach($tiposGarantia as $tipo)
-                  <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                @endforeach
+                  <option value="ci">ci</option>
               </select>
               @error('tipo_garantia_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>

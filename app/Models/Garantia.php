@@ -82,10 +82,6 @@ class Garantia extends Model
         return $this->belongsTo(Sucursal::class);
     }
 
-    public function alquileres()
-    {
-        return $this->hasMany(Alquiler::class, 'garantia_id');
-    }
 
     // Scopes
     public function scopeActivas($query)

@@ -142,6 +142,53 @@ class VentaController extends Component
         $this->resetearFormulario();
     }
 
+    // Métodos para nuevo cliente rápido
+    public function abrirModalNuevoCliente()
+    {
+        $this->mostrarModalNuevoCliente = true;
+        $this->nuevoCliente = [
+            'nombre' => '',
+            'ci_nit' => '',
+            'telefono' => '',
+            'email' => ''
+        ];
+    }
+
+    public function cerrarModalNuevoCliente()
+    {
+        $this->mostrarModalNuevoCliente = false;
+        $this->nuevoCliente = [
+            'nombre' => '',
+            'ci_nit' => '',
+            'telefono' => '',
+            'email' => ''
+        ];
+    }
+
+    public function guardarNuevoCliente()
+    {
+        $this->validate([
+            'nuevoCliente.nombre' => 'required|string|max:200',
+            'nuevoCliente.ci_nit' => 'required|string|max:50|unique:clientes,ci_nit',
+            'nuevoCliente.telefono' => 'required|string|max:20',
+            'nuevoCliente.email' => 'nullable|email|max:100'
+        ]);
+
+        $cliente = Cliente::create([
+            'nombre' => $this->nuevoCliente['nombre'],
+            'ci_nit' => $this->nuevoCliente['ci_nit'],
+            'telefono' => $this->nuevoCliente['telefono'],
+            'email' => $this->nuevoCliente['email'],
+            'activo' => true
+        ]);
+
+        $this->clientes = Cliente::where('activo', true)->orderBy('nombre')->get();
+        $this->cliente_id = $cliente->id;
+
+        session()->flash('message', 'Cliente creado exitosamente');
+        $this->cerrarModalNuevoCliente();
+    }
+
     public function resetearFormulario()
     {
         $this->ventaSeleccionada = null;

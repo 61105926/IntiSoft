@@ -57,7 +57,7 @@ class ConjuntoManagement extends Component
 
     public $componentesSeleccionados = [];
     public $variaciones = [];
-    public $tiposComponente = [];
+    public $componentes = []; // Cambiado de tiposComponente a componentes
 
     // Formulario para crear instancias
     public $instanceForm = [
@@ -74,8 +74,11 @@ class ConjuntoManagement extends Component
 
     public function mount()
     {
-        $this->tiposComponente = \App\Models\TipoComponente::where('activo', true)
-            ->orderBy('orden_visualizacion')
+        // Cargar los componentes específicos con su tipo de componente
+        $this->componentes = \App\Models\Componente::with('tipoComponente')
+            ->where('activo', true)
+            ->orderBy('tipo_componente_id')
+            ->orderBy('nombre')
             ->get();
     }
 

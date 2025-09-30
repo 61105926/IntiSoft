@@ -17,10 +17,7 @@
             <small class="text-white px-3 text-uppercase fw-bold">Inventario</small>
         </div>
 
-        <a href="{{ route('producto') }}" class="nav-link {{ request()->routeIs('producto*') ? 'active' : '' }}">
-            <i class="fas fa-boxes"></i>
-            <span>Productos</span>
-        </a>
+
 
         <a href="{{ route('sucursal') }}" class="nav-link {{ request()->routeIs('sucursal*') ? 'active' : '' }}">
             <i class="fas fa-store"></i>

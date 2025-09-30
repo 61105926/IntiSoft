@@ -122,27 +122,32 @@
 
                     {{-- Pestaña Componentes --}}
                     <div class="tab-pane fade" id="componentes" role="tabpanel">
-                        <h6 class="mb-3">Seleccione los componentes que forman este conjunto</h6>
+                        <h6 class="mb-3">Seleccione los componentes específicos que forman este conjunto</h6>
                         <div class="row">
-                            @foreach($tiposComponente as $tipoComponente)
+                            @foreach($componentes as $componente)
                                 <div class="col-md-6 mb-3">
-                                    <div class="card {{ in_array($tipoComponente->id, $componentesSeleccionados) ? 'border-primary bg-light' : '' }}">
+                                    <div class="card {{ in_array($componente->id, $componentesSeleccionados) ? 'border-primary bg-light' : '' }}">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
                                                 <div class="form-check me-3">
                                                     <input class="form-check-input" type="checkbox"
-                                                           value="{{ $tipoComponente->id }}"
+                                                           value="{{ $componente->id }}"
                                                            wire:model="componentesSeleccionados"
-                                                           id="componente_{{ $tipoComponente->id }}">
+                                                           id="componente_{{ $componente->id }}">
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <h6 class="mb-1">{{ $tipoComponente->nombre }}</h6>
-                                                    <p class="text-muted mb-1 small">{{ $tipoComponente->descripcion }}</p>
-                                                    @if($tipoComponente->es_obligatorio_defecto)
-                                                        <span class="badge bg-warning">Obligatorio por defecto</span>
+                                                    <h6 class="mb-1">{{ $componente->nombre }}</h6>
+                                                    <p class="text-muted mb-1 small">
+                                                        <strong>Tipo:</strong> {{ $componente->tipoComponente->nombre ?? 'N/A' }}
+                                                        @if($componente->codigo)
+                                                            | <strong>Código:</strong> {{ $componente->codigo }}
+                                                        @endif
+                                                    </p>
+                                                    @if($componente->tipoComponente && $componente->tipoComponente->es_obligatorio_defecto)
+                                                        <span class="badge bg-info">{{ $componente->tipoComponente->nombre }}</span>
                                                     @endif
                                                 </div>
-                                                <i class="fas fa-{{ $tipoComponente->icono }} fa-2x text-muted"></i>
+                                                <i class="fas fa-{{ $componente->tipoComponente->icono ?? 'puzzle-piece' }} fa-2x text-muted"></i>
                                             </div>
                                         </div>
                                     </div>

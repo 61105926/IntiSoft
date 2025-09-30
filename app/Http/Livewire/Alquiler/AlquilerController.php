@@ -8,7 +8,6 @@ use App\Models\Alquiler;
 use App\Models\Cliente;
 use App\Models\Sucursal;
 use App\Models\UnidadEducativa;
-use App\Models\Producto;
 use App\Models\Caja;
 use App\Models\MovimientoCaja;
 use App\Models\StockPorSucursal;
@@ -40,11 +39,11 @@ class AlquilerController extends Component
     public $showDevolucionModal = false;
     public $showPagoModal = false;
     public $showPrintModal = false;
+    public $mostrarModalNuevoCliente = false;
 
     // Form data para nuevo alquiler
     public $cliente_id = '';
     public $unidad_educativa_id = '';
-    public $garantia_id = '';
     public $fecha_alquiler;
     public $hora_entrega = '09:00';
     public $fecha_devolucion_programada;
@@ -57,11 +56,12 @@ class AlquilerController extends Component
     public $sucursal_id = '';
     public $anticipo = 0;
 
+    // Garantía integrada
+    public $tipo_garantia = 'NINGUNA';
+    public $documento_garantia = '';
+    public $monto_garantia = 0;
+    public $observaciones_garantia = '';
 
-    // Productos seleccionados
-    public $selectedProducts = [];
-    public $currentProductId = '';
-    public $currentQuantity = 1;
 
     // Conjuntos seleccionados
     public $selectedConjuntos = [];
@@ -72,9 +72,14 @@ class AlquilerController extends Component
 
     // Devolución
     public $fecha_devolucion_real;
-    public $penalizacion = 0;
+    public $hora_devolucion_real;
+    public $penalizacion_retraso = 0;
+    public $penalizacion_danos = 0;
+    public $penalizacion_perdida = 0;
     public $observaciones_devolucion = '';
     public $devolucionDetalles = [];
+    public $aplicar_penalizaciones_garantia = true;
+    public $devolver_garantia = true;
 
     // Pago
     public $monto_pago = 0;
@@ -91,13 +96,24 @@ class AlquilerController extends Component
     public $monto_aplicar_garantia = 0;
     public $motivo_aplicacion = '';
 
+    // Nuevo cliente rápido
+    public $nuevoCliente = [
+        'nombres' => '',
+        'apellidos' => '',
+        'carnet_identidad' => '',
+        'telefono' => '',
+        'email' => ''
+    ];
+
     protected $rules = [
         'cliente_id' => 'required|exists:clientes,id',
         'fecha_alquiler' => 'required|date',
         'fecha_devolucion_programada' => 'required|date|after:fecha_alquiler',
         'dias_alquiler' => 'required|integer|min:1',
         'sucursal_id' => 'required|exists:sucursals,id',
-        'garantia_id' => 'required|exists:garantias,id',
+        'tipo_garantia' => 'required|in:NINGUNA,CI,EFECTIVO,QR',
+        'documento_garantia' => 'required_if:tipo_garantia,CI',
+        'monto_garantia' => 'required_if:tipo_garantia,EFECTIVO,QR|numeric|min:0',
         'anticipo' => 'required|numeric|min:0',
     ];
 
@@ -114,26 +130,21 @@ class AlquilerController extends Component
         $clientes = Cliente::orderBy('nombres')->get();
         $sucursales = Sucursal::orderBy('nombre')->get();
         $unidadesEducativas = UnidadEducativa::orderBy('nombre')->get();
-        $productos = Producto::all();
 
         // Agregar instancias de conjuntos disponibles para alquilar
-        $conjuntos = \App\Models\InstanciaConjunto::with(['variacionConjunto.conjunto.categoriaConjunto'])
+        // Filtrar por sucursal si está seleccionada
+        $conjuntosQuery = \App\Models\InstanciaConjunto::with(['variacionConjunto.conjunto.categoriaConjunto'])
             ->where('estado_disponibilidad', 'DISPONIBLE')
-            ->where('activa', true)
-            ->orderBy('id')
-            ->get();
+            ->where('activa', true);
+
+        if ($this->sucursal_id) {
+            $conjuntosQuery->where('sucursal_id', $this->sucursal_id);
+        }
+
+        $conjuntos = $conjuntosQuery->orderBy('id')->get();
 
         $cajas = Caja::where('estado', 'ABIERTA')->orderBy('nombre')->get();
         $estadisticas = $this->getEstadisticas();
-
-        // Garantías disponibles para asignar
-        $garantiasDisponibles = \App\Models\Garantia::with('tipoGarantia', 'cliente')
-            ->leftJoin('alquileres', 'garantias.id', '=', 'alquileres.garantia_id')
-            ->where('garantias.estado', \App\Models\Garantia::ESTADO_RECIBIDA)
-            ->whereNull('alquileres.id') // Sin asignar a ningún alquiler
-            ->select('garantias.*')
-            ->orderBy('garantias.fecha_recepcion', 'desc')
-            ->get();
 
         $tiposGarantia = \App\Models\TipoGarantia::activos()->orderBy('nombre')->get();
 
@@ -142,18 +153,22 @@ class AlquilerController extends Component
             'clientes' => $clientes,
             'sucursales' => $sucursales,
             'unidadesEducativas' => $unidadesEducativas,
-            'productos' => $productos,
             'conjuntos' => $conjuntos,
             'cajas' => $cajas,
             'estadisticas' => $estadisticas,
-            'garantiasDisponibles' => $garantiasDisponibles,
             'tiposGarantia' => $tiposGarantia,
         ])->extends('layouts.theme.modern-app')->section('content');
     }
 
     private function getFilteredAlquileres()
     {
-        $query = Alquiler::with(['cliente', 'sucursal', 'usuarioCreacion', 'unidadEducativa', 'garantia.tipoGarantia']);
+        $query = Alquiler::with([
+            'cliente',
+            'sucursal',
+            'usuarioCreacion',
+            'unidadEducativa',
+            'detalles.instanciaConjunto.variacionConjunto.conjunto'
+        ]);
 
         if ($this->searchTerm) {
             $query->where(function ($q) {
@@ -260,8 +275,69 @@ class AlquilerController extends Component
         $this->resetForm();
     }
 
+    // Métodos para nuevo cliente rápido
+    public function abrirModalNuevoCliente()
+    {
+        $this->mostrarModalNuevoCliente = true;
+        $this->nuevoCliente = [
+            'nombres' => '',
+            'apellidos' => '',
+            'carnet_identidad' => '',
+            'telefono' => '',
+            'email' => ''
+        ];
+    }
+
+    public function cerrarModalNuevoCliente()
+    {
+        $this->mostrarModalNuevoCliente = false;
+        $this->nuevoCliente = [
+            'nombres' => '',
+            'apellidos' => '',
+            'carnet_identidad' => '',
+            'telefono' => '',
+            'email' => ''
+        ];
+    }
+
+    public function guardarNuevoCliente()
+    {
+        $this->validate([
+            'nuevoCliente.nombres' => 'required|string|max:100',
+            'nuevoCliente.apellidos' => 'required|string|max:100',
+            'nuevoCliente.carnet_identidad' => 'required|string|max:50|unique:clientes,carnet_identidad',
+            'nuevoCliente.telefono' => 'required|string|max:20',
+            'nuevoCliente.email' => 'nullable|email|max:100'
+        ]);
+
+        $cliente = Cliente::create([
+            'nombres' => $this->nuevoCliente['nombres'],
+            'apellidos' => $this->nuevoCliente['apellidos'],
+            'carnet_identidad' => $this->nuevoCliente['carnet_identidad'],
+            'telefono' => $this->nuevoCliente['telefono'],
+            'email' => $this->nuevoCliente['email'],
+            'activo' => true
+        ]);
+
+        // Recargar clientes
+        $clientes = Cliente::orderBy('nombres')->get();
+        $this->cliente_id = $cliente->id;
+
+        session()->flash('message', 'Cliente creado exitosamente');
+        $this->cerrarModalNuevoCliente();
+
+        // Forzar recarga de datos
+        $this->emit('refreshComponent');
+    }
+
     public function saveNewAlquiler()
     {
+        // Validar que haya conjuntos seleccionados
+        if (empty($this->selectedConjuntos)) {
+            session()->flash('errorModal', 'Debe seleccionar al menos un conjunto folklórico para alquilar.');
+            return;
+        }
+
         $this->validate();
 
         try {
@@ -274,21 +350,12 @@ class AlquilerController extends Component
             $total = $subtotal;
             $saldoPendiente = $total - $this->anticipo;
 
-            // Validar garantía si se seleccionó
-            if ($this->garantia_id) {
-                $garantia = \App\Models\Garantia::find($this->garantia_id);
-                if (!$garantia || !$garantia->puede_usarse) {
-                    throw new \Exception('La garantía seleccionada no está disponible para su uso.');
-                }
-            }
-
             $alquiler = Alquiler::create([
                 'sucursal_id' => $this->sucursal_id,
                 'numero_contrato' => $numeroContrato,
                 'cliente_id' => $this->cliente_id,
                 'unidad_educativa_id' => $this->unidad_educativa_id ?: null,
-                'garantia_id' => $this->garantia_id ?: null,
-                'tipo_pago_id' => 1, // Asumiendo tipo de pago por defecto
+                'tipo_pago_id' => 1,
                 'fecha_alquiler' => $this->fecha_alquiler,
                 'hora_entrega' => $this->hora_entrega,
                 'fecha_devolucion_programada' => $this->fecha_devolucion_programada,
@@ -305,45 +372,32 @@ class AlquilerController extends Component
                 'observaciones' => $this->observaciones,
                 'condiciones_especiales' => $this->condiciones_especiales,
                 'usuario_creacion' => Auth::id(),
-
+                'tipo_garantia' => $this->tipo_garantia,
+                'documento_garantia' => $this->documento_garantia,
+                'monto_garantia' => $this->monto_garantia,
+                'observaciones_garantia' => $this->observaciones_garantia,
+                'estado_garantia' => 'PENDIENTE',
             ]);
 
-            // Crear detalles del alquiler y ajustar stock
-            foreach ($this->selectedProducts as $producto) {
+            // Crear detalles del alquiler con conjuntos
+            foreach ($this->selectedConjuntos as $conjunto) {
                 AlquilerDetalle::create([
                     'alquiler_id' => $alquiler->id,
-                    'producto_id' => $producto['id'],
-                    'cantidad' => (int) $producto['cantidad'],
-                    'precio_unitario' => $producto['precio_unitario'] ?? 0,
-                    'subtotal' => $producto['subtotal'] ?? (($producto['precio_unitario'] ?? 0) * (int) $producto['cantidad']),
+                    'instancia_conjunto_id' => $conjunto['instancia_id'],
+                    'conjunto_id' => $conjunto['conjunto_id'],
+                    'cantidad' => 1,
+                    'precio_unitario' => $conjunto['precio_unitario'] ?? 0,
+                    'subtotal' => $conjunto['subtotal'] ?? 0,
                     'estado_devolucion' => 'PENDIENTE',
                 ]);
 
-                $stockSucursal = StockPorSucursal::where('producto_id', $producto['id'])
-                    ->where('sucursal_id', $this->sucursal_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($stockSucursal) {
-                    $cantidad = (int) $producto['cantidad'];
-                    $stockAnterior = (int) $stockSucursal->stock_actual;
-                    $stockSucursal->stock_actual = max(0, (int) $stockSucursal->stock_actual - $cantidad);
-                    if (isset($stockSucursal->stock_alquilado)) {
-                        $stockSucursal->stock_alquilado = (int) $stockSucursal->stock_alquilado + $cantidad;
-                    }
-                    $stockSucursal->save();
-
-                    MovimientoStockSucursal::create([
-                        'producto_id' => $producto['id'],
-                        'sucursal_id' => $this->sucursal_id,
-                        'tipo_movimiento' => 'SALIDA',
-                        'cantidad' => $cantidad,
-                        'stock_anterior' => $stockAnterior,
-                        'stock_nuevo' => $stockSucursal->stock_actual,
-                        'referencia' => $numeroContrato,
-                        'motivo' => 'Salida por alquiler',
-                        'usuario_id' => Auth::id(),
-                        'fecha_movimiento' => now(),
+                // Actualizar estado de la instancia del conjunto
+                $instancia = \App\Models\InstanciaConjunto::find($conjunto['instancia_id']);
+                if ($instancia) {
+                    $instancia->update([
+                        'estado_disponibilidad' => 'ALQUILADO',
+                        'ultimo_alquiler_id' => $alquiler->id,
+                        'fecha_ultimo_alquiler' => now(),
                     ]);
                 }
             }
@@ -385,8 +439,14 @@ class AlquilerController extends Component
 
     public function viewAlquiler($alquilerId)
     {
-        $this->selectedAlquiler = Alquiler::with(['cliente', 'sucursal', 'usuarioCreacion', 'unidadEducativa'])
-            ->find($alquilerId);
+        $this->selectedAlquiler = Alquiler::with([
+            'cliente',
+            'sucursal',
+            'usuarioCreacion',
+            'unidadEducativa',
+            'detalles.instanciaConjunto.variacionConjunto.conjunto',
+            'detalles.instanciaConjunto.componentesActivos'
+        ])->find($alquilerId);
         $this->showViewAlquilerModal = true;
     }
 
@@ -403,8 +463,8 @@ class AlquilerController extends Component
             'sucursal',
             'usuarioCreacion',
             'unidadEducativa',
-            'detalles.producto',
-            'garantia.tipoGarantia'
+            'detalles.instanciaConjunto.variacionConjunto.conjunto',
+            'detalles.instanciaConjunto.componentesActivos'
         ])->find($alquilerId);
         $this->showPrintModal = true;
     }
@@ -417,35 +477,44 @@ class AlquilerController extends Component
 
     public function openDevolucionModal($alquilerId)
     {
-        $this->selectedAlquiler = Alquiler::with(['detalles.producto'])->find($alquilerId);
-        $this->fecha_devolucion_real = now()->format('Y-m-d\TH:i');
-        $this->penalizacion = 0;
+        $this->selectedAlquiler = Alquiler::with([
+            'detalles.instanciaConjunto.variacionConjunto.conjunto',
+            'detalles.instanciaConjunto.componentesActivos.componente',
+            'cliente'
+        ])->find($alquilerId);
+
+        $this->fecha_devolucion_real = now()->format('Y-m-d');
+        $this->hora_devolucion_real = now()->format('H:i');
+        $this->penalizacion_retraso = 0;
+        $this->penalizacion_danos = 0;
+        $this->penalizacion_perdida = 0;
         $this->observaciones_devolucion = '';
-        // Verificar si hay detalles
-        if ($this->selectedAlquiler && $this->selectedAlquiler->detalles()->count() === 0) {
-            // No hay detalles asociados
-            foreach ([] as $dr) {
-                AlquilerDetalle::create([
-                    'alquiler_id' => $this->selectedAlquiler->id,
-                    'producto_id' => $dr->producto_id,
-                    'cantidad' => (int) $dr->cantidad,
-                    'precio_unitario' => $dr->precio_unitario,
-                    'subtotal' => $dr->subtotal,
-                    'estado_devolucion' => 'PENDIENTE',
-                ]);
-            }
-            $this->selectedAlquiler->load('detalles.producto');
-        }
-        // Precargar detalles para marcar estado por ítem (por defecto DEVUELTO)
-        $this->devolucionDetalles = $this->selectedAlquiler->detalles->map(function ($d) {
-            return [
-                'detalle_id' => $d->id,
-                'producto' => $d->producto->nombre ?? 'Producto',
-                'cantidad' => (int) $d->cantidad,
-                'estado' => $d->estado_devolucion ?? 'PENDIENTE',
-                'observaciones' => $d->observaciones_devolucion ?? '',
+        $this->aplicar_penalizaciones_garantia = true;
+        $this->devolver_garantia = true;
+
+        // Inicializar estructura de devolución para cada detalle
+        $this->devolucionDetalles = [];
+        foreach ($this->selectedAlquiler->detalles as $index => $detalle) {
+            $this->devolucionDetalles[$index] = [
+                'detalle_id' => $detalle->id,
+                'estado_general' => 'COMPLETO',
+                'observaciones_generales' => '',
+                'componentes' => []
             ];
-        })->toArray();
+
+            // Inicializar cada componente si existen
+            if ($detalle->instanciaConjunto && $detalle->instanciaConjunto->componentesActivos) {
+                foreach ($detalle->instanciaConjunto->componentesActivos as $componente) {
+                    $this->devolucionDetalles[$index]['componentes'][$componente->id] = [
+                        'presente' => true,
+                        'estado' => 'DEVUELTO',
+                        'costo_penalizacion' => 0,
+                        'observaciones' => ''
+                    ];
+                }
+            }
+        }
+
         $this->showDevolucionModal = true;
     }
 
@@ -459,132 +528,144 @@ class AlquilerController extends Component
     {
         $this->validate([
             'fecha_devolucion_real' => 'required|date',
-            'penalizacion' => 'required|numeric|min:0',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Actualizar estados por detalle según selección de UI
-            foreach ($this->devolucionDetalles as $item) {
-                $detalle = $this->selectedAlquiler->detalles->firstWhere('id', $item['detalle_id']);
-                if ($detalle) {
-                    $estado = $item['estado'] ?: 'PENDIENTE';
-                    if ($estado === 'DEVUELTO' && $detalle->estado_devolucion !== 'DEVUELTO') {
-                        $detalle->marcarComoDevuelto($item['observaciones'] ?? null);
-                    } elseif ($estado === 'DAÑADO' && $detalle->estado_devolucion !== 'DAÑADO') {
-                        $detalle->marcarComoDañado(0, $item['observaciones'] ?? null);
-                    } elseif ($estado === 'PERDIDO' && $detalle->estado_devolucion !== 'PERDIDO') {
-                        $detalle->update([
-                            'estado_devolucion' => 'PERDIDO',
-                            'fecha_devolucion' => now(),
-                            'observaciones_devolucion' => $item['observaciones'] ?? null,
+            $totalPenalizaciones = $this->penalizacion_retraso + $this->penalizacion_danos + $this->penalizacion_perdida;
+
+            // Procesar cada conjunto devuelto
+            foreach ($this->devolucionDetalles as $index => $detalleData) {
+                $detalle = $this->selectedAlquiler->detalles->firstWhere('id', $detalleData['detalle_id']);
+
+                if (!$detalle) continue;
+
+                // Actualizar estado del detalle
+                $detalle->update([
+                    'estado_devolucion' => $detalleData['estado_general'],
+                    'fecha_devolucion' => $this->fecha_devolucion_real . ' ' . $this->hora_devolucion_real,
+                    'observaciones_devolucion' => $detalleData['observaciones_generales'],
+                    'penalizacion_retraso' => $this->penalizacion_retraso,
+                    'penalizacion_daños' => $this->penalizacion_danos,
+                    'penalizacion_perdida' => $this->penalizacion_perdida,
+                ]);
+
+                // Procesar componentes individuales
+                if (isset($detalleData['componentes']) && $detalle->instanciaConjunto) {
+                    foreach ($detalleData['componentes'] as $componenteId => $componenteData) {
+                        $instanciaComponente = \App\Models\InstanciaComponente::find($componenteId);
+
+                        if (!$instanciaComponente) continue;
+
+                        // Actualizar estado del componente
+                        $nuevoEstado = 'ASIGNADO';
+                        if (!$componenteData['presente'] || $componenteData['estado'] === 'PERDIDO') {
+                            $nuevoEstado = 'PERDIDO';
+                        } elseif (in_array($componenteData['estado'], ['DAÑADO_LEVE', 'DAÑADO_GRAVE'])) {
+                            $nuevoEstado = 'DANADO';
+                        }
+
+                        $instanciaComponente->update([
+                            'estado_actual' => $nuevoEstado,
+                            'estado_fisico' => $componenteData['estado'] === 'DEVUELTO' ? 'BUENO' : 'MALO',
+                            'observaciones' => $componenteData['observaciones']
                         ]);
+
+                        // Registrar en historial
+                        if ($nuevoEstado === 'PERDIDO') {
+                            \App\Models\HistorialComponentesConjunto::registrarPerdida(
+                                $detalle->instancia_conjunto_id,
+                                $instanciaComponente->componente_id,
+                                $componenteId,
+                                $detalle->id,
+                                $componenteData['observaciones']
+                            );
+                        }
+
+                        // Registrar costo de penalización por componente
+                        if ($componenteData['costo_penalizacion'] > 0) {
+                            $this->penalizacion_danos += $componenteData['costo_penalizacion'];
+                        }
                     }
+                }
+
+                // Actualizar estado de disponibilidad de la instancia del conjunto
+                if ($detalle->instanciaConjunto) {
+                    $estadoDisponibilidad = 'DISPONIBLE';
+
+                    if ($detalleData['estado_general'] === 'PERDIDO') {
+                        $estadoDisponibilidad = 'PERDIDO';
+                    } elseif ($detalleData['estado_general'] === 'CON_DAÑOS' || $detalleData['estado_general'] === 'INCOMPLETO') {
+                        $estadoDisponibilidad = 'MANTENIMIENTO';
+                    }
+
+                    $detalle->instanciaConjunto->update([
+                        'estado_disponibilidad' => $estadoDisponibilidad,
+                        'fecha_ultima_devolucion' => now(),
+                    ]);
                 }
             }
 
-            // Procesar penalización en garantía si existe y hay monto a aplicar
-            if ($this->selectedAlquiler->tieneGarantia() && $this->penalizacion > 0) {
-                $this->selectedAlquiler->aplicarGarantia(
-                    $this->penalizacion,
-                    "Penalización por devolución tardía o daños - " . $this->observaciones_devolucion
-                );
-            }
-
+            // Actualizar alquiler con penalizaciones
             $this->selectedAlquiler->update([
-                'fecha_devolucion_real' => $this->fecha_devolucion_real,
-                'penalizacion' => $this->penalizacion,
-                'observaciones' => $this->selectedAlquiler->observaciones . "\nDevolución: " . $this->observaciones_devolucion,
+                'fecha_devolucion_real' => $this->fecha_devolucion_real . ' ' . $this->hora_devolucion_real,
+                'estado' => 'DEVUELTO',
+                'observaciones' => ($this->selectedAlquiler->observaciones ?? '') . "\n\n[DEVOLUCIÓN] " . $this->observaciones_devolucion,
                 'usuario_devolucion' => Auth::id(),
             ]);
 
-            // Ajuste de stock por detalle según estado_devolucion
-            $detalles = $this->selectedAlquiler->detalles()->get();
-            foreach ($detalles as $detalle) {
-                // Solo procesar detalles que ya no estén PENDIENTE
-                if (in_array($detalle->estado_devolucion, ['DEVUELTO', 'DAÑADO', 'PERDIDO'])) {
-                    $stockSucursal = StockPorSucursal::where('producto_id', $detalle->producto_id)
-                        ->where('sucursal_id', $this->selectedAlquiler->sucursal_id)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($stockSucursal) {
-                        $stockAnterior = $stockSucursal->stock_actual;
-
-                        // Liberar del alquilado
-                        if (isset($stockSucursal->stock_alquilado)) {
-                            $stockSucursal->stock_alquilado = max(0, (int) $stockSucursal->stock_alquilado - (int) $detalle->cantidad);
-                        }
-
-                        if ($detalle->estado_devolucion === 'DEVUELTO') {
-                            // Vuelve al stock
-                            $stockSucursal->stock_actual += (int) $detalle->cantidad;
-                            $stockSucursal->save();
-
-                            MovimientoStockSucursal::create([
-                                'producto_id' => $detalle->producto_id,
-                                'sucursal_id' => $this->selectedAlquiler->sucursal_id,
-                                'tipo_movimiento' => 'ENTRADA',
-                                'cantidad' => (int) $detalle->cantidad,
-                                'stock_anterior' => $stockAnterior,
-                                'stock_nuevo' => $stockSucursal->stock_actual,
-                                'referencia' => $this->selectedAlquiler->numero_contrato,
-                                'motivo' => 'Devolución de alquiler',
-                                'usuario_id' => Auth::id(),
-                                'fecha_movimiento' => now(),
-                            ]);
-                        } else {
-                            // DAÑADO o PERDIDO: no incrementa stock_actual, solo ajuste de baja
-                            $stockSucursal->save();
-
-                            MovimientoStockSucursal::create([
-                                'producto_id' => $detalle->producto_id,
-                                'sucursal_id' => $this->selectedAlquiler->sucursal_id,
-                                'tipo_movimiento' => 'AJUSTE',
-                                'cantidad' => (int) $detalle->cantidad,
-                                'stock_anterior' => $stockAnterior,
-                                'stock_nuevo' => $stockSucursal->stock_actual,
-                                'referencia' => $this->selectedAlquiler->numero_contrato,
-                                'motivo' => $detalle->estado_devolucion === 'DAÑADO' ? 'Baja por daño en alquiler' : 'Baja por pérdida en alquiler',
-                                'usuario_id' => Auth::id(),
-                                'fecha_movimiento' => now(),
-                            ]);
-                        }
-                    }
-                }
+            // Agregar penalizaciones al total
+            if ($totalPenalizaciones > 0) {
+                $this->selectedAlquiler->update([
+                    'total' => $this->selectedAlquiler->total + $totalPenalizaciones,
+                    'saldo_pendiente' => $this->selectedAlquiler->saldo_pendiente + $totalPenalizaciones,
+                ]);
             }
 
-            // Actualizar el estado general del alquiler según los detalles
-            $this->selectedAlquiler->completarDevolucion($this->observaciones_devolucion);
+            // Gestionar garantía
+            if ($this->selectedAlquiler->tieneGarantia() && $this->selectedAlquiler->estado_garantia !== 'DEVUELTA') {
 
-            // Devolver garantía automáticamente si no hubo penalizaciones que agoten el monto
-            if ($this->selectedAlquiler->tieneGarantia()) {
-                $garantia = $this->selectedAlquiler->garantia;
+                if ($this->aplicar_penalizaciones_garantia && $totalPenalizaciones > 0) {
+                    // Descontar penalizaciones de la garantía
+                    $montoDescontado = min($totalPenalizaciones, $this->selectedAlquiler->monto_garantia);
+                    $montoDevolver = max(0, $this->selectedAlquiler->monto_garantia - $montoDescontado);
 
-                // Si aún hay monto disponible, devolver la garantía
-                if ($garantia->estado === \App\Models\Garantia::ESTADO_RECIBIDA && $garantia->monto_disponible > 0) {
-                    $motivo = "Devolución automática por finalización de alquiler {$this->selectedAlquiler->numero_contrato}";
-                    if ($this->penalizacion > 0) {
-                        $motivo .= " (después de aplicar penalización de Bs. {$this->penalizacion})";
+                    $this->selectedAlquiler->update([
+                        'estado_garantia' => 'APLICADA',
+                        'fecha_devolucion_garantia' => now(),
+                        'monto_devuelto_garantia' => $montoDevolver,
+                        'observaciones_garantia' => "Penalizaciones aplicadas: Bs. {$montoDescontado}. Monto devuelto: Bs. {$montoDevolver}"
+                    ]);
+
+                    // Si queda saldo de penalizaciones, agregarlo al saldo pendiente
+                    if ($totalPenalizaciones > $montoDescontado) {
+                        $saldoAdicional = $totalPenalizaciones - $montoDescontado;
+                        $this->selectedAlquiler->increment('saldo_pendiente', $saldoAdicional);
                     }
-
-                    $garantia->marcarComoDevuelta($garantia->monto_disponible, $motivo);
+                } else {
+                    // Devolver garantía completa
+                    if ($this->devolver_garantia) {
+                        $this->selectedAlquiler->devolverGarantia(
+                            $this->selectedAlquiler->monto_garantia,
+                            'Devolución completa - Sin penalizaciones'
+                        );
+                    }
                 }
-
-                // Liberar la garantía del alquiler
-                $this->selectedAlquiler->liberarGarantia('Alquiler finalizado');
             }
 
             DB::commit();
 
-            $mensaje = 'La devolución ha sido registrada exitosamente.';
+            $mensaje = '✅ Devolución registrada exitosamente';
+            if ($totalPenalizaciones > 0) {
+                $mensaje .= " | Penalizaciones: Bs. {$totalPenalizaciones}";
+            }
             if ($this->selectedAlquiler->tieneGarantia()) {
-                $mensaje .= ' La garantía ha sido procesada automáticamente.';
+                $mensaje .= ' | Garantía procesada';
             }
 
             $this->dispatchBrowserEvent('swal', [
-                'title' => '¡Devolución Procesada!',
+                'title' => '¡Devolución Completada!',
                 'text' => $mensaje,
                 'icon' => 'success'
             ]);
@@ -592,7 +673,12 @@ class AlquilerController extends Component
             $this->closeDevolucionModal();
         } catch (\Exception $e) {
             DB::rollback();
-            session()->flash('error', 'Error al procesar la devolución: ' . $e->getMessage());
+
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Error al procesar la devolución: ' . $e->getMessage(),
+                'icon' => 'error'
+            ]);
         }
     }
 
@@ -615,7 +701,11 @@ class AlquilerController extends Component
 
     public function openPaymentModal($alquilerId)
     {
-        $this->selectedAlquiler = Alquiler::with(['cliente', 'sucursal'])->find($alquilerId);
+        $this->selectedAlquiler = Alquiler::with([
+            'cliente',
+            'sucursal',
+            'pagos.usuario'
+        ])->find($alquilerId);
         $this->monto_pago = $this->selectedAlquiler->saldo_pendiente;
         $this->caja_id = '';
         $this->metodo_pago = 'EFECTIVO';
@@ -696,65 +786,16 @@ class AlquilerController extends Component
         }
     }
 
-    public function addProductToAlquiler()
-    {
-        if (!$this->currentProductId || $this->currentQuantity <= 0) {
-            return;
-        }
-
-        $producto = Producto::query()
-            ->select('productos.*', 'sps.stock_actual', 'sps.precio_alquiler_sucursal')
-            ->join('stock_por_sucursals as sps', 'productos.id', '=', 'sps.producto_id')
-            ->where('productos.id', $this->currentProductId)
-            ->where('sps.sucursal_id', $this->sucursal_id)
-            ->first();
-
-        if (!$producto) {
-            session()->flash('errorModal', 'Producto no encontrado en esta sucursal.');
-            return;
-        }
-
-        $existingIndex = collect($this->selectedProducts)->search(function ($item) {
-            return $item['id'] == $this->currentProductId;
-        });
-
-        $cantidadExistente = $existingIndex !== false ? $this->selectedProducts[$existingIndex]['cantidad'] : 0;
-        $cantidadTotal = $cantidadExistente + $this->currentQuantity;
-
-        if ($cantidadTotal > $producto->stock_actual) {
-            session()->flash('errorModal', 'Stock insuficiente para esta cantidad.');
-            return;
-        }
-
-        $precio = $producto->precio_alquiler_sucursal ?? 0;
-
-        if ($existingIndex !== false) {
-            $this->selectedProducts[$existingIndex]['cantidad'] = $cantidadTotal;
-            $this->selectedProducts[$existingIndex]['subtotal'] = $cantidadTotal * $precio;
-        } else {
-            $this->selectedProducts[] = [
-                'id' => $producto->id,
-                'nombre' => $producto->nombre,
-                'cantidad' => $this->currentQuantity,
-                'precio_unitario' => $precio,
-                'subtotal' => $this->currentQuantity * $precio,
-            ];
-        }
-
-        $this->currentProductId = '';
-        $this->currentQuantity = 1;
-    }
-
-    public function removeProductFromAlquiler($index)
-    {
-        unset($this->selectedProducts[$index]);
-        $this->selectedProducts = array_values($this->selectedProducts);
-    }
-
     // Métodos para conjuntos folklóricos
     public function addConjuntoToAlquiler()
     {
         if (!$this->currentConjuntoId) {
+            session()->flash('errorModal', 'Debe seleccionar un conjunto.');
+            return;
+        }
+
+        if (!$this->sucursal_id) {
+            session()->flash('errorModal', 'Debe seleccionar una sucursal primero.');
             return;
         }
 
@@ -803,9 +844,7 @@ class AlquilerController extends Component
 
     private function calculateSubtotal()
     {
-        $productosTotal = collect($this->selectedProducts)->sum('subtotal');
-        $conjuntosTotal = collect($this->selectedConjuntos)->sum('subtotal');
-        return $productosTotal + $conjuntosTotal;
+        return collect($this->selectedConjuntos)->sum('subtotal');
     }
 
     // Métodos para gestión de garantías
@@ -815,36 +854,16 @@ class AlquilerController extends Component
         $this->garantia_id = '';
     }
 
-    public function asignarGarantia($alquilerId, $garantiaId)
+    public function liberarGarantiaExterna($alquilerId)
     {
         try {
             $alquiler = Alquiler::find($alquilerId);
-            $alquiler->asignarGarantia($garantiaId);
 
+            // Ya no se usa tabla externa de garantías
             $this->dispatchBrowserEvent('swal', [
-                'title' => '¡Garantía Asignada!',
-                'text' => 'La garantía ha sido asignada al alquiler exitosamente.',
-                'icon' => 'success'
-            ]);
-        } catch (\Exception $e) {
-            $this->dispatchBrowserEvent('swal', [
-                'title' => 'Error',
-                'text' => 'Error al asignar garantía: ' . $e->getMessage(),
-                'icon' => 'error'
-            ]);
-        }
-    }
-
-    public function liberarGarantia($alquilerId)
-    {
-        try {
-            $alquiler = Alquiler::find($alquilerId);
-            $alquiler->liberarGarantia('Liberada manualmente desde interfaz');
-
-            $this->dispatchBrowserEvent('swal', [
-                'title' => '¡Garantía Liberada!',
-                'text' => 'La garantía ha sido liberada del alquiler.',
-                'icon' => 'success'
+                'title' => 'Función obsoleta',
+                'text' => 'Las garantías ahora están integradas en el alquiler.',
+                'icon' => 'info'
             ]);
         } catch (\Exception $e) {
             $this->dispatchBrowserEvent('swal', [
@@ -892,10 +911,7 @@ class AlquilerController extends Component
         try {
             DB::beginTransaction();
 
-            $this->selectedAlquiler->aplicarGarantia(
-                $this->monto_aplicar_garantia,
-                $this->motivo_aplicacion
-            );
+            $this->selectedAlquiler->aplicarGarantia($this->motivo_aplicacion);
 
             DB::commit();
 
@@ -919,34 +935,25 @@ class AlquilerController extends Component
     public function devolverGarantiaCompleta($alquilerId)
     {
         try {
-            $alquiler = Alquiler::with('garantia')->find($alquilerId);
+            $alquiler = Alquiler::find($alquilerId);
 
             if (!$alquiler->tieneGarantia()) {
                 throw new \Exception('Este alquiler no tiene garantía asignada.');
             }
 
-            $garantia = $alquiler->garantia;
-
-            if ($garantia->estado !== \App\Models\Garantia::ESTADO_RECIBIDA) {
-                throw new \Exception('Esta garantía no puede ser devuelta en su estado actual.');
+            if ($alquiler->estado_garantia === 'DEVUELTA') {
+                throw new \Exception('Esta garantía ya fue devuelta.');
             }
 
             DB::beginTransaction();
 
-            // Devolver el monto disponible completo
-            $garantia->marcarComoDevuelta(
-                $garantia->monto_disponible,
-                "Devolución manual completa desde alquiler {$alquiler->numero_contrato}"
-            );
-
-            // Liberar la garantía del alquiler
-            $alquiler->liberarGarantia('Garantía devuelta manualmente');
+            $alquiler->devolverGarantia(null, 'Devolución manual completa');
 
             DB::commit();
 
             $this->dispatchBrowserEvent('swal', [
                 'title' => '¡Garantía Devuelta!',
-                'text' => "Se devolvió Bs. {$garantia->monto_disponible} de la garantía {$garantia->numero_ticket}.",
+                'text' => "Se devolvió la garantía del tipo {$alquiler->tipo_garantia_display}.",
                 'icon' => 'success'
             ]);
         } catch (\Exception $e) {
@@ -960,11 +967,18 @@ class AlquilerController extends Component
     }
 
 
+    public function resetFilters()
+    {
+        $this->searchTerm = '';
+        $this->filterEstado = 'TODOS';
+        $this->filterEstadoPago = 'TODOS';
+        $this->filterSucursal = 'TODAS';
+    }
+
     private function resetForm()
     {
         $this->cliente_id = '';
         $this->unidad_educativa_id = '';
-        $this->garantia_id = '';
         $this->fecha_alquiler = Carbon::now()->format('Y-m-d');
         $this->hora_entrega = '09:00';
         $this->fecha_devolucion_programada = Carbon::now()->addDays(1)->format('Y-m-d');
@@ -975,8 +989,11 @@ class AlquilerController extends Component
         $this->observaciones = '';
         $this->condiciones_especiales = '';
         $this->anticipo = 0;
-        $this->selectedProducts = [];
-        $this->currentProductId = '';
-        $this->currentQuantity = 1;
+        $this->tipo_garantia = 'NINGUNA';
+        $this->documento_garantia = '';
+        $this->monto_garantia = 0;
+        $this->observaciones_garantia = '';
+        $this->selectedConjuntos = [];
+        $this->currentConjuntoId = '';
     }
 }

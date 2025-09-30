@@ -139,7 +139,7 @@
                                 <i class="fas fa-handshake me-2"></i>
                                 Nuevo Alquiler
                             </a>
-                            <a href="{{ route('producto') }}" class="btn btn-outline-primary d-flex align-items-center">
+                            <a href="" class="btn btn-outline-primary d-flex align-items-center">
                                 <i class="fas fa-boxes me-2"></i>
                                 Agregar Producto
                             </a>
@@ -241,7 +241,7 @@
                             @endforelse
                         </div>
                         <div class="mt-3">
-                            <a href="{{ route('producto') }}" class="btn btn-outline-primary w-100">
+                            <a href="" class="btn btn-outline-primary w-100">
                                 Ver Todo el Inventario
                             </a>
                         </div>

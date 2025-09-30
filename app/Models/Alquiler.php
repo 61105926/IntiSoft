@@ -17,7 +17,6 @@ class Alquiler extends Model
         'numero_contrato',
         'cliente_id',
         'unidad_educativa_id',
-        'garantia_id',
         'tipo_pago_id',
         'fecha_alquiler',
         'hora_entrega',
@@ -49,6 +48,13 @@ class Alquiler extends Model
         'usuario_creacion',
         'usuario_entrega',
         'usuario_devolucion',
+        'tipo_garantia',
+        'documento_garantia',
+        'monto_garantia',
+        'observaciones_garantia',
+        'estado_garantia',
+        'fecha_devolucion_garantia',
+        'monto_devuelto_garantia',
     ];
 
     protected $dates = [
@@ -63,6 +69,7 @@ class Alquiler extends Model
         'fecha_alquiler' => 'date',
         'fecha_devolucion_programada' => 'date',
         'fecha_devolucion_real' => 'datetime',
+        'fecha_devolucion_garantia' => 'datetime',
         'subtotal' => 'decimal:2',
         'descuento' => 'decimal:2',
         'impuestos' => 'decimal:2',
@@ -75,6 +82,8 @@ class Alquiler extends Model
         'saldo_pendiente' => 'decimal:2',
         'penalizacion' => 'decimal:2',
         'comision_vendedor' => 'decimal:2',
+        'monto_garantia' => 'decimal:2',
+        'monto_devuelto_garantia' => 'decimal:2',
         'requiere_deposito' => 'boolean',
         'detalle_costos_adicionales' => 'array',
     ];
@@ -112,11 +121,6 @@ class Alquiler extends Model
     public function usuarioDevolucion()
     {
         return $this->belongsTo(User::class, 'usuario_devolucion');
-    }
-
-    public function garantia()
-    {
-        return $this->belongsTo(Garantia::class);
     }
 
     public function detalles()
@@ -295,57 +299,78 @@ class Alquiler extends Model
         return $this;
     }
 
-    // Métodos para garantías
+    // Métodos para garantías integradas
     public function tieneGarantia()
     {
-        return !is_null($this->garantia_id) && $this->garantia;
+        return $this->tipo_garantia !== 'NINGUNA';
     }
 
-    public function asignarGarantia($garantiaId)
-    {
-        $garantia = Garantia::find($garantiaId);
-        
-        if (!$garantia || !$garantia->puede_usarse) {
-            throw new \Exception('La garantía no está disponible para su uso.');
-        }
-
-        $this->update(['garantia_id' => $garantiaId]);
-        
-        return $this;
-    }
-
-    public function liberarGarantia($motivo = null)
-    {
-        if ($this->garantia) {
-            $observaciones = "Garantía liberada del alquiler {$this->numero_contrato}";
-            if ($motivo) {
-                $observaciones .= " - Motivo: {$motivo}";
-            }
-            
-            $this->garantia->update([
-                'observaciones' => $this->garantia->observaciones . "\n{$observaciones}"
-            ]);
-        }
-        
-        $this->update(['garantia_id' => null]);
-        
-        return $this;
-    }
-
-    public function aplicarGarantia($monto, $motivo = null)
+    public function devolverGarantia($montoDevuelto = null, $observaciones = null)
     {
         if (!$this->tieneGarantia()) {
-            throw new \Exception('Este alquiler no tiene garantía asignada.');
+            throw new \Exception('Este alquiler no tiene garantía.');
         }
 
-        $motivoCompleto = "Aplicado a alquiler {$this->numero_contrato}";
-        if ($motivo) {
-            $motivoCompleto .= " - {$motivo}";
+        $montoDevuelto = $montoDevuelto ?? $this->monto_garantia;
+
+        $this->update([
+            'estado_garantia' => 'DEVUELTA',
+            'fecha_devolucion_garantia' => now(),
+            'monto_devuelto_garantia' => $montoDevuelto,
+            'observaciones_garantia' => $observaciones
+        ]);
+
+        // Si es CI, no hay monto monetario devuelto
+        if ($this->tipo_garantia === 'CI') {
+            $this->monto_devuelto_garantia = 0.00;
         }
 
-        $this->garantia->aplicarMonto($monto, $motivoCompleto);
-        
         return $this;
+    }
+
+    public function aplicarGarantia($motivo = null)
+    {
+        if (!$this->tieneGarantia()) {
+            throw new \Exception('Este alquiler no tiene garantía.');
+        }
+
+        $this->update([
+            'estado_garantia' => 'APLICADA',
+            'fecha_devolucion_garantia' => now(),
+            'monto_devuelto_garantia' => 0,
+            'observaciones_garantia' => $motivo ?? 'Garantía aplicada por daños/pérdidas'
+        ]);
+
+        // Si es efectivo o QR, aplicar el monto como pago
+        if (in_array($this->tipo_garantia, ['EFECTIVO', 'QR'])) {
+            $this->anticipo += $this->monto_garantia;
+            $this->actualizarEstadoPago();
+        }
+
+        return $this;
+    }
+
+    public function getTipoGarantiaDisplayAttribute()
+    {
+        $tipos = [
+            'NINGUNA' => 'Sin garantía',
+            'CI' => 'Cédula de Identidad',
+            'EFECTIVO' => 'Efectivo',
+            'QR' => 'QR/Transferencia'
+        ];
+
+        return $tipos[$this->tipo_garantia] ?? $this->tipo_garantia;
+    }
+
+    public function getEstadoGarantiaDisplayAttribute()
+    {
+        $estados = [
+            'PENDIENTE' => 'Pendiente',
+            'DEVUELTA' => 'Devuelta',
+            'APLICADA' => 'Aplicada'
+        ];
+
+        return $estados[$this->estado_garantia] ?? $this->estado_garantia;
     }
 
     public function getInfoGarantiaAttribute()
@@ -355,12 +380,13 @@ class Alquiler extends Model
         }
 
         return [
-            'numero_ticket' => $this->garantia->numero_ticket,
-            'tipo' => $this->garantia->tipoGarantia->nombre,
-            'monto' => $this->garantia->monto,
-            'monto_disponible' => $this->garantia->monto_disponible,
-            'estado' => $this->garantia->estado_display,
-            'fecha_vencimiento' => $this->garantia->fecha_vencimiento,
+            'tipo' => $this->tipo_garantia_display,
+            'documento' => $this->documento_garantia,
+            'monto' => $this->monto_garantia,
+            'estado' => $this->estado_garantia_display,
+            'monto_devuelto' => $this->monto_devuelto_garantia,
+            'observaciones' => $this->observaciones_garantia,
+            'fecha_devolucion' => $this->fecha_devolucion_garantia,
         ];
     }
 }

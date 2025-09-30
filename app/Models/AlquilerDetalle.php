@@ -12,6 +12,8 @@ class AlquilerDetalle extends Model
     protected $fillable = [
         'alquiler_id',
         'producto_id',
+        'conjunto_id',
+        'instancia_conjunto_id',
         'cantidad',
         'precio_unitario',
         'subtotal',
@@ -19,6 +21,9 @@ class AlquilerDetalle extends Model
         'observaciones_devolucion',
         'fecha_devolucion',
         'costo_daño',
+        'penalizacion_retraso',
+        'penalizacion_daños',
+        'penalizacion_perdida',
     ];
 
     protected $casts = [
@@ -38,6 +43,26 @@ class AlquilerDetalle extends Model
     public function producto()
     {
         return $this->belongsTo(Producto::class);
+    }
+
+    public function conjunto()
+    {
+        return $this->belongsTo(Conjunto::class);
+    }
+
+    public function instanciaConjunto()
+    {
+        return $this->belongsTo(InstanciaConjunto::class, 'instancia_conjunto_id');
+    }
+
+    public function componentesAlquilados()
+    {
+        return $this->hasMany(AlquilerDetalleComponente::class);
+    }
+
+    public function historialComponentes()
+    {
+        return $this->hasMany(HistorialComponentesConjunto::class);
     }
 
     // Scopes
