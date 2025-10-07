@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
+use App\Models\InstanciaConjunto;
+use App\Observers\InstanciaConjuntoObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Configurar Bootstrap para la paginación
         Paginator::useBootstrapFive();
+
+        // Registrar observers
+        InstanciaConjunto::observe(InstanciaConjuntoObserver::class);
     }
 }

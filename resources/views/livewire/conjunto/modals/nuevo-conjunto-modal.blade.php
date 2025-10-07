@@ -11,6 +11,21 @@
                 <button type="button" class="btn-close" wire:click="closeNewConjuntoModal"></button>
             </div>
             <div class="modal-body">
+                {{-- ALERTAS DE ERROR/ÉXITO --}}
+                @if (session()->has('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                @if (session()->has('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
                 <p class="text-muted mb-4">
                     Cree un nuevo conjunto completo con componentes y variaciones. Sistema simplificado para venta y alquiler únicamente.
                 </p>

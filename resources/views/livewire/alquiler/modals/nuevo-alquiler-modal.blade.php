@@ -126,12 +126,20 @@
                         </div>
                         <div class="card-body">
 
+                            {{-- ALERTA SI NO HAY SUCURSAL SELECCIONADA --}}
+                            @if(!$sucursal_id)
+                                <div class="alert alert-info border-0 mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Importante:</strong> Primero debe seleccionar una <strong>Sucursal</strong> en la sección de "Pago y Detalles Adicionales" más abajo para poder agregar conjuntos folklóricos.
+                                </div>
+                            @endif
+
                             {{-- SELECTOR DE CONJUNTOS --}}
                             <div class="row g-3 mb-3">
                                 <div class="col-md-10">
                                     <label class="form-label fw-semibold">Seleccionar Conjunto Disponible</label>
-                                    <select wire:model="currentConjuntoId" class="form-select">
-                                        <option value="">Seleccione un conjunto...</option>
+                                    <select wire:model="currentConjuntoId" class="form-select" {{ !$sucursal_id ? 'disabled' : '' }}>
+                                        <option value="">{{ $sucursal_id ? 'Seleccione un conjunto...' : 'Primero seleccione una sucursal' }}</option>
                                         @foreach($conjuntos ?? [] as $instancia)
                                             <option value="{{ $instancia->id }}">
                                                 {{ $instancia->variacionConjunto->conjunto->nombre ?? 'Conjunto' }}
@@ -141,11 +149,17 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @if($sucursal_id && count($conjuntos ?? []) === 0)
+                                        <small class="text-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            No hay conjuntos disponibles en esta sucursal.
+                                        </small>
+                                    @endif
                                 </div>
 
                                 <div class="col-md-2">
                                     <label class="form-label fw-semibold">&nbsp;</label>
-                                    <button type="button" wire:click="addConjuntoToAlquiler" class="btn btn-primary w-100">
+                                    <button type="button" wire:click="addConjuntoToAlquiler" class="btn btn-primary w-100" {{ !$sucursal_id ? 'disabled' : '' }}>
                                         <i class="fas fa-plus me-1"></i> Agregar
                                     </button>
                                 </div>

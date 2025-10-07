@@ -217,8 +217,8 @@
                                                     </div>
                                                     <div>
                                                         <strong>{{ $detalle->instanciaConjunto->variacionConjunto->conjunto->nombre ?? 'Conjunto' }}</strong>
-                                                        @if($detalle->instanciaConjunto->componentesActivos)
-                                                        <br><small class="text-muted">{{ $detalle->instanciaConjunto->componentesActivos->count() }} componentes</small>
+                                                        @if($detalle->instanciaConjunto->instanciaComponentes)
+                                                        <br><small class="text-muted">{{ $detalle->instanciaConjunto->instanciaComponentes->count() }} componentes</small>
                                                         @endif
                                                     </div>
                                                 </div>

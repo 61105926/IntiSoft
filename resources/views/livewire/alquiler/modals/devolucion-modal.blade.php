@@ -143,69 +143,100 @@
                                 </div>
                             </div>
 
-                            {{-- VERIFICACIÓN DE COMPONENTES --}}
-                            @if($detalle->instanciaConjunto->componentesActivos && $detalle->instanciaConjunto->componentesActivos->count() > 0)
-                            <div class="border-top pt-3">
-                                <h6 class="fw-semibold mb-3">
-                                    <i class="fas fa-list-check me-2"></i>
-                                    Verificación de Componentes
-                                </h6>
+                            {{-- VERIFICACIÓN PRENDA POR PRENDA (COMPONENTES) --}}
+                            @if($detalle->instanciaConjunto->instanciaComponentes && $detalle->instanciaConjunto->instanciaComponentes->count() > 0)
+                            <div class="border-top pt-3 bg-light rounded p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-semibold mb-0">
+                                        <i class="fas fa-tasks me-2 text-success"></i>
+                                        Verificación Prenda por Prenda
+                                    </h6>
+                                    <span class="badge bg-info">{{ $detalle->instanciaConjunto->instanciaComponentes->count() }} prendas/componentes</span>
+                                </div>
+                                <div class="alert alert-info border-0 mb-3 py-2">
+                                    <small><i class="fas fa-info-circle me-1"></i> Marque cada prenda/componente según su estado al momento de la devolución</small>
+                                </div>
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-hover align-middle mb-0">
-                                        <thead class="table-light">
+                                    <table class="table table-sm table-hover align-middle mb-0 bg-white">
+                                        <thead class="table-dark">
                                             <tr>
-                                                <th width="5%"><input type="checkbox" class="form-check-input" checked disabled></th>
-                                                <th width="30%">Componente</th>
-                                                <th width="20%">Estado</th>
-                                                <th width="15%">Daño/Pérdida</th>
+                                                <th width="5%" class="text-center">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </th>
+                                                <th width="30%">Prenda/Componente</th>
+                                                <th width="20%">Estado de Devolución</th>
+                                                <th width="15%">Costo Daño/Pérdida (Bs.)</th>
                                                 <th width="30%">Observaciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($detalle->instanciaConjunto->componentesActivos as $compIndex => $componente)
-                                            <tr>
-                                                <td>
-                                                    <input type="checkbox" class="form-check-input"
-                                                        wire:model="devolucionDetalles.{{ $detalleIndex }}.componentes.{{ $componente->id }}.presente"
-                                                        checked>
+                                            @foreach($detalle->instanciaConjunto->instanciaComponentes as $compIndex => $componente)
+                                            <tr class="align-middle">
+                                                <td class="text-center">
+                                                    <div class="form-check d-flex justify-content-center">
+                                                        <input type="checkbox" class="form-check-input"
+                                                            wire:model="devolucionDetalles.{{ $detalleIndex }}.componentes.{{ $componente->id }}.presente"
+                                                            id="check_{{ $detalleIndex }}_{{ $componente->id }}"
+                                                            checked>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <div class="bg-primary bg-opacity-10 rounded p-2 me-2">
-                                                            <i class="fas fa-puzzle-piece text-primary"></i>
+                                                        <div class="bg-gradient rounded-3 p-2 me-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                                            <i class="fas fa-tshirt text-white"></i>
                                                         </div>
                                                         <div>
-                                                            <strong>{{ $componente->componente->nombre_componente ?? 'Componente' }}</strong>
+                                                            <div class="fw-bold text-dark">{{ $componente->componente->nombre ?? 'Componente' }}</div>
                                                             @if($componente->numero_serie_componente)
-                                                            <br><small class="text-muted">S/N: {{ $componente->numero_serie_componente }}</small>
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-barcode me-1"></i>S/N: {{ $componente->numero_serie_componente }}
+                                                            </small>
+                                                            @endif
+                                                            @if($componente->componente->descripcion)
+                                                            <br><small class="text-muted fst-italic">{{ $componente->componente->descripcion }}</small>
                                                             @endif
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <select wire:model="devolucionDetalles.{{ $detalleIndex }}.componentes.{{ $componente->id }}.estado" class="form-select form-select-sm">
-                                                        <option value="DEVUELTO">✅ Devuelto OK</option>
-                                                        <option value="DAÑADO_LEVE">⚠️ Daño Leve</option>
-                                                        <option value="DAÑADO_GRAVE">🔧 Daño Grave</option>
-                                                        <option value="PERDIDO">❌ Perdido</option>
+                                                    <select wire:model="devolucionDetalles.{{ $detalleIndex }}.componentes.{{ $componente->id }}.estado"
+                                                        class="form-select form-select-sm"
+                                                        wire:change="$refresh">
+                                                        <option value="DEVUELTO">✅ Devuelto en Buen Estado</option>
+                                                        <option value="DAÑADO_LEVE">⚠️ Daño Leve (reparable)</option>
+                                                        <option value="DAÑADO_GRAVE">🔧 Daño Grave (costoso)</option>
+                                                        <option value="PERDIDO">❌ Perdido o Extraviado</option>
                                                     </select>
                                                 </td>
                                                 <td>
-                                                    @if(in_array($devolucionDetalles[$detalleIndex]['componentes'][$componente->id]['estado'] ?? 'DEVUELTO', ['DAÑADO_LEVE', 'DAÑADO_GRAVE', 'PERDIDO']))
-                                                    <input type="number"
-                                                        wire:model="devolucionDetalles.{{ $detalleIndex }}.componentes.{{ $componente->id }}.costo_penalizacion"
-                                                        class="form-control form-control-sm"
-                                                        placeholder="Bs. 0.00"
-                                                        step="0.01">
+                                                    @php
+                                                        $estadoComponente = $devolucionDetalles[$detalleIndex]['componentes'][$componente->id]['estado'] ?? 'DEVUELTO';
+                                                        $requiereCosto = in_array($estadoComponente, ['DAÑADO_LEVE', 'DAÑADO_GRAVE', 'PERDIDO']);
+                                                    @endphp
+                                                    @if($requiereCosto)
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text bg-warning text-dark">
+                                                            <i class="fas fa-dollar-sign"></i>
+                                                        </span>
+                                                        <input type="number"
+                                                            wire:model="devolucionDetalles.{{ $detalleIndex }}.componentes.{{ $componente->id }}.costo_penalizacion"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="0.00"
+                                                            step="0.01"
+                                                            min="0">
+                                                    </div>
                                                     @else
-                                                    <span class="text-muted small">N/A</span>
+                                                    <div class="text-center">
+                                                        <span class="badge bg-success-subtle text-success">Sin costo</span>
+                                                    </div>
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <input type="text"
+                                                    <textarea
                                                         wire:model="devolucionDetalles.{{ $detalleIndex }}.componentes.{{ $componente->id }}.observaciones"
                                                         class="form-control form-control-sm"
-                                                        placeholder="Detalles...">
+                                                        rows="1"
+                                                        placeholder="Descripción del daño o motivo..."></textarea>
                                                 </td>
                                             </tr>
                                             @endforeach

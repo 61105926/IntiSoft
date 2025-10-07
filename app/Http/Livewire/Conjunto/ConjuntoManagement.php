@@ -87,11 +87,13 @@ class ConjuntoManagement extends Component
         $conjuntos = $this->getFilteredConjuntos();
         $categorias = CategoriaConjunto::where('activo', true)->orderBy('orden_visualizacion')->get();
         $estadisticas = $this->getEstadisticas();
+        $sucursales = \App\Models\Sucursal::where('activo', true)->orderBy('nombre')->get();
 
         return view('livewire.conjunto.conjunto-management', [
             'conjuntos' => $conjuntos,
             'categorias' => $categorias,
             'estadisticas' => $estadisticas,
+            'sucursales' => $sucursales,
         ])->extends('layouts.theme.modern-app')->section('content');
     }
 
@@ -327,8 +329,29 @@ class ConjuntoManagement extends Component
     public function guardarConjunto()
     {
         try {
-            if (!$this->puedeGuardarConjunto()) {
-                session()->flash('error', 'Por favor complete todos los campos requeridos.');
+            // Validación mejorada con mensajes específicos
+            if (empty($this->newConjunto['codigo'])) {
+                session()->flash('error', 'El código del conjunto es obligatorio.');
+                return;
+            }
+
+            if (empty($this->newConjunto['nombre'])) {
+                session()->flash('error', 'El nombre del conjunto es obligatorio.');
+                return;
+            }
+
+            if (empty($this->newConjunto['categoria_conjunto_id'])) {
+                session()->flash('error', 'Debe seleccionar una categoría.');
+                return;
+            }
+
+            if (count($this->componentesSeleccionados) === 0) {
+                session()->flash('error', 'Debe seleccionar al menos un componente para el conjunto.');
+                return;
+            }
+
+            if (!$this->newConjunto['disponible_venta'] && !$this->newConjunto['disponible_alquiler']) {
+                session()->flash('error', 'El conjunto debe estar disponible para venta o alquiler.');
                 return;
             }
 
@@ -362,18 +385,36 @@ class ConjuntoManagement extends Component
             }
 
             // Crear variaciones
+            $contadorVariaciones = 1;
             foreach ($this->variaciones as $variacionData) {
                 if (!empty($variacionData['talla']) || !empty($variacionData['color']) || !empty($variacionData['estilo'])) {
+                    // Generar código de variación automáticamente
+                    $codigoVariacion = $conjunto->codigo . '-VAR-' . str_pad($contadorVariaciones, 3, '0', STR_PAD_LEFT);
+
+                    // Generar nombre de variación
+                    $nombreVariacion = $conjunto->nombre;
+                    $partes = [];
+                    if (!empty($variacionData['color'])) $partes[] = $variacionData['color'];
+                    if (!empty($variacionData['talla'])) $partes[] = $variacionData['talla'];
+                    if (!empty($variacionData['estilo'])) $partes[] = $variacionData['estilo'];
+                    if (count($partes) > 0) {
+                        $nombreVariacion .= ' - ' . implode(' ', $partes);
+                    }
+
                     VariacionConjunto::create([
                         'conjunto_id' => $conjunto->id,
-                        'talla' => $variacionData['talla'],
-                        'color' => $variacionData['color'],
-                        'estilo' => $variacionData['estilo'],
+                        'codigo_variacion' => $codigoVariacion,
+                        'nombre_variacion' => $nombreVariacion,
+                        'talla' => $variacionData['talla'] ?? null,
+                        'color' => $variacionData['color'] ?? null,
+                        'estilo' => $variacionData['estilo'] ?? null,
                         'precio_venta' => $variacionData['precio_venta'] ?? $conjunto->precio_venta_base,
                         'precio_alquiler_dia' => $variacionData['precio_alquiler_dia'] ?? $conjunto->precio_alquiler_dia,
                         'usuario_creacion' => auth()->id(),
                         'activa' => true,
                     ]);
+
+                    $contadorVariaciones++;
                 }
             }
 
@@ -387,6 +428,11 @@ class ConjuntoManagement extends Component
 
         } catch (\Exception $e) {
             DB::rollback();
+            \Log::error('Error al crear conjunto', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $this->newConjunto
+            ]);
             session()->flash('error', 'Error al crear el conjunto: ' . $e->getMessage());
         }
     }
@@ -448,13 +494,25 @@ class ConjuntoManagement extends Component
         try {
             DB::beginTransaction();
 
-            for ($i = 1; $i <= $this->instanceForm['cantidad']; $i++) {
-                InstanciaConjunto::create([
+            // Obtener la variación para generar códigos adecuados
+            $variacion = VariacionConjunto::with('conjunto')->find($this->instanceForm['variacion_id']);
+            if (!$variacion) {
+                throw new \Exception('Variación no encontrada');
+            }
+
+            // Contar cuántas instancias ya existen de esta variación para continuar la numeración
+            $instanciasExistentes = InstanciaConjunto::where('variacion_conjunto_id', $variacion->id)->count();
+            $contadorInicial = $instanciasExistentes + 1;
+
+            $instanciasCreadas = [];
+
+            for ($i = 0; $i < $this->instanceForm['cantidad']; $i++) {
+                $numeroSecuencial = $contadorInicial + $i;
+
+                $instancia = InstanciaConjunto::create([
                     'variacion_conjunto_id' => $this->instanceForm['variacion_id'],
-                    'numero_serie' => $this->instanceForm['prefijo_serie'] . '-' .
-                                    str_pad($this->instanceForm['variacion_id'], 3, '0', STR_PAD_LEFT) . '-' .
-                                    str_pad($i, 3, '0', STR_PAD_LEFT),
-                    'codigo_interno' => 'INT-' . $this->instanceForm['variacion_id'] . '-' . $i,
+                    'numero_serie' => $this->instanceForm['prefijo_serie'] . '-' . str_pad($numeroSecuencial, 3, '0', STR_PAD_LEFT),
+                    'codigo_interno' => 'INT-' . $variacion->codigo_variacion . '-' . str_pad($numeroSecuencial, 3, '0', STR_PAD_LEFT),
                     'sucursal_id' => $this->instanceForm['sucursal_id'],
                     'estado_fisico' => $this->instanceForm['estado_fisico'],
                     'estado_disponibilidad' => 'DISPONIBLE',
@@ -462,23 +520,36 @@ class ConjuntoManagement extends Component
                     'total_usos' => 0,
                     'total_ingresos' => 0,
                     'ubicacion_almacen' => 'ESTANTE-A-' . rand(1, 10),
-                    'lote_fabricacion' => $this->instanceForm['lote_fabricacion'],
-                    'observaciones' => $this->instanceForm['observaciones'],
+                    'lote_fabricacion' => $this->instanceForm['lote_fabricacion'] ?? '',
+                    'observaciones' => $this->instanceForm['observaciones'] ?? '',
                     'usuario_creacion' => auth()->id(),
                     'activa' => true,
                 ]);
+
+                $instanciasCreadas[] = $instancia;
             }
 
             DB::commit();
+
+            \Log::info('Instancias creadas masivamente', [
+                'variacion' => $variacion->nombre_variacion,
+                'cantidad' => count($instanciasCreadas),
+                'usuario' => auth()->user()->name ?? auth()->id()
+            ]);
 
             // Limpiar formulario
             $this->resetInstanceForm();
             $this->showManageInstancesModal = false;
 
-            session()->flash('success', $this->instanceForm['cantidad'] . ' instancias creadas exitosamente.');
+            session()->flash('success', count($instanciasCreadas) . ' instancia(s) de "' . $variacion->nombre_variacion . '" creadas exitosamente con sus componentes.');
 
         } catch (\Exception $e) {
             DB::rollback();
+            \Log::error('Error al crear instancias masivas', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'form_data' => $this->instanceForm
+            ]);
             session()->flash('error', 'Error al crear las instancias: ' . $e->getMessage());
         }
     }

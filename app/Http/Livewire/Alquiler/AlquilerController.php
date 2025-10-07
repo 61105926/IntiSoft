@@ -252,6 +252,11 @@ class AlquilerController extends Component
                 ->addDays($this->dias_alquiler)
                 ->format('Y-m-d');
         }
+
+        // Recalcular subtotales de conjuntos cuando cambian los días
+        foreach ($this->selectedConjuntos as $index => $conjunto) {
+            $this->selectedConjuntos[$index]['subtotal'] = $conjunto['precio_unitario'] * $this->dias_alquiler;
+        }
     }
 
     public function updatedFechaAlquiler()
@@ -261,6 +266,14 @@ class AlquilerController extends Component
                 ->addDays($this->dias_alquiler)
                 ->format('Y-m-d');
         }
+    }
+
+    public function updatedSucursalId()
+    {
+        // Cuando cambia la sucursal, limpiar los conjuntos seleccionados
+        // porque pertenecen a otra sucursal
+        $this->selectedConjuntos = [];
+        $this->currentConjuntoId = '';
     }
 
     public function openNewAlquilerModal()
@@ -445,7 +458,7 @@ class AlquilerController extends Component
             'usuarioCreacion',
             'unidadEducativa',
             'detalles.instanciaConjunto.variacionConjunto.conjunto',
-            'detalles.instanciaConjunto.componentesActivos'
+            'detalles.instanciaConjunto.instanciaComponentes'
         ])->find($alquilerId);
         $this->showViewAlquilerModal = true;
     }
@@ -464,7 +477,7 @@ class AlquilerController extends Component
             'usuarioCreacion',
             'unidadEducativa',
             'detalles.instanciaConjunto.variacionConjunto.conjunto',
-            'detalles.instanciaConjunto.componentesActivos'
+            'detalles.instanciaConjunto.instanciaComponentes'
         ])->find($alquilerId);
         $this->showPrintModal = true;
     }
@@ -479,7 +492,7 @@ class AlquilerController extends Component
     {
         $this->selectedAlquiler = Alquiler::with([
             'detalles.instanciaConjunto.variacionConjunto.conjunto',
-            'detalles.instanciaConjunto.componentesActivos.componente',
+            'detalles.instanciaConjunto.instanciaComponentes.componente',
             'cliente'
         ])->find($alquilerId);
 
@@ -503,8 +516,8 @@ class AlquilerController extends Component
             ];
 
             // Inicializar cada componente si existen
-            if ($detalle->instanciaConjunto && $detalle->instanciaConjunto->componentesActivos) {
-                foreach ($detalle->instanciaConjunto->componentesActivos as $componente) {
+            if ($detalle->instanciaConjunto && $detalle->instanciaConjunto->instanciaComponentes) {
+                foreach ($detalle->instanciaConjunto->instanciaComponentes as $componente) {
                     $this->devolucionDetalles[$index]['componentes'][$componente->id] = [
                         'presente' => true,
                         'estado' => 'DEVUELTO',
@@ -703,8 +716,7 @@ class AlquilerController extends Component
     {
         $this->selectedAlquiler = Alquiler::with([
             'cliente',
-            'sucursal',
-            'pagos.usuario'
+            'sucursal'
         ])->find($alquilerId);
         $this->monto_pago = $this->selectedAlquiler->saldo_pendiente;
         $this->caja_id = '';

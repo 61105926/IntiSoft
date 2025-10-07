@@ -110,8 +110,8 @@
                                         <td class="text-center">{{ $loop->iteration }}</td>
                                         <td>
                                             <strong>{{ $detalle->instanciaConjunto->variacionConjunto->conjunto->nombre ?? 'Conjunto' }}</strong>
-                                            @if($detalle->instanciaConjunto->componentesActivos)
-                                            <br><small class="text-muted">({{ $detalle->instanciaConjunto->componentesActivos->count() }} componentes)</small>
+                                            @if($detalle->instanciaConjunto->instanciaComponentes)
+                                            <br><small class="text-muted">({{ $detalle->instanciaConjunto->instanciaComponentes->count() }} componentes)</small>
                                             @endif
                                         </td>
                                         <td>{{ $detalle->instanciaConjunto->variacionConjunto->nombre_variacion ?? 'N/A' }}</td>

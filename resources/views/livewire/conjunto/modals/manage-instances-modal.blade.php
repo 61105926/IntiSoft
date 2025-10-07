@@ -11,6 +11,21 @@
                 <button type="button" class="btn-close" wire:click="$set('showManageInstancesModal', false)"></button>
             </div>
             <div class="modal-body">
+                {{-- ALERTAS DE ERROR/ÉXITO --}}
+                @if (session()->has('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                @if (session()->has('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     Crear múltiples instancias físicas del conjunto "{{ $selectedConjunto->nombre }}" con verificación automática de componentes.
@@ -40,9 +55,9 @@
                         <label class="form-label fw-bold">Sucursal</label>
                         <select class="form-select" wire:model="instanceForm.sucursal_id">
                             <option value="">Seleccione sucursal</option>
-                            <option value="1">Sucursal Centro</option>
-                            <option value="2">Sucursal El Alto</option>
-                            <option value="3">Sucursal Sur</option>
+                            @foreach($sucursales as $sucursal)
+                                <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                            @endforeach
                         </select>
                     </div>
 
