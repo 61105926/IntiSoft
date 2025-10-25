@@ -13,3 +13,7 @@ class CajaController extends Controller
         return view('caja.index');
     }
 }
+
+
+
+
